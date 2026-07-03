@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from dataclasses import field
 
 
 @dataclass
@@ -128,3 +129,75 @@ class RigidBodyConfig:
     @property
     def thrust_control_floor(self) -> float:
         return self.thrust_control_floor_factor * self.hover_thrust
+
+
+@dataclass
+class ResetPreset:
+    name: str
+    state: list[float]
+
+
+@dataclass
+class InteractiveSimConfig:
+    """Runtime configuration for the pygame interactive simulator."""
+
+    physics_dt: float = 0.005
+    controller_dt: float = 0.01
+    render_rate: float = 60.0
+    initial_speed: float = 1.0
+    slow_motion_speed: float = 0.25
+    speed_step: float = 0.25
+    min_speed: float = 0.05
+    max_speed: float = 4.0
+
+    throttle_slew_per_s: float = 0.6
+    vane_slew_deg_s: float = 80.0
+    theta_target_slew_deg_s: float = 60.0
+    omega_target_slew_deg_s: float = 180.0
+    command_return_rate: float = 3.5
+
+    direct_vane_max_deg: float = 20.0
+    manual_theta_max_deg: float = 18.0
+    manual_omega_max_deg_s: float = 120.0
+
+    disturbance_force_x_N: float = 4.0
+    disturbance_force_z_N: float = 4.0
+    disturbance_moment_Nm: float = 0.20
+    impulse_duration_s: float = 0.15
+
+    pixels_per_meter: float = 180.0
+    trace_length: int = 900
+    log_directory: str = "results/interactive_logs"
+
+    presets: dict[str, ResetPreset] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.presets:
+            return
+        rb = RigidBodyConfig(dt=self.physics_dt)
+        self.presets = {
+            "F1": ResetPreset(
+                "upright hover",
+                [0.0, rb.target_z, 0.0, 0.0, 0.0, 0.0, rb.hover_thrust, 0.0],
+            ),
+            "F2": ResetPreset(
+                "positive initial tilt",
+                [0.0, rb.target_z, 0.15, 0.0, 0.0, 0.0, rb.hover_thrust, 0.0],
+            ),
+            "F3": ResetPreset(
+                "negative initial tilt",
+                [0.0, rb.target_z, -0.15, 0.0, 0.0, 0.0, rb.hover_thrust, 0.0],
+            ),
+            "F4": ResetPreset(
+                "horizontal velocity",
+                [0.0, rb.target_z, 0.0, 1.0, 0.0, 0.0, rb.hover_thrust, 0.0],
+            ),
+            "F5": ResetPreset(
+                "angular velocity",
+                [0.0, rb.target_z, 0.0, 0.0, 0.0, 1.0, rb.hover_thrust, 0.0],
+            ),
+            "F6": ResetPreset(
+                "low thrust authority",
+                [0.0, rb.target_z, 0.0, 0.0, 0.0, 0.0, 0.45 * rb.hover_thrust, 0.0],
+            ),
+        }

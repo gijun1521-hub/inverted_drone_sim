@@ -3,3 +3,5 @@ __pycache__/
 .ipynb_checkpoints/
 results/tb_logs/
 results/*.zip
+results/interactive_logs/
+results/replay/

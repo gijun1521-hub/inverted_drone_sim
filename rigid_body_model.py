@@ -18,9 +18,11 @@ class ForceMomentBreakdown:
     vane_force: np.ndarray
     gravity_force: np.ndarray
     drag_force: np.ndarray
+    disturbance_force: np.ndarray
     total_force: np.ndarray
     vane_moment: float
     damping_moment: float
+    disturbance_moment: float
     total_moment: float
     x_ddot: float
     z_ddot: float
@@ -62,8 +64,20 @@ class RigidBodySingleFan2D:
         body_right = np.array([np.cos(theta), -np.sin(theta)], dtype=float)
         return body_up, body_right
 
-    def force_moment_breakdown(self, state: np.ndarray) -> ForceMomentBreakdown:
+    def force_moment_breakdown(
+        self,
+        state: np.ndarray,
+        disturbance_force: np.ndarray | None = None,
+        disturbance_moment: float = 0.0,
+    ) -> ForceMomentBreakdown:
         _x, _z, theta, vx, vz, omega, thrust, vane_angle = np.asarray(state, dtype=float)
+        if disturbance_force is None:
+            disturbance_force = np.zeros(2, dtype=float)
+        else:
+            disturbance_force = np.asarray(disturbance_force, dtype=float)
+            if disturbance_force.shape != (2,):
+                raise ValueError("disturbance_force must have shape (2,)")
+
         body_up, body_right = self.body_axes(theta)
 
         thrust_force = thrust * body_up
@@ -71,12 +85,12 @@ class RigidBodySingleFan2D:
         vane_force = vane_force_mag * body_right
         gravity_force = np.array([0.0, -self.cfg.m * self.cfg.g], dtype=float)
         drag_force = -self.cfg.translational_drag * np.array([vx, vz], dtype=float)
-        total_force = thrust_force + vane_force + gravity_force + drag_force
+        total_force = thrust_force + vane_force + gravity_force + drag_force + disturbance_force
 
         r_vane = -self.cfg.l * body_up
         vane_moment = float(r_vane[1] * vane_force[0] - r_vane[0] * vane_force[1])
         damping_moment = -self.cfg.angular_damping * omega
-        total_moment = vane_moment + damping_moment
+        total_moment = vane_moment + damping_moment + disturbance_moment
 
         x_ddot = float(total_force[0] / self.cfg.m)
         z_ddot = float(total_force[1] / self.cfg.m)
@@ -89,18 +103,27 @@ class RigidBodySingleFan2D:
             vane_force=vane_force,
             gravity_force=gravity_force,
             drag_force=drag_force,
+            disturbance_force=disturbance_force.copy(),
             total_force=total_force,
             vane_moment=vane_moment,
             damping_moment=float(damping_moment),
+            disturbance_moment=float(disturbance_moment),
             total_moment=float(total_moment),
             x_ddot=x_ddot,
             z_ddot=z_ddot,
             theta_ddot=theta_ddot,
         )
 
-    def derivatives(self, state: np.ndarray, thrust_dot: float, vane_angle_dot: float) -> np.ndarray:
+    def derivatives(
+        self,
+        state: np.ndarray,
+        thrust_dot: float,
+        vane_angle_dot: float,
+        disturbance_force: np.ndarray | None = None,
+        disturbance_moment: float = 0.0,
+    ) -> np.ndarray:
         _x, _z, _theta, vx, vz, omega, _thrust, _vane_angle = state
-        terms = self.force_moment_breakdown(state)
+        terms = self.force_moment_breakdown(state, disturbance_force, disturbance_moment)
         return np.array(
             [
                 vx,
@@ -115,10 +138,16 @@ class RigidBodySingleFan2D:
             dtype=float,
         )
 
-    def step(self, thrust_dot: float, vane_angle_dot: float) -> np.ndarray:
+    def step(
+        self,
+        thrust_dot: float,
+        vane_angle_dot: float,
+        disturbance_force: np.ndarray | None = None,
+        disturbance_moment: float = 0.0,
+    ) -> np.ndarray:
         dt = self.cfg.dt
         x, z, theta, vx, vz, omega, thrust, vane_angle = self.state
-        terms = self.force_moment_breakdown(self.state)
+        terms = self.force_moment_breakdown(self.state, disturbance_force, disturbance_moment)
 
         vx += terms.x_ddot * dt
         vz += terms.z_ddot * dt
@@ -134,5 +163,5 @@ class RigidBodySingleFan2D:
         theta += omega * dt
 
         self.state = np.array([x, z, theta, vx, vz, omega, thrust, vane_angle], dtype=float)
-        self.last_breakdown = self.force_moment_breakdown(self.state)
+        self.last_breakdown = self.force_moment_breakdown(self.state, disturbance_force, disturbance_moment)
         return self.state.copy()

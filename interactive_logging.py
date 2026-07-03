@@ -1,0 +1,160 @@
+from __future__ import annotations
+
+import csv
+from pathlib import Path
+from time import strftime
+
+import numpy as np
+
+try:
+    from .actuators import MotorOutput, ServoOutput
+    from .cascaded_controller import RigidBodyControlOutput
+    from .rigid_body_model import ForceMomentBreakdown
+except ImportError:  # pragma: no cover - supports direct script execution
+    from actuators import MotorOutput, ServoOutput
+    from cascaded_controller import RigidBodyControlOutput
+    from rigid_body_model import ForceMomentBreakdown
+
+
+INTERACTIVE_FIELDS = [
+    "sim_time",
+    "wall_time",
+    "mode",
+    "x_cg",
+    "z_cg",
+    "theta",
+    "vx",
+    "vz",
+    "omega",
+    "thrust",
+    "vane_angle",
+    "throttle_cmd",
+    "direct_vane_cmd",
+    "theta_target",
+    "omega_target",
+    "rate_error",
+    "rate_p",
+    "rate_i",
+    "rate_d",
+    "rate_ff",
+    "desired_moment",
+    "achievable_moment",
+    "unattainable_moment",
+    "thrust_cmd",
+    "vane_angle_cmd",
+    "thrust_force_x",
+    "thrust_force_z",
+    "vane_force_x",
+    "vane_force_z",
+    "disturbance_force_x",
+    "disturbance_force_z",
+    "disturbance_moment",
+    "total_force_x",
+    "total_force_z",
+    "vane_moment",
+    "damping_moment",
+    "total_moment",
+    "motor_saturated",
+    "servo_angle_saturated",
+    "servo_rate_saturated",
+    "mixer_saturated",
+    "physics_dt",
+    "controller_dt",
+    "real_time_factor",
+]
+
+
+def interactive_row(
+    sim_time: float,
+    wall_time: float,
+    mode: str,
+    state: np.ndarray,
+    throttle_cmd: float,
+    direct_vane_cmd: float,
+    control: RigidBodyControlOutput,
+    motor: MotorOutput,
+    servo: ServoOutput,
+    forces: ForceMomentBreakdown,
+    physics_dt: float,
+    controller_dt: float,
+    real_time_factor: float,
+) -> dict[str, float | int | str]:
+    return {
+        "sim_time": float(sim_time),
+        "wall_time": float(wall_time),
+        "mode": mode,
+        "x_cg": float(state[0]),
+        "z_cg": float(state[1]),
+        "theta": float(state[2]),
+        "vx": float(state[3]),
+        "vz": float(state[4]),
+        "omega": float(state[5]),
+        "thrust": float(state[6]),
+        "vane_angle": float(state[7]),
+        "throttle_cmd": float(throttle_cmd),
+        "direct_vane_cmd": float(direct_vane_cmd),
+        "theta_target": float(control.theta_target),
+        "omega_target": float(control.omega_target),
+        "rate_error": float(control.rate_error),
+        "rate_p": float(control.rate_p),
+        "rate_i": float(control.rate_i),
+        "rate_d": float(control.rate_d),
+        "rate_ff": float(control.rate_ff),
+        "desired_moment": float(control.desired_moment),
+        "achievable_moment": float(control.mixer.achievable_moment),
+        "unattainable_moment": float(control.mixer.unattainable_moment),
+        "thrust_cmd": float(control.thrust_cmd),
+        "vane_angle_cmd": float(control.vane_angle_cmd),
+        "thrust_force_x": float(forces.thrust_force[0]),
+        "thrust_force_z": float(forces.thrust_force[1]),
+        "vane_force_x": float(forces.vane_force[0]),
+        "vane_force_z": float(forces.vane_force[1]),
+        "disturbance_force_x": float(forces.disturbance_force[0]),
+        "disturbance_force_z": float(forces.disturbance_force[1]),
+        "disturbance_moment": float(forces.disturbance_moment),
+        "total_force_x": float(forces.total_force[0]),
+        "total_force_z": float(forces.total_force[1]),
+        "vane_moment": float(forces.vane_moment),
+        "damping_moment": float(forces.damping_moment),
+        "total_moment": float(forces.total_moment),
+        "motor_saturated": int(motor.saturated),
+        "servo_angle_saturated": int(servo.angle_saturated),
+        "servo_rate_saturated": int(servo.rate_saturated),
+        "mixer_saturated": int(control.mixer.saturated),
+        "physics_dt": float(physics_dt),
+        "controller_dt": float(controller_dt),
+        "real_time_factor": float(real_time_factor),
+    }
+
+
+class InteractiveCSVLogger:
+    def __init__(self, directory: str | Path):
+        self.directory = Path(directory)
+        self.file = None
+        self.writer = None
+        self.path: Path | None = None
+
+    @property
+    def enabled(self) -> bool:
+        return self.file is not None
+
+    def start(self) -> Path:
+        self.directory.mkdir(parents=True, exist_ok=True)
+        self.path = self.directory / f"interactive_{strftime('%Y%m%d_%H%M%S')}.csv"
+        self.file = self.path.open("w", newline="", encoding="utf-8")
+        self.writer = csv.DictWriter(self.file, fieldnames=INTERACTIVE_FIELDS)
+        self.writer.writeheader()
+        return self.path
+
+    def stop(self) -> None:
+        if self.file is not None:
+            self.file.close()
+        self.file = None
+        self.writer = None
+
+    def write(self, row: dict[str, float | int | str]) -> None:
+        if self.writer is not None:
+            self.writer.writerow(row)
+
+    def close(self) -> None:
+        self.stop()

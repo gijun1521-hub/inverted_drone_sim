@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from inverted_drone_sim.actuators import FirstOrderMotor, VaneServo
 from inverted_drone_sim.cascaded_controller import AttitudeController, RatePIDController
 from inverted_drone_sim.config import RigidBodyConfig
+from inverted_drone_sim.interactive_sim import ControlMode, ManualCommands, ManualControlSystem
 from inverted_drone_sim.rigid_body_model import RigidBodySingleFan2D
 from inverted_drone_sim.singlecopter_mixer import SingleCopterMixer
 
@@ -77,6 +78,25 @@ class RigidBodyPhysicsTests(unittest.TestCase):
 
         self.assertLess(large_alpha, small_alpha)
 
+    def test_external_force_changes_acceleration_not_position_directly(self):
+        cfg = RigidBodyConfig(translational_drag=0.0, angular_damping=0.0)
+        plant = RigidBodySingleFan2D(cfg)
+        state = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+
+        terms = plant.force_moment_breakdown(state, disturbance_force=np.array([3.0, 0.0]))
+
+        self.assertAlmostEqual(state[0], 0.0)
+        self.assertGreater(terms.x_ddot, 0.0)
+
+    def test_external_moment_changes_angular_acceleration(self):
+        cfg = RigidBodyConfig(translational_drag=0.0, angular_damping=0.0)
+        plant = RigidBodySingleFan2D(cfg)
+        state = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+
+        terms = plant.force_moment_breakdown(state, disturbance_moment=0.2)
+
+        self.assertGreater(terms.theta_ddot, 0.0)
+
 
 class ActuatorAndMixerTests(unittest.TestCase):
     def test_motor_lag(self):
@@ -130,6 +150,39 @@ class ControllerArchitectureTests(unittest.TestCase):
 
         self.assertIsInstance(omega_target, float)
         self.assertLess(omega_target, 0.0)
+
+    def test_direct_mode_outputs_actuator_commands(self):
+        cfg = RigidBodyConfig()
+        control = ManualControlSystem(cfg)
+        commands = ManualCommands(throttle=0.4, direct_vane=0.1)
+        state = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+
+        output = control.compute(ControlMode.DIRECT, state, commands)
+
+        self.assertAlmostEqual(output.thrust_cmd, 0.4 * cfg.T_max)
+        self.assertAlmostEqual(output.vane_angle_cmd, 0.1)
+        self.assertAlmostEqual(output.desired_moment, 0.0)
+
+    def test_rate_mode_uses_mixer_not_direct_vane(self):
+        cfg = RigidBodyConfig()
+        control = ManualControlSystem(cfg)
+        commands = ManualCommands(throttle=0.4, direct_vane=0.2, omega_target=-1.0)
+        state = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+
+        output = control.compute(ControlMode.RATE, state, commands)
+
+        self.assertNotAlmostEqual(output.vane_angle_cmd, commands.direct_vane)
+        self.assertLess(output.desired_moment, 0.0)
+
+    def test_stabilize_mode_generates_rate_target(self):
+        cfg = RigidBodyConfig()
+        control = ManualControlSystem(cfg)
+        commands = ManualCommands(throttle=0.4, theta_target=-0.1)
+        state = np.array([0.0, 1.0, 0.1, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+
+        output = control.compute(ControlMode.STABILIZE, state, commands)
+
+        self.assertLess(output.omega_target, 0.0)
 
 
 if __name__ == "__main__":

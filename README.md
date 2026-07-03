@@ -121,3 +121,49 @@ altitude -> thrust target -> motor lag
 Outputs are written to:
 
 - `results/rigid_body_simulation.csv`
+
+## Interactive Real-Time Simulator
+
+Manual flight comes before position hold, gain sweeps, or reinforcement
+learning. Run:
+
+```bash
+python interactive_sim.py
+```
+
+This pygame app uses a fixed-step physics loop independent of rendering. It
+keeps keyboard input outside the plant: keys create actuator/controller
+commands, while disturbances enter the plant as world-frame forces and pitch
+moments.
+
+Controls:
+
+- `1`: direct actuator test
+- `2`: rate / acro-like mode
+- `3`: stabilize-like mode
+- `4`: alt-hold placeholder
+- `W/S`: increase/decrease throttle command
+- `A/D`: vane, rate, or attitude command depending on mode
+- arrow keys: continuous world-frame disturbance force
+- `Q/E`: continuous pitch disturbance moment
+- `I/O`: short force or pitch-moment impulse
+- `Space`: pause/resume
+- `N`: single physics step while paused
+- `R`: reset
+- `F1`-`F6`: reset presets from `InteractiveSimConfig` in `config.py`
+- `L`: start/stop timestamped CSV logging
+- `[` / `]`: decrease/increase simulation speed
+- `M`: toggle slow motion
+- `Backspace`: reset manual commands
+- `Esc`: quit
+
+Interactive logs are written under `results/interactive_logs/`.
+
+Replay a recorded run with:
+
+```bash
+python replay_interactive.py results/interactive_logs/<log>.csv
+```
+
+The replay tool creates an animation plus state, force/moment, and controller
+term plots under `results/replay/`.
