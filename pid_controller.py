@@ -1,11 +1,23 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
 
 try:
     from .config import DroneConfig
 except ImportError:  # pragma: no cover - supports direct script execution
     from config import DroneConfig
+
+
+@dataclass(frozen=True)
+class ControlBreakdown:
+    throttle: float
+    ax_cmd: float
+    theta_term: float
+    position_term: float
+    velocity_term: float
+    omega_term: float
 
 
 class PIDController:
@@ -39,7 +51,7 @@ class PIDController:
         self.alt_integral = 0.0
         self.last_ax_cmd = 0.0
 
-    def compute_action(self, state: np.ndarray) -> np.ndarray:
+    def compute_breakdown(self, state: np.ndarray) -> ControlBreakdown:
         x, z, theta, vx, vz, omega = state
 
         z_error = self.cfg.target_z - z
@@ -64,13 +76,23 @@ class PIDController:
         # near upright this may accelerate toward the current offset briefly,
         # which creates the lean needed to return to the target instead of
         # drifting away.
-        ax_cmd = (
-            self.Ktheta * theta_error
-            + self.Komega * omega
-            + self.Kx * x_error
-            + self.Kvx * vx
-        )
+        theta_term = self.Ktheta * theta_error
+        omega_term = self.Komega * omega
+        position_term = self.Kx * x_error
+        velocity_term = self.Kvx * vx
+        ax_cmd = theta_term + omega_term + position_term + velocity_term
         ax_cmd = float(np.clip(ax_cmd, -self.cfg.ax_cmd_max, self.cfg.ax_cmd_max))
         self.last_ax_cmd = ax_cmd
 
-        return np.array([throttle, ax_cmd], dtype=float)
+        return ControlBreakdown(
+            throttle=float(throttle),
+            ax_cmd=ax_cmd,
+            theta_term=float(theta_term),
+            position_term=float(position_term),
+            velocity_term=float(velocity_term),
+            omega_term=float(omega_term),
+        )
+
+    def compute_action(self, state: np.ndarray) -> np.ndarray:
+        terms = self.compute_breakdown(state)
+        return np.array([terms.throttle, terms.ax_cmd], dtype=float)

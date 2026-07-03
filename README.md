@@ -2,9 +2,10 @@
 
 A small Python prototype for a 2D moving-base inverted-pendulum-style drone.
 
-The first milestone is PID stabilization with matplotlib plots and a GIF
-animation. The code is kept modular so it can later be used as a Gymnasium
-environment for reinforcement learning.
+This project intentionally starts with a simple horizontal base acceleration
+command, `ax_cmd`, instead of a full aerodynamic vane model. The first goal is
+to verify sign conventions, geometry, dynamics, logging, and visualization
+before tuning gains or adding hardware-specific effects.
 
 ## Control Model
 
@@ -30,6 +31,13 @@ x_ddot = ax_cmd
 z_ddot = T / m - g
 theta_ddot = (g * sin(theta) - x_ddot * cos(theta)) / l - damping * omega
 ```
+
+Sign convention:
+
+- `theta > 0`: CG is right of the thrust point.
+- `theta < 0`: CG is left of the thrust point.
+- If `theta < 0`, attitude control should initially command `ax_cmd < 0` so
+  the thrust point moves left toward the CG.
 
 ## Setup
 
@@ -60,6 +68,21 @@ Outputs are written to `results/`:
 - `states.png`
 - `trajectory.png`
 - `pid_animation.gif`
+- `simulation.csv`
+
+The CSV includes CG position, control-term breakdowns, `theta_ddot`, and an
+`ax_saturated` flag so visual motion can be checked against the internal state.
+
+## Run Tests
+
+From the repository root:
+
+```bash
+python -m unittest discover -s inverted_drone_sim/tests
+```
+
+The tests check geometry sign conventions, upright hover acceleration, and
+attitude-only stabilization before position control is trusted.
 
 ## Optional Passive Check
 

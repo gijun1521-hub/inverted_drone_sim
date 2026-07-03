@@ -64,8 +64,9 @@ class InvertedDrone2D:
             dtype=float,
         )
 
-    def dynamics(self, state: np.ndarray, action: np.ndarray) -> np.ndarray:
-        _x, _z, theta, vx, vz, omega = state
+    def acceleration_terms(self, state: np.ndarray, action: np.ndarray) -> tuple[float, float, float, float, float]:
+        """Return thrust, x_ddot, z_ddot, theta_ddot, and clamped ax_cmd."""
+        _x, _z, theta, _vx, _vz, omega = state
         throttle, ax_cmd = self.clamp_action(action)
 
         thrust = throttle * self.cfg.T_max
@@ -75,6 +76,11 @@ class InvertedDrone2D:
             (self.cfg.g * np.sin(theta) - x_ddot * np.cos(theta)) / self.cfg.l
             - self.cfg.damping * omega
         )
+        return thrust, x_ddot, z_ddot, theta_ddot, ax_cmd
+
+    def dynamics(self, state: np.ndarray, action: np.ndarray) -> np.ndarray:
+        _x, _z, _theta, vx, vz, omega = state
+        _thrust, x_ddot, z_ddot, theta_ddot, _ax_cmd = self.acceleration_terms(state, action)
 
         return np.array([vx, vz, omega, x_ddot, z_ddot, theta_ddot], dtype=float)
 
@@ -82,16 +88,8 @@ class InvertedDrone2D:
         return self.dynamics(state, action)[3:]
 
     def step(self, action: np.ndarray) -> np.ndarray:
-        throttle, ax_cmd = self.clamp_action(action)
         x, z, theta, vx, vz, omega = self.state
-
-        thrust = throttle * self.cfg.T_max
-        x_ddot = ax_cmd
-        z_ddot = thrust / self.cfg.m - self.cfg.g
-        theta_ddot = (
-            (self.cfg.g * np.sin(theta) - x_ddot * np.cos(theta)) / self.cfg.l
-            - self.cfg.damping * omega
-        )
+        thrust, x_ddot, z_ddot, theta_ddot, ax_cmd = self.acceleration_terms(self.state, action)
 
         dt = self.cfg.dt
         vx += x_ddot * dt
