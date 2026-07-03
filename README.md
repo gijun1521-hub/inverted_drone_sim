@@ -78,7 +78,7 @@ The CSV includes CG position, control-term breakdowns, `theta_ddot`, and an
 From the repository root:
 
 ```bash
-python -m unittest discover -s inverted_drone_sim/tests
+python -m unittest discover -s tests
 ```
 
 The tests check geometry sign conventions, upright hover acceleration, and
@@ -92,3 +92,32 @@ python simulate_passive.py
 
 This runs the model with hover throttle and zero horizontal base acceleration so the initial tilt
 falls away from upright, confirming the unstable inverted-pendulum term.
+
+## Rigid-Body Single-Fan Model
+
+The moving-base model remains as a conceptual baseline. A second model is
+available for more physical single-fan work:
+
+```bash
+python simulate_rigid_body.py
+```
+
+This model uses the CG as the reference point and keeps actuator states in the
+plant state:
+
+```python
+state = [x_cg, z_cg, theta, vx, vz, omega, thrust, vane_angle]
+```
+
+It computes real force and moment terms from fan thrust, vane side-force,
+gravity, translational drag, angular damping, motor lag, servo lag/rate limits,
+and a cascaded ArduPilot-like controller:
+
+```text
+position -> theta target -> rate target -> desired moment -> vane angle
+altitude -> thrust target -> motor lag
+```
+
+Outputs are written to:
+
+- `results/rigid_body_simulation.csv`
