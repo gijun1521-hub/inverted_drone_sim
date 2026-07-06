@@ -71,6 +71,12 @@ class RigidBodyConfig:
     k_vane_side: float = 0.75
     k_vane_axial_loss: float = 1.6
     vane_model: str = "linear_legacy"
+    duct_diameter: float = 0.18
+    vane_area: float = 0.004
+    vane_count_effective: float = 2.0
+    vane_lift_slope: float = 2.0
+    vane_efficiency: float = 0.55
+    vane_axial_loss_coefficient: float = 1.6
     thrust_curve_model: str = "linear"
     thrust_curve_coefficients: tuple[float, ...] = ()
     thrust_curve_lookup_csv: str = ""

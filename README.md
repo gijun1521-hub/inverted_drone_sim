@@ -7,6 +7,11 @@ command, `ax_cmd`, instead of a full aerodynamic vane model. The first goal is
 to verify sign conventions, geometry, dynamics, logging, and visualization
 before tuning gains or adding hardware-specific effects.
 
+The current direction is analytical rather than experimentally calibrated. The
+models use nominal physical assumptions and parameter sweeps to study sign
+correctness, conservation laws, relative authority, and feasibility trends. Do
+not interpret outputs as exact flight predictions until bench data is added.
+
 ## Control Model
 
 The simulator now follows a moving-base inverted pendulum model:
@@ -51,6 +56,8 @@ pip install -r requirements.txt
 python -m pip install -r requirements.txt
 python -m unittest discover -s tests
 python validate_sim.py
+python analyze_authority.py
+python analyze_moving_mass.py
 python interactive_sim.py --params params/default_rigid_body.json
 python replay_interactive.py results/interactive_logs/<log>.csv
 ```

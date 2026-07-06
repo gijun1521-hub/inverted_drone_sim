@@ -5,6 +5,10 @@ import numpy as np
 try:
     from ..actuators import FirstOrderMotor, VaneServo
     from ..config import RigidBodyConfig
+    from ..analysis.moving_mass_sweep import sweep_rows
+    from ..analysis.compare_actuators import compare_authority
+    from ..config import MovingMassConfig
+    from ..moving_mass_model import MovingMassSingleFan2D
     from ..interactive_sim import ControlMode, ManualCommands, ManualControlSystem
     from ..rigid_body_model import RigidBodySingleFan2D
     from ..safety import check_safety
@@ -13,6 +17,10 @@ try:
 except ImportError:  # pragma: no cover
     from actuators import FirstOrderMotor, VaneServo
     from config import RigidBodyConfig
+    from analysis.moving_mass_sweep import sweep_rows
+    from analysis.compare_actuators import compare_authority
+    from config import MovingMassConfig
+    from moving_mass_model import MovingMassSingleFan2D
     from interactive_sim import ControlMode, ManualCommands, ManualControlSystem
     from rigid_body_model import RigidBodySingleFan2D
     from safety import check_safety
@@ -122,6 +130,66 @@ def long_finite_run(cfg: RigidBodyConfig) -> ScenarioResult:
     return ScenarioResult("Long finite run", finite, "state remains finite", {"final_theta": plant.state[2]})
 
 
+def reaction_only_no_external_torque(cfg: RigidBodyConfig) -> ScenarioResult:
+    mm = MovingMassSingleFan2D(MovingMassConfig(thrust=0.0, g=0.0))
+    mm.reset()
+    for _ in range(30):
+        mm.step(0.3, thrust=0.0)
+    passed = abs(mm.last_breakdown.angular_momentum) < 1e-6
+    return ScenarioResult("Analytical reaction-only momentum", passed, "angular momentum conservation", {"angular_momentum": mm.last_breakdown.angular_momentum})
+
+
+def moving_mass_offset_with_thrust(cfg: RigidBodyConfig) -> ScenarioResult:
+    mm = MovingMassSingleFan2D(MovingMassConfig())
+    state = mm.reset()
+    state[8] = 0.25
+    mm.state = state
+    mm.step(0.25)
+    passed = abs(mm.last_breakdown.cg_offset_moment) > 0.0
+    return ScenarioResult("Moving mass offset with thrust", passed, "sustained CG-offset moment", {"cg_offset_moment": mm.last_breakdown.cg_offset_moment})
+
+
+def return_to_center_reaction(cfg: RigidBodyConfig) -> ScenarioResult:
+    mm = MovingMassSingleFan2D(MovingMassConfig(thrust=0.0, g=0.0))
+    mm.reset()
+    first = 0.0
+    for _ in range(10):
+        mm.step(0.3, thrust=0.0)
+        if abs(mm.last_breakdown.reaction_moment) > abs(first):
+            first = mm.last_breakdown.reaction_moment
+    mm.state[8] = 0.3
+    mm.state[9] = 0.0
+    for _ in range(20):
+        mm.step(0.0, thrust=0.0)
+        if mm.last_breakdown.reaction_moment * first < 0.0:
+            break
+    second = mm.last_breakdown.reaction_moment
+    passed = first * second < 0.0
+    return ScenarioResult("Return-to-center reaction", passed, "reverse reaction appears", {"first": first, "second": second})
+
+
+def vane_vs_moving_mass_authority(cfg: RigidBodyConfig) -> ScenarioResult:
+    comp = compare_authority()
+    passed = comp.vane_moment > 0.0 and comp.moving_mass_reaction_moment > 0.0 and comp.moving_mass_cg_offset_moment > 0.0
+    return ScenarioResult("Vane vs moving-mass authority", passed, "all analytical authority terms positive", comp.__dict__)
+
+
+def hybrid_authority_margin(cfg: RigidBodyConfig) -> ScenarioResult:
+    comp = compare_authority()
+    desired = comp.vane_moment * 1.2
+    passed = comp.hybrid_total_moment > desired
+    return ScenarioResult("Hybrid authority margin", passed, "hybrid proxy exceeds target moment", {"desired": desired, "hybrid": comp.hybrid_total_moment})
+
+
+def sensitivity_sweep_smoke(cfg: RigidBodyConfig) -> ScenarioResult:
+    rows = sweep_rows()
+    finite = all(np.isfinite(float(row["moving_mass_to_vane_ratio"])) for row in rows)
+    low = [r for r in rows if abs(float(r["moving_mass_ratio"]) - 0.1) < 1e-9]
+    high = [r for r in rows if abs(float(r["moving_mass_ratio"]) - 0.7) < 1e-9]
+    passed = finite and np.mean([float(r["max_cg_offset"]) for r in high]) > np.mean([float(r["max_cg_offset"]) for r in low])
+    return ScenarioResult("Sensitivity sweep smoke", passed, "finite outputs and mass-ratio trend", {"rows": len(rows)})
+
+
 SCENARIOS = [
     direct_throttle_step,
     direct_vane_step,
@@ -133,4 +201,10 @@ SCENARIOS = [
     emergency_motor_cut,
     nonlinear_vane_model,
     long_finite_run,
+    reaction_only_no_external_torque,
+    moving_mass_offset_with_thrust,
+    return_to_center_reaction,
+    vane_vs_moving_mass_authority,
+    hybrid_authority_margin,
+    sensitivity_sweep_smoke,
 ]

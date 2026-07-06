@@ -14,6 +14,13 @@ from inverted_drone_sim.config import RigidBodyConfig
 from inverted_drone_sim.interactive_sim import ControlMode, InteractiveApp, ManualCommands, ManualControlSystem
 from inverted_drone_sim.math_utils import shortest_angle_error, wrap_pi
 from inverted_drone_sim.moment_allocator import MomentAllocator
+from inverted_drone_sim.moving_mass_analysis import (
+    compute_cg_offset_from_thrust_line,
+    compute_thrust_offset_moment,
+    compute_total_cg_body,
+    moving_mass_reaction_body_delta,
+    moving_mass_reaction_rate,
+)
 from inverted_drone_sim.moving_mass_model import MovingMassSingleFan2D
 from inverted_drone_sim.rigid_body_model import RigidBodySingleFan2D
 from inverted_drone_sim.safety import check_safety
@@ -95,6 +102,31 @@ class RigidBodyPhysicsTests(unittest.TestCase):
 
         self.assertAlmostEqual(pos.vane_force[0], -neg.vane_force[0])
         self.assertAlmostEqual(pos.vane_moment, -neg.vane_moment)
+
+    def test_analytical_plate_side_force_dependencies(self):
+        small = RigidBodyConfig(vane_model="analytical_plate", vane_area=0.002, duct_diameter=0.18)
+        large = RigidBodyConfig(vane_model="analytical_plate", vane_area=0.006, duct_diameter=0.18)
+        duct = RigidBodyConfig(vane_model="analytical_plate", vane_area=0.006, duct_diameter=0.3)
+        state = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, small.hover_thrust, 0.1])
+
+        f_small = RigidBodySingleFan2D(small).force_moment_breakdown(state).side_force_magnitude
+        f_large = RigidBodySingleFan2D(large).force_moment_breakdown(state).side_force_magnitude
+        f_duct = RigidBodySingleFan2D(duct).force_moment_breakdown(state).side_force_magnitude
+
+        self.assertGreater(f_large, f_small)
+        self.assertLess(f_duct, f_large)
+
+    def test_analytical_plate_small_angle_linear_and_axial_loss(self):
+        cfg = RigidBodyConfig(vane_model="analytical_plate")
+        plant = RigidBodySingleFan2D(cfg)
+        s1 = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.02])
+        s2 = s1.copy()
+        s2[7] = 0.04
+        f1 = plant.force_moment_breakdown(s1)
+        f2 = plant.force_moment_breakdown(s2)
+
+        self.assertAlmostEqual(f2.side_force_magnitude / f1.side_force_magnitude, 2.0, delta=0.02)
+        self.assertLess(f2.axial_force_magnitude, f1.axial_force_magnitude)
 
     def test_pitch_inertia_changes_angular_acceleration(self):
         small = RigidBodyConfig(H=0.30, W=0.08)
@@ -372,6 +404,18 @@ class ControllerArchitectureTests(unittest.TestCase):
 
 
 class MovingMassAndAllocationTests(unittest.TestCase):
+    def test_reaction_helper_limits(self):
+        self.assertAlmostEqual(moving_mass_reaction_body_delta(1.0, 100.0, 0.2), -0.2, delta=0.003)
+        self.assertAlmostEqual(moving_mass_reaction_body_delta(100.0, 1.0, 0.2), -0.001980198, places=6)
+        self.assertLess(moving_mass_reaction_rate(1.0, 2.0, 1.0), 0.0)
+
+    def test_cg_offset_helpers(self):
+        cg = compute_total_cg_body(1.0, 1.0, moving_mass_body=(0.2, 0.0))
+        offset = compute_cg_offset_from_thrust_line(cg)
+        self.assertGreater(offset, 0.0)
+        self.assertGreater(compute_thrust_offset_moment(10.0, offset), 0.0)
+        self.assertAlmostEqual(compute_thrust_offset_moment(0.0, offset), 0.0)
+
     def test_moving_mass_internal_motion_conserves_angular_momentum(self):
         from inverted_drone_sim.config import MovingMassConfig
 
@@ -387,7 +431,7 @@ class MovingMassAndAllocationTests(unittest.TestCase):
         plant = MovingMassSingleFan2D(MovingMassConfig(thrust=0.0, g=0.0))
         plant.reset()
         plant.step(0.3, thrust=0.0)
-        self.assertLess(plant.last_breakdown.reaction_moment_body, 0.0)
+        self.assertLess(plant.last_breakdown.reaction_moment, 0.0)
 
     def test_moving_mass_offset_shifts_cg(self):
         from inverted_drone_sim.config import MovingMassConfig

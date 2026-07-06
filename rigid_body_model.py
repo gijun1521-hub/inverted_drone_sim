@@ -96,6 +96,13 @@ class RigidBodySingleFan2D:
             axial_efficiency = float(np.clip(1.0 - self.cfg.k_vane_axial_loss * vane_angle**2, 0.0, 1.0))
             axial_force_mag = thrust * axial_efficiency
             side_force_mag = self.cfg.k_vane_side * thrust * np.sin(vane_angle)
+        elif self.cfg.vane_model == "analytical_plate":
+            disk_area = np.pi * (0.5 * self.cfg.duct_diameter) ** 2
+            area_ratio = self.cfg.vane_count_effective * self.cfg.vane_area / max(disk_area, 1e-9)
+            k_side_analytic = self.cfg.vane_lift_slope * self.cfg.vane_efficiency * area_ratio
+            axial_efficiency = float(np.clip(1.0 - self.cfg.vane_axial_loss_coefficient * vane_angle**2, 0.0, 1.0))
+            axial_force_mag = thrust * axial_efficiency
+            side_force_mag = k_side_analytic * thrust * np.sin(vane_angle)
         else:
             raise ValueError(f"unknown vane_model: {self.cfg.vane_model}")
 

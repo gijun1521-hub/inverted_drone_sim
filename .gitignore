@@ -10,5 +10,12 @@ results/*.mp4
 results/*.json
 results/*.html
 results/*.md
+results/**/*.csv
+results/**/*.png
+results/**/*.gif
+results/**/*.mp4
+results/**/*.json
+results/**/*.html
+results/**/*.md
 results/interactive_logs/
 results/replay/

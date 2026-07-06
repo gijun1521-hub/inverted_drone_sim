@@ -1,5 +1,11 @@
 # Model Assumptions
 
+This simulator is not experimentally calibrated. Physical parameters are
+nominal analytical assumptions. Results should be interpreted as trends,
+feasibility checks, and sign/conservation tests rather than exact flight
+predictions. Bench data can be added later without changing the current
+analytical workflow.
+
 ## Moving-Base Baseline
 
 The original moving-base inverted-pendulum model is kept as a conceptual
