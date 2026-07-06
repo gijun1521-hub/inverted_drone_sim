@@ -1,0 +1,5 @@
+{
+  "vane_model": "linear_legacy",
+  "thrust_curve_model": "linear",
+  "dt": 0.005
+}

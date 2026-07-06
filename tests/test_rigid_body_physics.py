@@ -1,4 +1,6 @@
 import sys
+import csv
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -11,9 +13,12 @@ from inverted_drone_sim.cascaded_controller import AttitudeController, RatePIDCo
 from inverted_drone_sim.config import RigidBodyConfig
 from inverted_drone_sim.interactive_sim import ControlMode, InteractiveApp, ManualCommands, ManualControlSystem
 from inverted_drone_sim.math_utils import shortest_angle_error, wrap_pi
+from inverted_drone_sim.moment_allocator import MomentAllocator
+from inverted_drone_sim.moving_mass_model import MovingMassSingleFan2D
 from inverted_drone_sim.rigid_body_model import RigidBodySingleFan2D
 from inverted_drone_sim.safety import check_safety
 from inverted_drone_sim.singlecopter_mixer import SingleCopterMixer
+from inverted_drone_sim.thrust_curve import ThrottleToThrustModel
 
 
 class RigidBodyPhysicsTests(unittest.TestCase):
@@ -155,8 +160,41 @@ class RigidBodyPhysicsTests(unittest.TestCase):
         self.assertTrue(status.crashed)
         self.assertEqual(status.reason, "ground contact")
 
+    def test_wind_changes_drag_direction(self):
+        tailwind_cfg = RigidBodyConfig(wind_velocity_world=(2.0, 0.0))
+        headwind_cfg = RigidBodyConfig(wind_velocity_world=(-2.0, 0.0))
+        state = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, tailwind_cfg.hover_thrust, 0.0])
+
+        tailwind = RigidBodySingleFan2D(tailwind_cfg).force_moment_breakdown(state)
+        headwind = RigidBodySingleFan2D(headwind_cfg).force_moment_breakdown(state)
+
+        self.assertGreater(tailwind.drag_force[0], 0.0)
+        self.assertLess(headwind.drag_force[0], 0.0)
+
 
 class ActuatorAndMixerTests(unittest.TestCase):
+    def test_polynomial_throttle_zero_is_not_max_thrust(self):
+        base = RigidBodyConfig()
+        cfg = RigidBodyConfig(thrust_curve_model="polynomial", thrust_curve_coefficients=(base.T_max, 0.0))
+        model = ThrottleToThrustModel(cfg)
+
+        self.assertAlmostEqual(model.thrust(0.0), 0.0)
+
+    def test_missing_polynomial_coefficients_raise(self):
+        cfg = RigidBodyConfig(thrust_curve_model="polynomial", thrust_curve_coefficients=())
+        model = ThrottleToThrustModel(cfg)
+
+        with self.assertRaisesRegex(ValueError, "requires coefficients"):
+            model.thrust(0.5)
+
+    def test_lookup_csv_requires_monotonic_throttle(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bad_lookup.csv"
+            path.write_text("throttle,thrust\n0.0,0\n0.5,2\n0.4,3\n", encoding="utf-8")
+            cfg = RigidBodyConfig(thrust_curve_model="lookup_csv", thrust_curve_lookup_csv=str(path))
+            with self.assertRaisesRegex(ValueError, "strictly increasing"):
+                ThrottleToThrustModel(cfg)
+
     def test_motor_lag(self):
         motor = FirstOrderMotor(thrust_max=100.0, time_constant=0.5)
 
@@ -245,6 +283,17 @@ class ControllerArchitectureTests(unittest.TestCase):
         app.set_mode(ControlMode.STABILIZE)
         self.assertAlmostEqual(app.commands.theta_target, wrap_pi(3.5))
 
+    def test_no_large_mode_switch_moment_spike(self):
+        app = InteractiveApp()
+        app.set_mode(ControlMode.RATE)
+        app.state[5] = 0.6
+        app.commands.omega_target = 0.6
+        before = app.control.compute(app.mode, app.state, app.commands, app.ui_cfg.controller_dt).desired_moment
+        app.set_mode(ControlMode.STABILIZE)
+        after = app.control.compute(app.mode, app.state, app.commands, app.ui_cfg.controller_dt).desired_moment
+
+        self.assertLess(abs(after - before), 0.2)
+
     def test_rate_pid_anti_windup_under_low_thrust_saturation(self):
         cfg = RigidBodyConfig()
         rate = RatePIDController(moment_limit=1.0, kp=0.4, ki=0.2, kd=0.0)
@@ -289,6 +338,72 @@ class ControllerArchitectureTests(unittest.TestCase):
         output = control.compute(ControlMode.STABILIZE, state, commands)
 
         self.assertLess(output.omega_target, 0.0)
+
+    def test_crash_logging_writes_post_step_ground_contact(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            app = InteractiveApp()
+            app.logger.directory = Path(tmp)
+            app.state = app.plant.reset(np.array([0.0, 0.26, 0.0, 0.0, -10.0, 0.0, 0.0, 0.0]))
+            app.logger.start()
+            for _ in range(10):
+                app.physics_step(wall_time=0.0, real_time_factor=1.0)
+                if app.crash_reason:
+                    break
+            path = app.logger.path
+            app.logger.stop()
+            with path.open("r", newline="", encoding="utf-8") as f:
+                rows = list(csv.DictReader(f))
+
+        self.assertTrue(rows)
+        self.assertEqual(rows[-1]["crash_reason"], "ground contact")
+
+
+class MovingMassAndAllocationTests(unittest.TestCase):
+    def test_moving_mass_internal_motion_conserves_angular_momentum(self):
+        from inverted_drone_sim.config import MovingMassConfig
+
+        plant = MovingMassSingleFan2D(MovingMassConfig(thrust=0.0, g=0.0))
+        plant.reset()
+        for _ in range(20):
+            plant.step(0.3, thrust=0.0)
+        self.assertAlmostEqual(plant.last_breakdown.angular_momentum, 0.0, places=6)
+
+    def test_positive_q_accel_creates_opposite_body_reaction(self):
+        from inverted_drone_sim.config import MovingMassConfig
+
+        plant = MovingMassSingleFan2D(MovingMassConfig(thrust=0.0, g=0.0))
+        plant.reset()
+        plant.step(0.3, thrust=0.0)
+        self.assertLess(plant.last_breakdown.reaction_moment_body, 0.0)
+
+    def test_moving_mass_offset_shifts_cg(self):
+        from inverted_drone_sim.config import MovingMassConfig
+
+        plant = MovingMassSingleFan2D(MovingMassConfig())
+        state = plant.reset()
+        cg0, _ = plant.total_cg_world(state)
+        state[8] = 0.3
+        cg1, _ = plant.total_cg_world(state)
+        self.assertNotAlmostEqual(cg0[0], cg1[0])
+
+    def test_moving_mass_limits(self):
+        from inverted_drone_sim.config import MovingMassConfig
+
+        cfg = MovingMassConfig(q_limit=0.05, q_rate_limit=0.1)
+        plant = MovingMassSingleFan2D(cfg)
+        plant.reset()
+        for _ in range(50):
+            plant.step(1.0)
+        self.assertLessEqual(abs(plant.state[8]), cfg.q_limit + 1e-12)
+        self.assertLessEqual(abs(plant.state[9]), cfg.q_rate_limit + 1e-12)
+
+    def test_vane_only_allocator_uses_mixer(self):
+        cfg = RigidBodyConfig()
+        allocator = MomentAllocator("vane_only")
+        state = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+        out = allocator.allocate(-0.1, state, cfg)
+        self.assertNotEqual(out.vane_angle_cmd, 0.0)
+        self.assertEqual(out.moment_to_moving_mass, 0.0)
 
 
 if __name__ == "__main__":

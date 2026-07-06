@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from time import perf_counter
+import argparse
 
 import numpy as np
 
@@ -12,6 +13,7 @@ try:
     from .config import InteractiveSimConfig, RigidBodyConfig
     from .interactive_logging import InteractiveCSVLogger, interactive_row
     from .math_utils import wrap_pi
+    from .params import load_rigid_body_config
     from .rigid_body_model import ForceMomentBreakdown, RigidBodySingleFan2D
     from .safety import check_safety
     from .singlecopter_mixer import MixerOutput, SingleCopterMixer
@@ -22,6 +24,7 @@ except ImportError:  # pragma: no cover - supports direct script execution
     from config import InteractiveSimConfig, RigidBodyConfig
     from interactive_logging import InteractiveCSVLogger, interactive_row
     from math_utils import wrap_pi
+    from params import load_rigid_body_config
     from rigid_body_model import ForceMomentBreakdown, RigidBodySingleFan2D
     from safety import check_safety
     from singlecopter_mixer import MixerOutput, SingleCopterMixer
@@ -167,6 +170,7 @@ class ManualControlSystem:
 
     def reset_pid_for_mode_change(self, omega_target: float, omega: float) -> None:
         self.rate.reset(initial_error=omega_target - omega)
+        self.attitude.seed_last_omega_target(omega_target)
 
 
 def _move_toward(value: float, target: float, rate: float, dt: float) -> float:
@@ -175,9 +179,9 @@ def _move_toward(value: float, target: float, rate: float, dt: float) -> float:
 
 
 class InteractiveApp:
-    def __init__(self):
-        self.rb_cfg = RigidBodyConfig(dt=0.005)
-        self.ui_cfg = InteractiveSimConfig(physics_dt=self.rb_cfg.dt, controller_dt=0.01)
+    def __init__(self, rb_cfg: RigidBodyConfig | None = None, ui_cfg: InteractiveSimConfig | None = None):
+        self.rb_cfg = rb_cfg or RigidBodyConfig(dt=0.005)
+        self.ui_cfg = ui_cfg or InteractiveSimConfig(physics_dt=self.rb_cfg.dt, controller_dt=0.01)
         self.plant = RigidBodySingleFan2D(self.rb_cfg)
         self.motor = FirstOrderMotor(self.rb_cfg.T_max, self.rb_cfg.motor_time_constant)
         self.servo = VaneServo(
@@ -222,6 +226,10 @@ class InteractiveApp:
             self.commands.omega_target = float(self.state[5])
         if mode == ControlMode.STABILIZE:
             self.commands.theta_target = float(wrap_pi(self.state[2]))
+            self.commands.omega_target = float(self.state[5])
+            self.control.attitude.reset_to_current(float(self.state[2]), float(self.state[5]))
+        if previous == ControlMode.STABILIZE and mode == ControlMode.RATE:
+            self.commands.omega_target = float(self.state[5])
         self.control.reset_pid_for_mode_change(self.commands.omega_target, float(self.state[5]))
         self.mode = mode
         self.mode_status = f"{previous.value} -> {mode.value}"
@@ -361,29 +369,6 @@ class InteractiveApp:
             )
         self.last_motor = self.motor.update(float(self.state[6]), self.last_control.thrust_cmd)
         self.last_servo = self.servo.update(float(self.state[7]), self.last_control.vane_angle_cmd)
-        self.last_forces = self.plant.force_moment_breakdown(self.state, disturbance_force, disturbance_moment)
-
-        if self.logger.enabled:
-            self.logger.write(
-                interactive_row(
-                    self.sim_time,
-                    wall_time,
-                    self.mode.value,
-                    self.state,
-                    self.commands.throttle,
-                    self.commands.direct_vane,
-                    self.last_control,
-                    self.last_motor,
-                    self.last_servo,
-                    self.last_forces,
-                    self.crash_reason,
-                    check_safety(self.state, self.rb_cfg).min_body_z,
-                    self.rb_cfg.dt,
-                    self.ui_cfg.controller_dt,
-                    real_time_factor,
-                )
-            )
-
         self.state = self.plant.step(
             self.last_motor.thrust_dot,
             self.last_servo.vane_angle_dot,
@@ -398,6 +383,27 @@ class InteractiveApp:
             self.crash_reason = safety.reason
             self.paused = True
             self.mode_status = f"auto-paused: {safety.reason}"
+        self.last_forces = self.plant.force_moment_breakdown(self.state, disturbance_force, disturbance_moment)
+        if self.logger.enabled:
+            self.logger.write(
+                interactive_row(
+                    self.sim_time,
+                    wall_time,
+                    self.mode.value,
+                    self.state,
+                    self.commands.throttle,
+                    self.commands.direct_vane,
+                    self.last_control,
+                    self.last_motor,
+                    self.last_servo,
+                    self.last_forces,
+                    self.crash_reason,
+                    safety.min_body_z,
+                    self.rb_cfg.dt,
+                    self.ui_cfg.controller_dt,
+                    real_time_factor,
+                )
+            )
         self.trace.append((float(self.state[0]), float(self.state[1])))
         if len(self.trace) > self.ui_cfg.trace_length:
             self.trace.pop(0)
@@ -522,7 +528,10 @@ class InteractiveApp:
 
 
 def main() -> None:
-    InteractiveApp().run()
+    parser = argparse.ArgumentParser(description="Run the interactive single-fan simulator.")
+    parser.add_argument("--params", default=None, help="Optional JSON parameter override file.")
+    args = parser.parse_args()
+    InteractiveApp(load_rigid_body_config(args.params)).run()
 
 
 if __name__ == "__main__":

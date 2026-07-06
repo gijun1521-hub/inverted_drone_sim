@@ -1,0 +1,6 @@
+{
+  "vane_model": "nonlinear_with_axial_loss",
+  "k_vane_side": 0.75,
+  "k_vane_axial_loss": 1.6,
+  "thrust_curve_model": "linear"
+}

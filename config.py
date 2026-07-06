@@ -76,6 +76,9 @@ class RigidBodyConfig:
     thrust_curve_lookup_csv: str = ""
     translational_drag: float = 0.10
     angular_damping: float = 0.04
+    wind_velocity_world: tuple[float, float] = (0.0, 0.0)
+    gust_force_world: tuple[float, float] = (0.0, 0.0)
+    gust_moment: float = 0.0
 
     target_x: float = 0.0
     target_z: float = 1.0
@@ -142,6 +145,35 @@ class RigidBodyConfig:
     @property
     def thrust_control_floor(self) -> float:
         return self.thrust_control_floor_factor * self.hover_thrust
+
+
+@dataclass
+class MovingMassConfig:
+    H: float = 0.50
+    W: float = 0.10
+    g: float = 9.81
+    dt: float = 0.005
+    m_body_without_battery: float = 1.0
+    m_moving: float = 0.5
+    I_body_without_battery: float = 0.025
+    I_moving_about_hinge: float = 0.004
+    moving_mass_geometry: str = "rotating"
+    q_limit: float = 0.45
+    q_rate_limit: float = 4.0
+    q_accel_limit: float = 30.0
+    q_servo_time_constant: float = 0.08
+    q_command_delay: float = 0.0
+    hinge_position_body: tuple[float, float] = (0.0, 0.15)
+    mass_center_offset_body: tuple[float, float] = (0.0, 0.12)
+    rail_axis_body: tuple[float, float] = (1.0, 0.0)
+    rail_limit: float = 0.12
+    thrust_offset_body: tuple[float, float] = (0.0, -0.25)
+    vane_offset_body: tuple[float, float] = (0.0, -0.25)
+    thrust: float = 14.715
+
+    @property
+    def m_total(self) -> float:
+        return self.m_body_without_battery + self.m_moving
 
 
 @dataclass

@@ -1,0 +1,5 @@
+{
+  "thrust_control_floor_factor": 0.35,
+  "vane_angle_max_deg": 15.0,
+  "motor_time_constant": 0.12
+}

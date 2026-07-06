@@ -19,10 +19,15 @@ class ForceMomentBreakdown:
     axial_efficiency: float
     axial_force_magnitude: float
     side_force_magnitude: float
+    thrust_application_point: np.ndarray
+    vane_application_point: np.ndarray
+    thrust_moment_arm: np.ndarray
+    vane_moment_arm: np.ndarray
     gravity_force: np.ndarray
     drag_force: np.ndarray
     disturbance_force: np.ndarray
     total_force: np.ndarray
+    thrust_moment: float
     vane_moment: float
     damping_moment: float
     disturbance_moment: float
@@ -73,7 +78,7 @@ class RigidBodySingleFan2D:
         disturbance_force: np.ndarray | None = None,
         disturbance_moment: float = 0.0,
     ) -> ForceMomentBreakdown:
-        _x, _z, theta, vx, vz, omega, thrust, vane_angle = np.asarray(state, dtype=float)
+        x, z, theta, vx, vz, omega, thrust, vane_angle = np.asarray(state, dtype=float)
         if disturbance_force is None:
             disturbance_force = np.zeros(2, dtype=float)
         else:
@@ -96,14 +101,21 @@ class RigidBodySingleFan2D:
 
         thrust_force = axial_force_mag * body_up
         vane_force = side_force_mag * body_right
+        cg = np.array([x, z], dtype=float)
+        thrust_application_point = cg.copy()
+        vane_application_point = cg - self.cfg.l * body_up
+        thrust_moment_arm = thrust_application_point - cg
+        vane_moment_arm = vane_application_point - cg
+
         gravity_force = np.array([0.0, -self.cfg.m * self.cfg.g], dtype=float)
-        drag_force = -self.cfg.translational_drag * np.array([vx, vz], dtype=float)
+        relative_velocity = np.array([vx, vz], dtype=float) - np.asarray(self.cfg.wind_velocity_world, dtype=float)
+        drag_force = -self.cfg.translational_drag * relative_velocity
         total_force = thrust_force + vane_force + gravity_force + drag_force + disturbance_force
 
-        r_vane = -self.cfg.l * body_up
-        vane_moment = float(r_vane[1] * vane_force[0] - r_vane[0] * vane_force[1])
+        thrust_moment = float(thrust_moment_arm[1] * thrust_force[0] - thrust_moment_arm[0] * thrust_force[1])
+        vane_moment = float(vane_moment_arm[1] * vane_force[0] - vane_moment_arm[0] * vane_force[1])
         damping_moment = -self.cfg.angular_damping * omega
-        total_moment = vane_moment + damping_moment + disturbance_moment
+        total_moment = thrust_moment + vane_moment + damping_moment + disturbance_moment
 
         x_ddot = float(total_force[0] / self.cfg.m)
         z_ddot = float(total_force[1] / self.cfg.m)
@@ -117,10 +129,15 @@ class RigidBodySingleFan2D:
             axial_efficiency=float(axial_efficiency),
             axial_force_magnitude=float(axial_force_mag),
             side_force_magnitude=float(side_force_mag),
+            thrust_application_point=thrust_application_point,
+            vane_application_point=vane_application_point,
+            thrust_moment_arm=thrust_moment_arm,
+            vane_moment_arm=vane_moment_arm,
             gravity_force=gravity_force,
             drag_force=drag_force,
             disturbance_force=disturbance_force.copy(),
             total_force=total_force,
+            thrust_moment=thrust_moment,
             vane_moment=vane_moment,
             damping_moment=float(damping_moment),
             disturbance_moment=float(disturbance_moment),

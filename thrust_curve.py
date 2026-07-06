@@ -28,7 +28,15 @@ class ThrottleToThrustModel:
                 thrusts.append(float(row["thrust"]))
         if len(throttles) < 2:
             raise ValueError("lookup CSV needs at least two rows")
-        return np.asarray(throttles, dtype=float), np.asarray(thrusts, dtype=float)
+        xs = np.asarray(throttles, dtype=float)
+        ys = np.asarray(thrusts, dtype=float)
+        if not np.all(np.isfinite(xs)) or not np.all(np.isfinite(ys)):
+            raise ValueError("lookup CSV contains non-finite values")
+        if np.any(np.diff(xs) <= 0.0):
+            raise ValueError("lookup CSV throttle values must be strictly increasing")
+        if xs[0] < 0.0 or xs[-1] > 1.0:
+            raise ValueError("lookup CSV throttle values must stay within [0, 1]")
+        return xs, ys
 
     def thrust(self, throttle: float) -> float:
         u = float(np.clip(throttle, 0.0, 1.0))
@@ -38,7 +46,9 @@ class ThrottleToThrustModel:
         elif model == "quadratic":
             value = self.cfg.T_max * u * u
         elif model == "polynomial":
-            coeffs = self.cfg.thrust_curve_coefficients or (0.0, self.cfg.T_max)
+            if not self.cfg.thrust_curve_coefficients:
+                raise ValueError("polynomial thrust curve requires coefficients, e.g. (T_max, 0.0)")
+            coeffs = self.cfg.thrust_curve_coefficients
             value = float(np.polyval(coeffs, u))
         elif model == "lookup_csv":
             if self.lookup is None:

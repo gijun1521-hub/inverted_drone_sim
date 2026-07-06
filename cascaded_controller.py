@@ -67,6 +67,12 @@ class AttitudeController:
     def reset(self) -> None:
         self._last_omega_target = 0.0
 
+    def seed_last_omega_target(self, value: float) -> None:
+        self._last_omega_target = float(value)
+
+    def reset_to_current(self, theta: float, omega: float) -> None:
+        self._last_omega_target = float(omega)
+
     def compute(self, theta: float, theta_target: float, dt: float) -> float:
         theta_error = shortest_angle_error(theta_target, theta)
         omega_cmd = self.kp_theta * theta_error

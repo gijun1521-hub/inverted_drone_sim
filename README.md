@@ -45,6 +45,21 @@ Sign convention:
 pip install -r requirements.txt
 ```
 
+## Developer Commands
+
+```bash
+python -m pip install -r requirements.txt
+python -m unittest discover -s tests
+python validate_sim.py
+python interactive_sim.py --params params/default_rigid_body.json
+python replay_interactive.py results/interactive_logs/<log>.csv
+```
+
+Generated CSV, plots, GIFs, videos, JSON, and HTML under `results/` are ignored
+by git. Validation writes `results/validation_summary.csv` and
+`results/validation_report.md`; interactive logging writes under
+`results/interactive_logs/`.
+
 ## Run PID Simulation
 
 From this directory:
