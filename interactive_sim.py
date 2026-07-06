@@ -605,6 +605,26 @@ class InteractiveApp:
         z_err = self.targets.target_z - z if self.mode in (ControlMode.ALT_HOLD, ControlMode.LOITER) else 0.0
         return float(x_err), float(z_err)
 
+    def vane_visual_geometry(
+        self,
+        bottom: np.ndarray,
+        body_up: np.ndarray,
+        body_right: np.ndarray,
+        actual_vane: float,
+        command_vane: float,
+    ) -> dict[str, np.ndarray | float]:
+        visual_scale = self.ui_cfg.vane_visual_scale
+        hinge = bottom - self.ui_cfg.vane_visual_offset_m * body_up
+        actual_dir = np.cos(actual_vane * visual_scale) * body_right + np.sin(actual_vane * visual_scale) * body_up
+        command_dir = np.cos(command_vane * visual_scale) * body_right + np.sin(command_vane * visual_scale) * body_up
+        return {
+            "hinge": hinge,
+            "neutral_dir": body_right,
+            "actual_dir": actual_dir,
+            "command_dir": command_dir,
+            "length": float(self.ui_cfg.vane_visual_length_m),
+        }
+
     def render(self, pygame, screen, font, small_font) -> None:
         w, h = screen.get_size()
         screen.fill((18, 20, 24))
@@ -656,26 +676,6 @@ class InteractiveApp:
         pygame.draw.circle(screen, (255, 80, 80), world_to_screen(cg), 5)
         pygame.draw.circle(screen, (20, 20, 20), world_to_screen(bottom), 5)
 
-        if self.ui_cfg.show_vane_overlay:
-            length = 0.24
-            visual_scale = self.ui_cfg.vane_visual_scale
-            neutral_dir = body_right
-            actual_dir = np.cos(vane * visual_scale) * body_right + np.sin(vane * visual_scale) * body_up
-            cmd_dir = np.cos(self.last_control.vane_angle_cmd * visual_scale) * body_right + np.sin(self.last_control.vane_angle_cmd * visual_scale) * body_up
-            hinge = bottom - 0.02 * body_up
-            pygame.draw.line(screen, (150, 150, 150), world_to_screen(hinge - 0.12 * neutral_dir), world_to_screen(hinge + 0.12 * neutral_dir), 1)
-            if self.ui_cfg.show_vane_command_ghost:
-                pygame.draw.line(screen, (210, 160, 235), world_to_screen(hinge), world_to_screen(hinge + length * cmd_dir), 2)
-            pygame.draw.line(screen, (190, 90, 230), world_to_screen(hinge), world_to_screen(hinge + length * actual_dir), 5)
-            labels = []
-            if self.last_control.mixer.saturated or self.last_servo.angle_saturated:
-                labels.append("SAT")
-            if self.last_servo.rate_saturated:
-                labels.append("RATE")
-            if self.last_control.mixer.authority_limited:
-                labels.append("AUTH")
-            vane_text = f"actual {np.rad2deg(vane):.1f} deg cmd {np.rad2deg(self.last_control.vane_angle_cmd):.1f} deg {' '.join(labels)}"
-            screen.blit(small_font.render(vane_text, True, (235, 220, 245)), world_to_screen(hinge + 0.18 * body_right - 0.12 * body_up))
 
         draw_arrow(bottom, self.last_forces.thrust_force / max(self.rb_cfg.hover_thrust, 1e-6), (245, 160, 55), 0.35)
         draw_arrow(bottom, self.last_forces.vane_force / max(self.rb_cfg.hover_thrust, 1e-6), (190, 90, 230), 0.6)
@@ -685,6 +685,35 @@ class InteractiveApp:
         if self.ui_cfg.show_theta_target_vector:
             target_up = np.array([np.sin(self.last_control.theta_target), np.cos(self.last_control.theta_target)])
             pygame.draw.line(screen, (255, 255, 255), world_to_screen(cg), world_to_screen(cg + 0.45 * target_up), 1)
+
+        if self.ui_cfg.show_vane_overlay:
+            geom = self.vane_visual_geometry(bottom, body_up, body_right, float(vane), self.last_control.vane_angle_cmd)
+            hinge = geom["hinge"]
+            neutral_dir = geom["neutral_dir"]
+            actual_dir = geom["actual_dir"]
+            cmd_dir = geom["command_dir"]
+            length = geom["length"]
+            pygame.draw.line(
+                screen,
+                (235, 235, 235),
+                world_to_screen(hinge - 0.35 * length * neutral_dir),
+                world_to_screen(hinge + 0.35 * length * neutral_dir),
+                3,
+            )
+            if self.ui_cfg.show_vane_command_ghost:
+                pygame.draw.line(screen, (220, 170, 245), world_to_screen(hinge), world_to_screen(hinge + length * cmd_dir), 3)
+            pygame.draw.line(screen, (210, 70, 245), world_to_screen(hinge), world_to_screen(hinge + length * actual_dir), 7)
+            pygame.draw.circle(screen, (245, 245, 245), world_to_screen(hinge), 4)
+            labels = []
+            if self.last_control.mixer.saturated or self.last_servo.angle_saturated:
+                labels.append("SAT")
+            if self.last_servo.rate_saturated:
+                labels.append("RATE")
+            if self.last_control.mixer.authority_limited:
+                labels.append("AUTH")
+            limit_text = " ".join(labels)
+            vane_text = f"VANE actual={np.rad2deg(vane):.1f}deg cmd={np.rad2deg(self.last_control.vane_angle_cmd):.1f}deg {limit_text}".rstrip()
+            screen.blit(small_font.render(vane_text, True, (250, 235, 255)), world_to_screen(hinge + 0.28 * body_right - 0.18 * body_up))
 
         lines = [
             "W/S throttle or climb  A/D mode stick  arrows force  Q/E moment  I/O impulse  X motor cut",

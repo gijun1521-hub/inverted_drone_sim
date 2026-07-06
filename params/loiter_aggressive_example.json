@@ -11,6 +11,8 @@
   },
   "interactive": {
     "vane_visual_scale": 2.5,
+    "vane_visual_length_m": 0.45,
+    "vane_visual_offset_m": 0.08,
     "show_vane_command_ghost": true,
     "show_target_marker": true,
     "show_loiter_error_vector": true

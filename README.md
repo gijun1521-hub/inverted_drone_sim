@@ -238,7 +238,9 @@ Vane visualization:
 - `SAT`: actuator or mixer saturation.
 - `RATE`: servo rate limit.
 - `AUTH`: mixer authority limited.
+- `SAT/RATE/AUTH` only appears when actuator or mixer limits are active.
 - `vane_visual_scale` may exaggerate the displayed angle and does not affect physics.
+- `vane_visual_length_m` and `vane_visual_offset_m` change only the overlay, not physics.
 
 The mode hierarchy is ArduCopter-inspired: Stabilize is lean-angle control, AltHold adds vertical target control, and Loiter adds horizontal position/velocity control. This is still a simplified 2D research simulator, not exact ArduPilot firmware and not experimentally calibrated.
 
@@ -253,7 +255,7 @@ Troubleshooting:
 - If `pygame` install fails on Windows, try Python 3.11.
 - If the motion looks too perfect, try `params/loiter_sluggish_example.json` or enable the zero-default noise parameters in the controller section.
 - If LOITER does not return to target, check saturation, `authority_limited`, thrust-to-weight ratio, vane authority, and gains.
-- If the vane is not visible enough, increase `interactive.vane_visual_scale` or enable `interactive.show_vane_overlay`.
+- If the vane is not visible enough, increase `interactive.vane_visual_scale`, `interactive.vane_visual_length_m`, or enable `interactive.show_vane_overlay`.
 - Unknown parameter keys are reported by section. Structured files use `rigid_body`, `interactive`, and `controller` sections; old flat rigid-body JSON still works.
 
 See also [docs/arducopter_alignment.md](docs/arducopter_alignment.md).

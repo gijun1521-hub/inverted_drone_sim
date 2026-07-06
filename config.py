@@ -287,6 +287,8 @@ class InteractiveSimConfig:
     log_directory: str = "results/interactive_logs"
 
     vane_visual_scale: float = 2.5
+    vane_visual_length_m: float = 0.45
+    vane_visual_offset_m: float = 0.08
     show_vane_command_ghost: bool = True
     show_vane_overlay: bool = True
     show_target_marker: bool = True
