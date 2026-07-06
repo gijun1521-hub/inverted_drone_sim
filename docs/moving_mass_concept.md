@@ -25,6 +25,8 @@ The first implementation prioritizes a rotating module:
 - q commands pass through lag, rate limiting, and acceleration limiting.
 - Internal q acceleration applies opposite reaction to the body.
 - Total CG is computed from body mass and moving mass position.
+- Thrust and vane forces are evaluated at configurable body-frame application
+  points for sign and architecture checks.
 
 The formulas are intended for sign and architecture tests only. The mass,
 inertia, hinge location, servo behavior, and actual force coefficients must be

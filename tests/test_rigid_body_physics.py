@@ -19,6 +19,7 @@ from inverted_drone_sim.rigid_body_model import RigidBodySingleFan2D
 from inverted_drone_sim.safety import check_safety
 from inverted_drone_sim.singlecopter_mixer import SingleCopterMixer
 from inverted_drone_sim.thrust_curve import ThrottleToThrustModel
+from inverted_drone_sim.wind import SimpleWindModel
 
 
 class RigidBodyPhysicsTests(unittest.TestCase):
@@ -170,6 +171,18 @@ class RigidBodyPhysicsTests(unittest.TestCase):
 
         self.assertGreater(tailwind.drag_force[0], 0.0)
         self.assertLess(headwind.drag_force[0], 0.0)
+
+    def test_wind_gust_impulse_has_duration(self):
+        cfg = RigidBodyConfig(gust_force_world=(3.0, 0.0), gust_moment=0.2, gust_duration_s=0.1)
+        wind = SimpleWindModel(cfg)
+
+        early = wind.disturbance_at(0.05)
+        late = wind.disturbance_at(0.2)
+
+        self.assertGreater(early.force_world[0], 0.0)
+        self.assertGreater(early.moment, 0.0)
+        self.assertAlmostEqual(late.force_world[0], 0.0)
+        self.assertAlmostEqual(late.moment, 0.0)
 
 
 class ActuatorAndMixerTests(unittest.TestCase):
@@ -396,6 +409,16 @@ class MovingMassAndAllocationTests(unittest.TestCase):
             plant.step(1.0)
         self.assertLessEqual(abs(plant.state[8]), cfg.q_limit + 1e-12)
         self.assertLessEqual(abs(plant.state[9]), cfg.q_rate_limit + 1e-12)
+
+    def test_moving_mass_vane_force_creates_moment_at_application_point(self):
+        from inverted_drone_sim.config import MovingMassConfig
+
+        cfg = MovingMassConfig()
+        plant = MovingMassSingleFan2D(cfg)
+        plant.reset()
+        plant.state[7] = 0.2
+        plant.step(0.0)
+        self.assertNotAlmostEqual(plant.last_breakdown.vane_moment, 0.0)
 
     def test_vane_only_allocator_uses_mixer(self):
         cfg = RigidBodyConfig()

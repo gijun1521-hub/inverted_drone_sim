@@ -20,6 +20,7 @@ Two vane models are available:
   axial efficiency loss. These coefficients are placeholders, not experimentally
   validated values.
 
-Wind is modeled only as constant world-frame velocity for drag relative to air.
-No ground contact bounce, duct aerodynamics, motor voltage sag, or 3D coupling is
-included yet.
+Wind is modeled as constant world-frame velocity for drag relative to air, plus
+an optional finite-duration gust force/moment for headless validation. No ground
+contact bounce, duct aerodynamics, motor voltage sag, or 3D coupling is included
+yet.

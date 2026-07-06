@@ -18,6 +18,7 @@ class MovingMassBreakdown:
     qddot_mass: float
     reaction_moment_body: float
     thrust_moment: float
+    vane_moment: float
     total_external_moment: float
     angular_momentum: float
     q_limited: bool
@@ -91,7 +92,7 @@ class MovingMassSingleFan2D:
         alpha_reaction = -(self.cfg.I_moving_about_hinge * qddot) / max(I_body_total, 1e-9)
         reaction_moment = self.cfg.I_body_without_battery * alpha_reaction
 
-        body_up, _body_right = self.body_axes(theta)
+        body_up, body_right = self.body_axes(theta)
         force = np.array([thrust * body_up[0], thrust * body_up[1] - self.cfg.m_total * self.cfg.g])
         ax, az = force / self.cfg.m_total
 
@@ -100,8 +101,13 @@ class MovingMassSingleFan2D:
         thrust_point = body_cg + self._world_from_body(theta, np.asarray(self.cfg.thrust_offset_body, dtype=float))
         arm = thrust_point - total_cg
         thrust_force = thrust * body_up
-        thrust_moment = float(arm[0] * thrust_force[1] - arm[1] * thrust_force[0])
-        alpha_external = thrust_moment / max(I_body_total, 1e-9)
+        thrust_moment = float(arm[1] * thrust_force[0] - arm[0] * thrust_force[1])
+        vane_point = body_cg + self._world_from_body(theta, np.asarray(self.cfg.vane_offset_body, dtype=float))
+        vane_arm = vane_point - total_cg
+        vane_force = 0.75 * thrust * vane_angle * body_right
+        vane_moment = float(vane_arm[1] * vane_force[0] - vane_arm[0] * vane_force[1])
+        total_external_moment = thrust_moment + vane_moment
+        alpha_external = total_external_moment / max(I_body_total, 1e-9)
 
         vx += ax * dt
         vz += az * dt
@@ -128,7 +134,8 @@ class MovingMassSingleFan2D:
             qddot_mass=qddot,
             reaction_moment_body=reaction_moment,
             thrust_moment=thrust_moment,
-            total_external_moment=thrust_moment,
+            vane_moment=vane_moment,
+            total_external_moment=total_external_moment,
             angular_momentum=float(angular_momentum),
             q_limited=q_limited,
             q_rate_limited=abs(qdot_des) >= self.cfg.q_rate_limit - 1e-9,

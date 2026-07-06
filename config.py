@@ -79,6 +79,7 @@ class RigidBodyConfig:
     wind_velocity_world: tuple[float, float] = (0.0, 0.0)
     gust_force_world: tuple[float, float] = (0.0, 0.0)
     gust_moment: float = 0.0
+    gust_duration_s: float = 0.0
 
     target_x: float = 0.0
     target_z: float = 1.0
