@@ -147,12 +147,15 @@ Controls:
 - arrow keys: continuous world-frame disturbance force
 - `Q/E`: continuous pitch disturbance moment
 - `I/O`: short force or pitch-moment impulse
+- `X`: emergency motor cut
 - `Space`: pause/resume
 - `N`: single physics step while paused
 - `R`: reset
 - `F1`-`F6`: reset presets from `InteractiveSimConfig` in `config.py`
 - `L`: start/stop timestamped CSV logging
 - `[` / `]`: decrease/increase simulation speed
+- `+` / `-`: zoom
+- `C`: toggle camera follow
 - `M`: toggle slow motion
 - `Backspace`: reset manual commands
 - `Esc`: quit
@@ -167,3 +170,16 @@ python replay_interactive.py results/interactive_logs/<log>.csv
 
 The replay tool creates an animation plus state, force/moment, and controller
 term plots under `results/replay/`.
+
+Hardening notes:
+
+- controller shaping receives explicit controller `dt`
+- attitude errors use shortest-angle wrapping via `wrap_pi`
+- mode transitions seed rate/attitude targets to avoid stale PID kicks
+- mixer reports floor-normalized command authority separately from physically
+  achievable moment at the actual thrust
+- low-thrust saturation feeds rate-PID anti-windup
+- the vane model can be `linear_legacy` or `nonlinear_with_axial_loss`
+- manual throttle commands go through a pluggable thrust-curve model
+- safety checks pause the simulator on ground contact, state limits, or
+  non-finite state values

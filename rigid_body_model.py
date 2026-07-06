@@ -16,6 +16,9 @@ class ForceMomentBreakdown:
     body_right: np.ndarray
     thrust_force: np.ndarray
     vane_force: np.ndarray
+    axial_efficiency: float
+    axial_force_magnitude: float
+    side_force_magnitude: float
     gravity_force: np.ndarray
     drag_force: np.ndarray
     disturbance_force: np.ndarray
@@ -80,9 +83,19 @@ class RigidBodySingleFan2D:
 
         body_up, body_right = self.body_axes(theta)
 
-        thrust_force = thrust * body_up
-        vane_force_mag = self.cfg.k_vane_force * thrust * vane_angle
-        vane_force = vane_force_mag * body_right
+        if self.cfg.vane_model == "linear_legacy":
+            axial_efficiency = 1.0
+            axial_force_mag = thrust
+            side_force_mag = self.cfg.k_vane_force * thrust * vane_angle
+        elif self.cfg.vane_model == "nonlinear_with_axial_loss":
+            axial_efficiency = float(np.clip(1.0 - self.cfg.k_vane_axial_loss * vane_angle**2, 0.0, 1.0))
+            axial_force_mag = thrust * axial_efficiency
+            side_force_mag = self.cfg.k_vane_side * thrust * np.sin(vane_angle)
+        else:
+            raise ValueError(f"unknown vane_model: {self.cfg.vane_model}")
+
+        thrust_force = axial_force_mag * body_up
+        vane_force = side_force_mag * body_right
         gravity_force = np.array([0.0, -self.cfg.m * self.cfg.g], dtype=float)
         drag_force = -self.cfg.translational_drag * np.array([vx, vz], dtype=float)
         total_force = thrust_force + vane_force + gravity_force + drag_force + disturbance_force
@@ -101,6 +114,9 @@ class RigidBodySingleFan2D:
             body_right=body_right,
             thrust_force=thrust_force,
             vane_force=vane_force,
+            axial_efficiency=float(axial_efficiency),
+            axial_force_magnitude=float(axial_force_mag),
+            side_force_magnitude=float(side_force_mag),
             gravity_force=gravity_force,
             drag_force=drag_force,
             disturbance_force=disturbance_force.copy(),

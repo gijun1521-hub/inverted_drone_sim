@@ -6,9 +6,11 @@ import numpy as np
 
 try:
     from .config import RigidBodyConfig
+    from .math_utils import shortest_angle_error
     from .singlecopter_mixer import MixerOutput, SingleCopterMixer
 except ImportError:  # pragma: no cover - supports direct script execution
     from config import RigidBodyConfig
+    from math_utils import shortest_angle_error
     from singlecopter_mixer import MixerOutput, SingleCopterMixer
 
 
@@ -25,6 +27,8 @@ class RigidBodyControlOutput:
     rate_i: float
     rate_d: float
     rate_ff: float
+    anti_windup_correction: float
+    integrator_inhibited: bool
     mixer: MixerOutput
 
 
@@ -63,10 +67,11 @@ class AttitudeController:
     def reset(self) -> None:
         self._last_omega_target = 0.0
 
-    def compute(self, theta: float, theta_target: float) -> float:
-        omega_cmd = self.kp_theta * (theta_target - theta)
+    def compute(self, theta: float, theta_target: float, dt: float) -> float:
+        theta_error = shortest_angle_error(theta_target, theta)
+        omega_cmd = self.kp_theta * theta_error
         omega_cmd = float(np.clip(omega_cmd, -self.cfg.omega_target_max, self.cfg.omega_target_max))
-        max_delta = self.cfg.alpha_target_max * self.cfg.dt
+        max_delta = self.cfg.alpha_target_max * dt
         omega_target = float(np.clip(omega_cmd, self._last_omega_target - max_delta, self._last_omega_target + max_delta))
         self._last_omega_target = omega_target
         return omega_target
@@ -90,10 +95,17 @@ class RatePIDController:
         self.integrator_limit = integrator_limit
         self.integrator = 0.0
         self._last_error = 0.0
+        self.last_anti_windup_correction = 0.0
+        self.last_integrator_inhibited = False
 
-    def reset(self) -> None:
+    def reset(self, initial_error: float = 0.0) -> None:
         self.integrator = 0.0
-        self._last_error = 0.0
+        self._last_error = initial_error
+        self.last_anti_windup_correction = 0.0
+        self.last_integrator_inhibited = False
+
+    def reset_derivative(self, initial_error: float = 0.0) -> None:
+        self._last_error = initial_error
 
     def compute(self, omega_target: float, omega: float, dt: float) -> tuple[float, float, float, float, float, float]:
         error = omega_target - omega
@@ -103,7 +115,9 @@ class RatePIDController:
         p = self.kp * error
         d = self.kd * derivative
         ff = self.kff * omega_target
-        candidate_i = self.integrator + self.ki * error * dt
+        candidate_i = self.integrator
+        if not self.last_integrator_inhibited:
+            candidate_i += self.ki * error * dt
 
         unclipped = p + candidate_i + d + ff
         desired_moment = float(np.clip(unclipped, -self.moment_limit, self.moment_limit))
@@ -113,6 +127,19 @@ class RatePIDController:
 
         desired_moment = float(np.clip(p + self.integrator + d + ff, -self.moment_limit, self.moment_limit))
         return desired_moment, error, p, self.integrator, d, ff
+
+    def apply_mixer_feedback(self, desired_moment: float, mixer: MixerOutput, dt: float, back_calculation_gain: float = 0.25) -> None:
+        error = mixer.physically_achievable_moment - desired_moment
+        self.last_anti_windup_correction = float(back_calculation_gain * error)
+        self.last_integrator_inhibited = bool(mixer.saturated and np.sign(error) != np.sign(desired_moment))
+        if mixer.saturated:
+            self.integrator = float(
+                np.clip(
+                    self.integrator + self.last_anti_windup_correction * dt,
+                    -self.integrator_limit,
+                    self.integrator_limit,
+                )
+            )
 
 
 class ArduPilotLikeController:
@@ -129,13 +156,15 @@ class ArduPilotLikeController:
         self.attitude.reset()
         self.rate.reset()
 
-    def compute(self, state: np.ndarray) -> RigidBodyControlOutput:
+    def compute(self, state: np.ndarray, controller_dt: float | None = None) -> RigidBodyControlOutput:
+        dt = controller_dt if controller_dt is not None else self.cfg.dt
         x, z, theta, vx, vz, omega, thrust, _vane_angle = state
         ax_target, theta_target = self.position.compute(x, vx)
         thrust_cmd = self.altitude.compute(z, vz, theta)
-        omega_target = self.attitude.compute(theta, theta_target)
-        desired_moment, rate_error, p, i, d, ff = self.rate.compute(omega_target, omega, self.cfg.dt)
+        omega_target = self.attitude.compute(theta, theta_target, dt)
+        desired_moment, rate_error, p, i, d, ff = self.rate.compute(omega_target, omega, dt)
         mixer_output = self.mixer.mix(desired_moment, thrust)
+        self.rate.apply_mixer_feedback(desired_moment, mixer_output, dt)
 
         return RigidBodyControlOutput(
             thrust_cmd=thrust_cmd,
@@ -149,5 +178,7 @@ class ArduPilotLikeController:
             rate_i=i,
             rate_d=d,
             rate_ff=ff,
+            anti_windup_correction=self.rate.last_anti_windup_correction,
+            integrator_inhibited=self.rate.last_integrator_inhibited,
             mixer=mixer_output,
         )

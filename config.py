@@ -68,6 +68,12 @@ class RigidBodyConfig:
     servo_delay: float = 0.0
 
     k_vane_force: float = 0.75
+    k_vane_side: float = 0.75
+    k_vane_axial_loss: float = 1.6
+    vane_model: str = "linear_legacy"
+    thrust_curve_model: str = "linear"
+    thrust_curve_coefficients: tuple[float, ...] = ()
+    thrust_curve_lookup_csv: str = ""
     translational_drag: float = 0.10
     angular_damping: float = 0.04
 
@@ -81,6 +87,13 @@ class RigidBodyConfig:
     alpha_target_max: float = 30.0
     thrust_control_floor_factor: float = 0.20
     attitude_priority_thrust_mixing: bool = False
+
+    x_limit_abs: float = 8.0
+    z_limit_min: float = -0.5
+    z_limit_max: float = 8.0
+    theta_limit_abs: float = 4.0 * 3.141592653589793
+    velocity_limit_abs: float = 30.0
+    omega_limit_abs: float = 60.0
 
     @property
     def l(self) -> float:
@@ -166,6 +179,9 @@ class InteractiveSimConfig:
     impulse_duration_s: float = 0.15
 
     pixels_per_meter: float = 180.0
+    zoom_step: float = 1.15
+    min_pixels_per_meter: float = 60.0
+    max_pixels_per_meter: float = 420.0
     trace_length: int = 900
     log_directory: str = "results/interactive_logs"
 

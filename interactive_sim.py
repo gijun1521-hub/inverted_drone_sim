@@ -11,15 +11,21 @@ try:
     from .cascaded_controller import AttitudeController, RatePIDController, RigidBodyControlOutput
     from .config import InteractiveSimConfig, RigidBodyConfig
     from .interactive_logging import InteractiveCSVLogger, interactive_row
+    from .math_utils import wrap_pi
     from .rigid_body_model import ForceMomentBreakdown, RigidBodySingleFan2D
+    from .safety import check_safety
     from .singlecopter_mixer import MixerOutput, SingleCopterMixer
+    from .thrust_curve import ThrottleToThrustModel
 except ImportError:  # pragma: no cover - supports direct script execution
     from actuators import FirstOrderMotor, MotorOutput, ServoOutput, VaneServo
     from cascaded_controller import AttitudeController, RatePIDController, RigidBodyControlOutput
     from config import InteractiveSimConfig, RigidBodyConfig
     from interactive_logging import InteractiveCSVLogger, interactive_row
+    from math_utils import wrap_pi
     from rigid_body_model import ForceMomentBreakdown, RigidBodySingleFan2D
+    from safety import check_safety
     from singlecopter_mixer import MixerOutput, SingleCopterMixer
+    from thrust_curve import ThrottleToThrustModel
 
 
 class ControlMode(str, Enum):
@@ -69,7 +75,7 @@ class Disturbance:
 
 
 def _dummy_mixer_output() -> MixerOutput:
-    return MixerOutput(0.0, 0.0, 0.0, 0.0, False, 0.0, 0.0)
+    return MixerOutput(0.0, 0.0, 0.0, 0.0, 0.0, False, False, False, 0.0, 0.0, 0.0)
 
 
 def _control_output(
@@ -83,6 +89,8 @@ def _control_output(
     i: float = 0.0,
     d: float = 0.0,
     ff: float = 0.0,
+    anti_windup_correction: float = 0.0,
+    integrator_inhibited: bool = False,
     mixer: MixerOutput | None = None,
 ) -> RigidBodyControlOutput:
     return RigidBodyControlOutput(
@@ -97,6 +105,8 @@ def _control_output(
         rate_i=float(i),
         rate_d=float(d),
         rate_ff=float(ff),
+        anti_windup_correction=float(anti_windup_correction),
+        integrator_inhibited=bool(integrator_inhibited),
         mixer=mixer or _dummy_mixer_output(),
     )
 
@@ -108,6 +118,7 @@ class ManualControlSystem:
         self.attitude = AttitudeController(rb_cfg)
         self.rate = RatePIDController(moment_limit=moment_limit)
         self.mixer = SingleCopterMixer(rb_cfg.k_moment, rb_cfg.vane_angle_max, rb_cfg.thrust_control_floor)
+        self.thrust_curve = ThrottleToThrustModel(rb_cfg)
 
     def reset(self) -> None:
         self.attitude.reset()
@@ -120,16 +131,16 @@ class ManualControlSystem:
         commands: ManualCommands,
         controller_dt: float | None = None,
     ) -> RigidBodyControlOutput:
-        thrust_cmd = commands.throttle * self.cfg.T_max
+        thrust_cmd = self.thrust_curve.thrust(commands.throttle)
         if mode == ControlMode.DIRECT:
             return _control_output(thrust_cmd, commands.direct_vane)
 
         omega_target = commands.omega_target
         theta_target = commands.theta_target
         if mode == ControlMode.STABILIZE:
-            omega_target = self.attitude.compute(theta=float(state[2]), theta_target=theta_target)
+            omega_target = self.attitude.compute(theta=float(state[2]), theta_target=theta_target, dt=controller_dt or self.cfg.dt)
         elif mode == ControlMode.ALT_HOLD:
-            omega_target = self.attitude.compute(theta=float(state[2]), theta_target=theta_target)
+            omega_target = self.attitude.compute(theta=float(state[2]), theta_target=theta_target, dt=controller_dt or self.cfg.dt)
 
         desired_moment, rate_error, p, i, d, ff = self.rate.compute(
             omega_target,
@@ -137,6 +148,7 @@ class ManualControlSystem:
             controller_dt if controller_dt is not None else self.cfg.dt,
         )
         mixer = self.mixer.mix(desired_moment, float(state[6]))
+        self.rate.apply_mixer_feedback(desired_moment, mixer, controller_dt if controller_dt is not None else self.cfg.dt)
         return _control_output(
             thrust_cmd,
             mixer.vane_angle_cmd,
@@ -148,8 +160,13 @@ class ManualControlSystem:
             i=i,
             d=d,
             ff=ff,
+            anti_windup_correction=self.rate.last_anti_windup_correction,
+            integrator_inhibited=self.rate.last_integrator_inhibited,
             mixer=mixer,
         )
+
+    def reset_pid_for_mode_change(self, omega_target: float, omega: float) -> None:
+        self.rate.reset(initial_error=omega_target - omega)
 
 
 def _move_toward(value: float, target: float, rate: float, dt: float) -> float:
@@ -173,7 +190,8 @@ class InteractiveApp:
         )
         self.control = ManualControlSystem(self.rb_cfg)
         self.mode = ControlMode.DIRECT
-        self.commands = ManualCommands(throttle=self.rb_cfg.hover_thrust / self.rb_cfg.T_max)
+        self.thrust_curve = ThrottleToThrustModel(self.rb_cfg)
+        self.commands = ManualCommands(throttle=self.thrust_curve.throttle_for_hover())
         self.disturbance = Disturbance(force=np.zeros(2), moment=0.0)
         self.logger = InteractiveCSVLogger(self.ui_cfg.log_directory)
 
@@ -183,6 +201,12 @@ class InteractiveApp:
         self.paused = False
         self.step_once = False
         self.slow_motion = False
+        self.emergency_cut = False
+        self.crash_reason = ""
+        self.mode_status = "ready"
+        self.camera_center = np.array([0.0, self.rb_cfg.target_z], dtype=float)
+        self.camera_follow = True
+        self.measured_real_time_factor = 0.0
         self.trace: list[tuple[float, float]] = []
         self.controller_time_remaining = 0.0
         self.last_control = _control_output(self.rb_cfg.hover_thrust, 0.0)
@@ -190,15 +214,30 @@ class InteractiveApp:
         self.last_servo = ServoOutput(0.0, 0.0, 0.0, False, False)
         self.last_forces = self.plant.force_moment_breakdown(self.state)
 
+    def set_mode(self, mode: ControlMode) -> None:
+        if mode == self.mode:
+            return
+        previous = self.mode
+        if previous == ControlMode.DIRECT and mode == ControlMode.RATE:
+            self.commands.omega_target = float(self.state[5])
+        if mode == ControlMode.STABILIZE:
+            self.commands.theta_target = float(wrap_pi(self.state[2]))
+        self.control.reset_pid_for_mode_change(self.commands.omega_target, float(self.state[5]))
+        self.mode = mode
+        self.mode_status = f"{previous.value} -> {mode.value}"
+
     def reset(self, preset_key: str = "F1") -> None:
         preset = self.ui_cfg.presets.get(preset_key, self.ui_cfg.presets["F1"])
         self.state = self.plant.reset(np.array(preset.state, dtype=float))
         self.control.reset()
         self.servo.reset()
-        self.commands.zero(self.rb_cfg.hover_thrust / self.rb_cfg.T_max)
+        self.commands.zero(self.thrust_curve.throttle_for_hover())
         self.disturbance = Disturbance(force=np.zeros(2), moment=0.0)
         self.sim_time = 0.0
         self.controller_time_remaining = 0.0
+        self.emergency_cut = False
+        self.crash_reason = ""
+        self.mode_status = f"reset: {preset.name}"
         self.trace.clear()
 
     def handle_events(self, pygame) -> bool:
@@ -220,21 +259,38 @@ class InteractiveApp:
                     else:
                         self.logger.start()
                 elif event.key == pygame.K_BACKSPACE:
-                    self.commands.zero(self.rb_cfg.hover_thrust / self.rb_cfg.T_max)
+                    self.commands.zero(self.thrust_curve.throttle_for_hover())
+                    self.emergency_cut = False
                 elif event.key == pygame.K_1:
-                    self.mode = ControlMode.DIRECT
+                    self.set_mode(ControlMode.DIRECT)
                 elif event.key == pygame.K_2:
-                    self.mode = ControlMode.RATE
+                    self.set_mode(ControlMode.RATE)
                 elif event.key == pygame.K_3:
-                    self.mode = ControlMode.STABILIZE
+                    self.set_mode(ControlMode.STABILIZE)
                 elif event.key == pygame.K_4:
-                    self.mode = ControlMode.ALT_HOLD
+                    self.set_mode(ControlMode.ALT_HOLD)
                 elif event.key == pygame.K_LEFTBRACKET:
                     self.speed = max(self.ui_cfg.min_speed, self.speed - self.ui_cfg.speed_step)
                 elif event.key == pygame.K_RIGHTBRACKET:
                     self.speed = min(self.ui_cfg.max_speed, self.speed + self.ui_cfg.speed_step)
                 elif event.key == pygame.K_m:
                     self.slow_motion = not self.slow_motion
+                elif event.key == pygame.K_x:
+                    self.emergency_cut = not self.emergency_cut
+                    self.mode_status = "emergency motor cut" if self.emergency_cut else "motor cut released"
+                elif event.key in (pygame.K_EQUALS, pygame.K_PLUS):
+                    self.ui_cfg.pixels_per_meter = min(
+                        self.ui_cfg.max_pixels_per_meter,
+                        self.ui_cfg.pixels_per_meter * self.ui_cfg.zoom_step,
+                    )
+                elif event.key == pygame.K_MINUS:
+                    self.ui_cfg.pixels_per_meter = max(
+                        self.ui_cfg.min_pixels_per_meter,
+                        self.ui_cfg.pixels_per_meter / self.ui_cfg.zoom_step,
+                    )
+                elif event.key == pygame.K_c:
+                    self.camera_follow = not self.camera_follow
+                    self.mode_status = "camera follow on" if self.camera_follow else "camera follow off"
                 elif event.key in (pygame.K_F1, pygame.K_F2, pygame.K_F3, pygame.K_F4, pygame.K_F5, pygame.K_F6):
                     self.reset(f"F{event.key - pygame.K_F1 + 1}")
                 elif event.key == pygame.K_i:
@@ -295,6 +351,14 @@ class InteractiveApp:
                 self.ui_cfg.controller_dt,
             )
             self.controller_time_remaining += self.ui_cfg.controller_dt
+        if self.emergency_cut:
+            self.last_control = _control_output(
+                0.0,
+                self.last_control.vane_angle_cmd,
+                theta_target=self.last_control.theta_target,
+                omega_target=self.last_control.omega_target,
+                mixer=self.last_control.mixer,
+            )
         self.last_motor = self.motor.update(float(self.state[6]), self.last_control.thrust_cmd)
         self.last_servo = self.servo.update(float(self.state[7]), self.last_control.vane_angle_cmd)
         self.last_forces = self.plant.force_moment_breakdown(self.state, disturbance_force, disturbance_moment)
@@ -312,6 +376,8 @@ class InteractiveApp:
                     self.last_motor,
                     self.last_servo,
                     self.last_forces,
+                    self.crash_reason,
+                    check_safety(self.state, self.rb_cfg).min_body_z,
                     self.rb_cfg.dt,
                     self.ui_cfg.controller_dt,
                     real_time_factor,
@@ -327,6 +393,11 @@ class InteractiveApp:
         self.disturbance.tick(self.rb_cfg.dt)
         self.sim_time += self.rb_cfg.dt
         self.controller_time_remaining -= self.rb_cfg.dt
+        safety = check_safety(self.state, self.rb_cfg)
+        if safety.crashed:
+            self.crash_reason = safety.reason
+            self.paused = True
+            self.mode_status = f"auto-paused: {safety.reason}"
         self.trace.append((float(self.state[0]), float(self.state[1])))
         if len(self.trace) > self.ui_cfg.trace_length:
             self.trace.pop(0)
@@ -336,7 +407,9 @@ class InteractiveApp:
         screen.fill((18, 20, 24))
 
         scale = self.ui_cfg.pixels_per_meter
-        origin = np.array([w * 0.5, h * 0.78])
+        if self.camera_follow:
+            self.camera_center = np.array([self.state[0], self.state[1]], dtype=float)
+        origin = np.array([w * 0.5, h * 0.58]) - np.array([self.camera_center[0] * scale, -self.camera_center[1] * scale])
 
         def world_to_screen(p):
             p = np.asarray(p, dtype=float)
@@ -381,19 +454,20 @@ class InteractiveApp:
         pygame.draw.line(screen, (255, 255, 255), world_to_screen(cg), world_to_screen(cg + 0.45 * target_up), 1)
 
         lines = [
-            "W/S throttle  A/D pitch cmd  arrows force  Q/E moment  I/O impulse",
-            "1 direct  2 rate  3 stabilize  Space pause  N step  R reset  L log  M slow  [/]",
-            f"t={self.sim_time:6.2f}s  speed={self.speed:.2f}x{' slow' if self.slow_motion else ''}  mode={self.mode.value}  paused={self.paused}",
+            "W/S throttle  A/D pitch cmd  arrows force  Q/E moment  I/O impulse  X motor cut",
+            "1 direct  2 rate  3 stabilize  Space pause  N step  R reset  L log  M slow  [/] speed  +/- zoom  C camera",
+            f"t={self.sim_time:6.2f}s  requested={self.speed:.2f}x measured={self.measured_real_time_factor:.2f}x{' slow' if self.slow_motion else ''}  mode={self.mode.value}  paused={self.paused}",
             f"x={x: .2f} z={z: .2f}  vx={self.state[3]: .2f} vz={self.state[4]: .2f}",
             f"theta={np.rad2deg(theta): .2f} deg  omega={np.rad2deg(self.state[5]): .1f} deg/s",
             f"throttle_cmd={self.commands.throttle:.2f} thrust={thrust:.2f} N",
             f"theta_t={np.rad2deg(self.last_control.theta_target): .1f} deg  omega_t={np.rad2deg(self.last_control.omega_target): .1f} deg/s",
-            f"moment req={self.last_control.desired_moment:.3f} ach={self.last_control.mixer.achievable_moment:.3f}",
+            f"moment req={self.last_control.desired_moment:.3f} phys_ach={self.last_control.mixer.physically_achievable_moment:.3f} floor_ach={self.last_control.mixer.achievable_moment:.3f}",
             f"vane cmd={np.rad2deg(self.last_control.vane_angle_cmd): .1f} deg actual={np.rad2deg(vane): .1f} deg",
-            f"PID P/I/D/FF={self.last_control.rate_p:.3f}/{self.last_control.rate_i:.3f}/{self.last_control.rate_d:.3f}/{self.last_control.rate_ff:.3f}",
+            f"PID P/I/D/FF={self.last_control.rate_p:.3f}/{self.last_control.rate_i:.3f}/{self.last_control.rate_d:.3f}/{self.last_control.rate_ff:.3f} AW={self.last_control.anti_windup_correction:.3f} inhibit={int(self.last_control.integrator_inhibited)}",
             f"dist F=({self.last_forces.disturbance_force[0]:.1f},{self.last_forces.disturbance_force[1]:.1f}) N M={self.last_forces.disturbance_moment:.2f} Nm impulse={self.disturbance.impulse_time_remaining:.2f}s",
             f"energy={total_energy:.2f} J  dt={self.rb_cfg.dt:.4f}s controller_dt={self.ui_cfg.controller_dt:.4f}s",
-            f"sat motor={int(self.last_motor.saturated)} servo_angle={int(self.last_servo.angle_saturated)} servo_rate={int(self.last_servo.rate_saturated)} mixer={int(self.last_control.mixer.saturated)} log={int(self.logger.enabled)}",
+            f"sat motor={int(self.last_motor.saturated)} servo_angle={int(self.last_servo.angle_saturated)} servo_rate={int(self.last_servo.rate_saturated)} mixer_angle={int(self.last_control.mixer.angle_saturated)} authority={int(self.last_control.mixer.authority_limited)} log={int(self.logger.enabled)}",
+            f"status={self.mode_status} crash={self.crash_reason or '-'} camera_follow={int(self.camera_follow)} zoom={self.ui_cfg.pixels_per_meter:.0f}px/m",
             "arrow scale: thrust/vane per hover thrust; total/disturbance shown only visually scaled",
         ]
         y = 12
@@ -434,9 +508,11 @@ class InteractiveApp:
                 accumulator += self.rb_cfg.dt
                 self.step_once = False
 
+            sim_before = self.sim_time
             while accumulator >= self.rb_cfg.dt:
                 self.physics_step(now, factor)
                 accumulator -= self.rb_cfg.dt
+            self.measured_real_time_factor = (self.sim_time - sim_before) / max(wall_dt, 1e-6)
 
             self.render(pygame, screen, font, small_font)
             clock.tick(self.ui_cfg.render_rate)
