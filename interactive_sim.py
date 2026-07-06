@@ -600,6 +600,11 @@ class InteractiveApp:
         if len(self.trace) > self.ui_cfg.trace_length:
             self.trace.pop(0)
 
+    def render_errors(self, x: float, z: float) -> tuple[float, float]:
+        x_err = self.targets.target_x - x if self.mode == ControlMode.LOITER else 0.0
+        z_err = self.targets.target_z - z if self.mode in (ControlMode.ALT_HOLD, ControlMode.LOITER) else 0.0
+        return float(x_err), float(z_err)
+
     def render(self, pygame, screen, font, small_font) -> None:
         w, h = screen.get_size()
         screen.fill((18, 20, 24))
@@ -628,6 +633,7 @@ class InteractiveApp:
             pygame.draw.lines(screen, (70, 130, 200), False, [world_to_screen(p) for p in self.trace], 1)
 
         x, z, theta, _vx, _vz, _omega, thrust, vane = self.state
+        x_err, z_err = self.render_errors(float(x), float(z))
         translational_energy = 0.5 * self.rb_cfg.m * (self.state[3] ** 2 + self.state[4] ** 2)
         rotational_energy = 0.5 * self.rb_cfg.Iyy * self.state[5] ** 2
         potential_energy = self.rb_cfg.m * self.rb_cfg.g * z
