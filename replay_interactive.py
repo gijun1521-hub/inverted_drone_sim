@@ -39,6 +39,10 @@ def save_state_plots(data: dict[str, np.ndarray], output_dir: Path) -> Path:
     fig, axes = plt.subplots(4, 1, figsize=(11, 10), sharex=True)
     axes[0].plot(t, data["x_cg"], label="x_cg")
     axes[0].plot(t, data["z_cg"], label="z_cg")
+    if "target_x" in data:
+        axes[0].plot(t, data["target_x"], "--", label="target_x")
+    if "target_z" in data:
+        axes[0].plot(t, data["target_z"], "--", label="target_z")
     axes[0].set_ylabel("position [m]")
     axes[0].legend()
     axes[0].grid(True)
@@ -58,6 +62,10 @@ def save_state_plots(data: dict[str, np.ndarray], output_dir: Path) -> Path:
 
     axes[3].plot(t, data["thrust"], label="thrust")
     axes[3].plot(t, np.rad2deg(data["vane_angle"]), label="vane [deg]")
+    if "vane_angle_cmd" in data:
+        axes[3].plot(t, np.rad2deg(data["vane_angle_cmd"]), "--", label="vane cmd [deg]")
+    if "mixer_saturated" in data:
+        axes[3].plot(t, data["mixer_saturated"] * max(np.max(data["thrust"]), 1.0), ":", label="mixer saturated")
     axes[3].set_xlabel("time [s]")
     axes[3].legend()
     axes[3].grid(True)
@@ -144,6 +152,7 @@ def save_animation(data: dict[str, np.ndarray], output_dir: Path, fps: int = 30)
     ax.add_patch(body)
     trace, = ax.plot([], [], color="tab:gray", lw=1)
     cg_dot, = ax.plot([], [], "o", color="tab:red")
+    target_dot, = ax.plot([], [], "x", color="tab:orange")
     time_text = ax.text(0.02, 0.96, "", transform=ax.transAxes, va="top")
 
     def update(frame_i: int):
@@ -159,8 +168,10 @@ def save_animation(data: dict[str, np.ndarray], output_dir: Path, fps: int = 30)
         body.set_xy(corners)
         trace.set_data(x[: i + 1], z[: i + 1])
         cg_dot.set_data([cg[0]], [cg[1]])
+        if "target_x" in data and "target_z" in data:
+            target_dot.set_data([data["target_x"][i]], [data["target_z"][i]])
         time_text.set_text(f"t={t[i]:.2f}s")
-        return body, trace, cg_dot, time_text
+        return body, trace, cg_dot, target_dot, time_text
 
     ani = FuncAnimation(fig, update, frames=len(idx), interval=1000 / fps, blit=True)
     path = output_dir / "interactive_replay.gif"

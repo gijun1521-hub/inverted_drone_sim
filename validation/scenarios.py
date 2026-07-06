@@ -4,24 +4,24 @@ import numpy as np
 
 try:
     from ..actuators import FirstOrderMotor, VaneServo
-    from ..config import RigidBodyConfig
+    from ..config import ControllerConfig, RigidBodyConfig
     from ..analysis.moving_mass_sweep import sweep_rows
     from ..analysis.compare_actuators import compare_authority
     from ..config import MovingMassConfig
     from ..moving_mass_model import MovingMassSingleFan2D
-    from ..interactive_sim import ControlMode, ManualCommands, ManualControlSystem
+    from ..interactive_sim import ControlMode, LoiterInputShaper, ManualCommands, ManualControlSystem, RuntimeTargets
     from ..rigid_body_model import RigidBodySingleFan2D
     from ..safety import check_safety
     from ..singlecopter_mixer import SingleCopterMixer
     from .metrics import ScenarioResult
 except ImportError:  # pragma: no cover
     from actuators import FirstOrderMotor, VaneServo
-    from config import RigidBodyConfig
+    from config import ControllerConfig, RigidBodyConfig
     from analysis.moving_mass_sweep import sweep_rows
     from analysis.compare_actuators import compare_authority
     from config import MovingMassConfig
     from moving_mass_model import MovingMassSingleFan2D
-    from interactive_sim import ControlMode, ManualCommands, ManualControlSystem
+    from interactive_sim import ControlMode, LoiterInputShaper, ManualCommands, ManualControlSystem, RuntimeTargets
     from rigid_body_model import RigidBodySingleFan2D
     from safety import check_safety
     from singlecopter_mixer import SingleCopterMixer
@@ -190,11 +190,137 @@ def sensitivity_sweep_smoke(cfg: RigidBodyConfig) -> ScenarioResult:
     return ScenarioResult("Sensitivity sweep smoke", passed, "finite outputs and mass-ratio trend", {"rows": len(rows)})
 
 
+
+def loiter_mode_capture(cfg: RigidBodyConfig) -> ScenarioResult:
+    targets = RuntimeTargets()
+    state = np.array([1.7, 2.3, 0.1, 0.4, -0.2, 0.0, cfg.hover_thrust, 0.0])
+    targets.capture(state)
+    passed = abs(targets.target_x - state[0]) < 1e-9 and abs(targets.target_z - state[1]) < 1e-9
+    return ScenarioResult("loiter_mode_capture", passed, "LOITER target captures current x/z", {"target_x": targets.target_x, "target_z": targets.target_z})
+
+
+def loiter_stick_move_then_release(cfg: RigidBodyConfig) -> ScenarioResult:
+    ccfg = ControllerConfig(loit_brk_delay_s=0.05)
+    shaper = LoiterInputShaper(ccfg)
+    dt = 0.02
+    held = [shaper.update(1.0, dt) for _ in range(60)]
+    braking_seen = False
+    released = []
+    for _ in range(140):
+        released.append(shaper.update(0.0, dt))
+        braking_seen = braking_seen or shaper.braking_active
+    passed = max(held) > 0.2 and braking_seen and abs(released[-1]) < abs(held[-1])
+    return ScenarioResult("loiter_stick_move_then_release", passed, "desired_vx ramps, braking activates, and speed decays", {"held_vx": held[-1], "final_vx": released[-1], "braking": int(braking_seen)})
+
+
+def loiter_position_error_to_velocity(cfg: RigidBodyConfig) -> ScenarioResult:
+    control = ManualControlSystem(cfg, ControllerConfig())
+    targets = RuntimeTargets(target_x=2.0, target_z=1.0)
+    state = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+    out = control.compute(ControlMode.LOITER, state, ManualCommands(0.4), cfg.dt, targets)
+    return ScenarioResult("loiter_position_error_to_velocity", out.ax_target > 0.0, "positive x error requests positive acceleration", {"desired_ax": out.ax_target})
+
+
+def loiter_velocity_error_to_acceleration(cfg: RigidBodyConfig) -> ScenarioResult:
+    control = ManualControlSystem(cfg, ControllerConfig())
+    targets = RuntimeTargets(target_x=0.0, target_z=1.0, desired_vx=0.0)
+    state = np.array([0.0, 1.0, 0.0, 1.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+    out = control.compute(ControlMode.LOITER, state, ManualCommands(0.4), cfg.dt, targets)
+    return ScenarioResult("loiter_velocity_error_to_acceleration", out.ax_target < 0.0, "positive velocity error requests braking acceleration", {"desired_ax": out.ax_target})
+
+
+def loiter_acceleration_to_lean(cfg: RigidBodyConfig) -> ScenarioResult:
+    ccfg = ControllerConfig(psc_accel_xy_max_mss=20.0, loit_angle_max_deg=5.0, atc_angle_max_deg=20.0)
+    control = ManualControlSystem(cfg, ccfg)
+    targets = RuntimeTargets(target_x=50.0, target_z=1.0)
+    state = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+    out = control.compute(ControlMode.LOITER, state, ManualCommands(0.4), cfg.dt, targets)
+    passed = out.theta_target > 0.0 and abs(out.theta_target) <= ccfg.loit_angle_max + 1e-9
+    return ScenarioResult("loiter_acceleration_to_lean", passed, "desired acceleration maps to limited lean angle", {"theta_target_deg": np.rad2deg(out.theta_target)})
+
+
+def althold_deadband(cfg: RigidBodyConfig) -> ScenarioResult:
+    control = ManualControlSystem(cfg, ControllerConfig(thr_dz=0.2))
+    targets = RuntimeTargets(target_x=0.0, target_z=1.5)
+    state = np.array([0.0, 1.5, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+    before = targets.target_z
+    control.compute(ControlMode.ALT_HOLD, state, ManualCommands(0.4, stick_z=0.0), 0.1, targets)
+    held = abs(targets.target_z - before) < 1e-9 and targets.throttle_deadband_active
+    control.compute(ControlMode.ALT_HOLD, state, ManualCommands(0.4, stick_z=1.0), 0.1, targets)
+    climbed = targets.target_z > before and not targets.throttle_deadband_active
+    return ScenarioResult("althold_deadband", held and climbed, "centered stick holds target_z; W commands climb rate", {"target_z_delta": targets.target_z - before})
+
+
+def mode_switch_no_jump(cfg: RigidBodyConfig) -> ScenarioResult:
+    state = np.array([3.0, 2.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+    targets = RuntimeTargets()
+    targets.capture(state)
+    passed = abs(targets.target_x - 3.0) < 1e-9 and abs(targets.target_z - 2.0) < 1e-9
+    return ScenarioResult("mode_switch_no_jump", passed, "ALT_HOLD/LOITER capture current position instead of cfg defaults", {"target_x": targets.target_x, "target_z": targets.target_z})
+
+
+def low_authority_loiter(cfg: RigidBodyConfig) -> ScenarioResult:
+    weak = RigidBodyConfig(thrust_control_floor_factor=0.0, vane_angle_max_deg=2.0)
+    control = ManualControlSystem(weak, ControllerConfig(psc_accel_xy_max_mss=10.0))
+    targets = RuntimeTargets(target_x=10.0, target_z=1.0)
+    state = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.05 * weak.hover_thrust, 0.0])
+    out = control.compute(ControlMode.LOITER, state, ManualCommands(0.4), weak.dt, targets)
+    passed = out.mixer.saturated and out.mixer.authority_limited
+    return ScenarioResult("low_authority_loiter", passed, "low authority is reported by mixer saturation flags", {"saturated": int(out.mixer.saturated), "authority_limited": int(out.mixer.authority_limited)})
+
+
+def loiter_initial_x_offset(cfg: RigidBodyConfig) -> ScenarioResult:
+    control = ManualControlSystem(cfg, ControllerConfig())
+    targets = RuntimeTargets(target_x=0.0, target_z=1.0)
+    state = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+    out = control.compute(ControlMode.LOITER, state, ManualCommands(0.4), cfg.dt, targets)
+    passed = out.ax_target < 0.0
+    return ScenarioResult("loiter_initial_x_offset", passed, "x offset produces acceleration back toward target", {"initial_x_error": targets.target_x - state[0], "desired_ax": out.ax_target})
+
+
+def loiter_initial_z_offset(cfg: RigidBodyConfig) -> ScenarioResult:
+    control = ManualControlSystem(cfg, ControllerConfig())
+    targets = RuntimeTargets(target_x=0.0, target_z=1.0)
+    high = np.array([0.0, 1.8, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0])
+    control.compute(ControlMode.LOITER, high, ManualCommands(0.4), cfg.dt, targets)
+    passed = targets.desired_az < 0.0
+    return ScenarioResult("loiter_initial_z_offset", passed, "z offset produces vertical acceleration back toward target", {"initial_z_error": targets.target_z - high[1], "desired_az": targets.desired_az})
+
+
+def loiter_horizontal_impulse(cfg: RigidBodyConfig) -> ScenarioResult:
+    control = ManualControlSystem(cfg, ControllerConfig())
+    targets = RuntimeTargets(target_x=0.0, target_z=1.0)
+    state = np.array([0.0, 1.0, 0.0, 1.2, 0.0, 0.0, cfg.hover_thrust, 0.0])
+    out = control.compute(ControlMode.LOITER, state, ManualCommands(0.4), cfg.dt, targets)
+    passed = out.ax_target < 0.0 and np.isfinite(out.desired_moment)
+    return ScenarioResult("loiter_horizontal_impulse", passed, "positive vx impulse produces braking acceleration and finite controller output", {"actual_vx": state[3], "desired_ax": out.ax_target})
+
+
+def loiter_pitch_impulse(cfg: RigidBodyConfig) -> ScenarioResult:
+    control = ManualControlSystem(cfg, ControllerConfig())
+    targets = RuntimeTargets(target_x=0.0, target_z=1.0)
+    state = np.array([0.0, 1.0, 0.25, 0.0, 0.0, 1.5, cfg.hover_thrust, 0.0])
+    out = control.compute(ControlMode.LOITER, state, ManualCommands(0.4), cfg.dt, targets)
+    passed = np.isfinite(out.desired_moment) and out.desired_moment < 0.0
+    return ScenarioResult("loiter_pitch_impulse", passed, "pitch/rate impulse remains finite and commands restoring moment", {"theta": state[2], "omega": state[5], "desired_moment": out.desired_moment})
+
 SCENARIOS = [
     direct_throttle_step,
     direct_vane_step,
     rate_pitch_command,
     stabilize_initial_tilt,
+    loiter_mode_capture,
+    loiter_stick_move_then_release,
+    loiter_position_error_to_velocity,
+    loiter_velocity_error_to_acceleration,
+    loiter_acceleration_to_lean,
+    althold_deadband,
+    loiter_initial_x_offset,
+    loiter_initial_z_offset,
+    loiter_horizontal_impulse,
+    loiter_pitch_impulse,
+    mode_switch_no_jump,
+    low_authority_loiter,
     external_horizontal_impulse,
     external_pitch_impulse,
     low_thrust_authority,

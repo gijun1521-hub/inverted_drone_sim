@@ -1,0 +1,31 @@
+{
+  "rigid_body": {
+    "vane_model": "nonlinear_with_axial_loss",
+    "T_max_factor": 2.0,
+    "vane_angle_max_deg": 22.0,
+    "vane_rate_limit_deg_s": 260.0,
+    "servo_time_constant": 0.05,
+    "motor_time_constant": 0.08,
+    "translational_drag": 0.05,
+    "angular_damping": 0.025
+  },
+  "interactive": {
+    "vane_visual_scale": 2.5,
+    "show_vane_command_ghost": true,
+    "show_target_marker": true,
+    "show_loiter_error_vector": true
+  },
+  "controller": {
+    "loit_speed_ms": 1.8,
+    "loit_acc_max_mss": 1.4,
+    "loit_brk_acc_mss": 1.3,
+    "loit_brk_delay_s": 0.25,
+    "loit_brk_jerk_msss": 4.0,
+    "loit_angle_max_deg": 18.0,
+    "psc_ne_pos_p": 1.0,
+    "psc_ne_vel_p": 1.4,
+    "pilot_speed_up_ms": 1.0,
+    "pilot_speed_dn_ms": 0.8,
+    "thr_dz": 0.08
+  }
+}
