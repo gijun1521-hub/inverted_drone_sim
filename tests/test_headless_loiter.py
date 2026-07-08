@@ -10,6 +10,11 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from analysis.headless_loiter import LoiterScenarioConfig, run_headless_loiter
+from analysis.vane_authority import (
+    default_grid,
+    resolve_authority_scenarios,
+    write_plots as write_authority_plots,
+)
 from compare_loiter_params import run_comparison, write_csv as write_comparison_csv, write_markdown as write_comparison_md
 from params import load_interactive_config
 from sweep_loiter_authority import (
@@ -81,7 +86,24 @@ class HeadlessLoiterTests(unittest.TestCase):
             self.assertTrue(csv_path.exists())
             self.assertTrue(md_path.exists())
             self.assertEqual(len(rows), 1)
-            self.assertIn("preliminary authority map", md_path.read_text(encoding="utf-8").lower())
+            self.assertIn("vane authority mapping", md_path.read_text(encoding="utf-8").lower())
+
+    def test_authority_scenario_names_resolve(self):
+        names = {scenario.name for scenario in resolve_authority_scenarios("all")}
+
+        self.assertIn("authority_stress", names)
+        self.assertIn("impulse_light", names)
+        self.assertIn("impulse_heavy", names)
+        self.assertIn("offset_recovery_2m", names)
+        self.assertIn("stick_step_aggressive", names)
+        self.assertIn("low_thrust_margin", names)
+
+    def test_quick_grid_and_scenario_all_expand(self):
+        grid = default_grid(quick=True)
+        scenarios = resolve_authority_scenarios("all", duration_s=0.05)
+
+        self.assertGreater(len(grid.vane_angle_max_deg), 1)
+        self.assertGreater(len(scenarios), 1)
 
     def test_sweep_overrides_change_effective_config_values(self):
         low = LoiterScenarioConfig(name="short_low", duration_s=0.1, capture_current_target=True)
@@ -120,6 +142,27 @@ class HeadlessLoiterTests(unittest.TestCase):
         self.assertGreater(int(stats["unique_max_vane_actual_deg"]), 1)
         self.assertFalse(stats["inconclusive"])
 
+    def test_authority_design_scores_are_finite_and_ordered(self):
+        args = SimpleNamespace(
+            params="params/loiter_example.json",
+            scenario="authority_stress",
+            duration=None,
+            output_dir="",
+            vane_angle_max_deg="0.5,20",
+            vane_rate_limit_deg_s="5,160",
+            T_max_factor="1.05,2.5",
+        )
+
+        rows = run_sweep(args)
+        for row in rows:
+            self.assertTrue(np.isfinite(float(row["combined_design_score"])))
+        low = [row for row in rows if float(row["vane_angle_max_deg"]) == 0.5]
+        high = [row for row in rows if float(row["vane_angle_max_deg"]) == 20.0]
+        self.assertLess(
+            max(float(row["combined_design_score"]) for row in low),
+            max(float(row["combined_design_score"]) for row in high),
+        )
+
     def test_authority_sweep_markdown_reports_sensitivity_or_inconclusive(self):
         with tempfile.TemporaryDirectory() as tmp:
             args = SimpleNamespace(
@@ -136,8 +179,27 @@ class HeadlessLoiterTests(unittest.TestCase):
             text = md_path.read_text(encoding="utf-8")
 
             self.assertIn("## Sensitivity Check", text)
+            self.assertIn("## Recommended Design Regions", text)
+            self.assertIn("## Limitations", text)
             self.assertRegex(text, r"unique final_abs_x_error values: [2-9]")
             self.assertNotIn("**INCONCLUSIVE:**", text)
+
+    def test_authority_plot_smoke_or_clean_skip(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            args = SimpleNamespace(
+                params="params/loiter_example.json",
+                scenario="impulse_light",
+                duration=0.2,
+                output_dir=tmp,
+                vane_angle_max_deg="0.5,20",
+                vane_rate_limit_deg_s="5,80",
+                T_max_factor="1.05",
+            )
+            rows = run_sweep(args)
+            paths = write_authority_plots(rows, Path(tmp), required=False)
+
+            for path in paths:
+                self.assertTrue(path.exists())
 
     def test_legacy_flat_and_structured_params_load(self):
         flat_rb, _flat_ui, _flat_controller = load_interactive_config("params/low_authority_example.json")
