@@ -49,6 +49,68 @@ class DroneConfig:
 
 
 @dataclass
+class ControllerConfig:
+    """ArduCopter-inspired controller parameters for the 2D simulator."""
+
+    loit_speed_ms: float = 1.5
+    loit_acc_max_mss: float = 1.0
+    loit_brk_acc_mss: float = 1.0
+    loit_brk_delay_s: float = 0.4
+    loit_brk_jerk_msss: float = 2.5
+    loit_angle_max_deg: float = 15.0
+    psc_ne_pos_p: float = 0.8
+    psc_ne_vel_p: float = 1.1
+    psc_ne_vel_i: float = 0.0
+    psc_ne_vel_d: float = 0.0
+    psc_accel_xy_max_mss: float = 2.0
+    psc_jerk_xy_max_msss: float = 4.0
+
+    pilot_speed_up_ms: float = 0.8
+    pilot_speed_dn_ms: float = 0.6
+    pilot_accel_z_mss: float = 1.0
+    thr_dz: float = 0.1
+    psc_posz_p: float = 1.6
+    psc_velz_p: float = 4.0
+    psc_velz_i: float = 0.0
+    psc_velz_d: float = 0.0
+    psc_accz_p: float = 1.0
+    psc_accz_i: float = 0.0
+    psc_accz_d: float = 0.0
+
+    atc_angle_max_deg: float = 20.0
+    atc_input_tc: float = 0.15
+    atc_ang_pit_p: float = 7.0
+    atc_rat_pit_p: float = 0.035
+    atc_rat_pit_i: float = 0.010
+    atc_rat_pit_d: float = 0.002
+    atc_rat_pit_ff: float = 0.0
+    atc_rat_pit_imax: float = 0.15
+
+    enable_noise: bool = False
+    random_seed: int = 0
+    sensor_theta_noise_std_deg: float = 0.0
+    sensor_omega_noise_std_deg_s: float = 0.0
+    sensor_x_noise_std: float = 0.0
+    sensor_z_noise_std: float = 0.0
+    servo_bias_deg: float = 0.0
+    vane_effectiveness_scale: float = 1.0
+    motor_thrust_bias: float = 0.0
+    disturbance_wind_noise_std: float = 0.0
+    controller_update_jitter: float = 0.0
+
+    @property
+    def loit_angle_max(self) -> float:
+        import math
+
+        return math.radians(self.loit_angle_max_deg)
+
+    @property
+    def atc_angle_max(self) -> float:
+        import math
+
+        return math.radians(self.atc_angle_max_deg)
+
+@dataclass
 class RigidBodyConfig:
     """Parameters for the CG-referenced single-fan rigid-body model."""
 
@@ -223,6 +285,16 @@ class InteractiveSimConfig:
     max_pixels_per_meter: float = 420.0
     trace_length: int = 900
     log_directory: str = "results/interactive_logs"
+
+    vane_visual_scale: float = 2.5
+    vane_visual_length_m: float = 0.45
+    vane_visual_offset_m: float = 0.08
+    show_vane_command_ghost: bool = True
+    show_vane_overlay: bool = True
+    show_target_marker: bool = True
+    show_loiter_error_vector: bool = True
+    show_desired_accel_arrow: bool = True
+    show_theta_target_vector: bool = True
 
     presets: dict[str, ResetPreset] = field(default_factory=dict)
 
