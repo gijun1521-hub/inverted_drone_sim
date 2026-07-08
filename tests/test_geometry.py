@@ -4,10 +4,10 @@ from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from inverted_drone_sim.config import DroneConfig
-from inverted_drone_sim.diagnostics import assert_geometry_sign, cg_position
+from config import DroneConfig
+from diagnostics import assert_geometry_sign, cg_position
 
 
 class GeometryTests(unittest.TestCase):

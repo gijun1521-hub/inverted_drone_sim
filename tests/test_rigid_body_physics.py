@@ -6,27 +6,27 @@ from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from inverted_drone_sim.actuators import FirstOrderMotor, VaneServo
-from inverted_drone_sim.cascaded_controller import AttitudeController, RatePIDController
-from inverted_drone_sim.config import RigidBodyConfig
-from inverted_drone_sim.interactive_sim import ControlMode, InteractiveApp, ManualCommands, ManualControlSystem
-from inverted_drone_sim.math_utils import shortest_angle_error, wrap_pi
-from inverted_drone_sim.moment_allocator import MomentAllocator
-from inverted_drone_sim.moving_mass_analysis import (
+from actuators import FirstOrderMotor, VaneServo
+from cascaded_controller import AttitudeController, RatePIDController
+from config import RigidBodyConfig
+from interactive_sim import ControlMode, InteractiveApp, ManualCommands, ManualControlSystem
+from math_utils import shortest_angle_error, wrap_pi
+from moment_allocator import MomentAllocator
+from moving_mass_analysis import (
     compute_cg_offset_from_thrust_line,
     compute_thrust_offset_moment,
     compute_total_cg_body,
     moving_mass_reaction_body_delta,
     moving_mass_reaction_rate,
 )
-from inverted_drone_sim.moving_mass_model import MovingMassSingleFan2D
-from inverted_drone_sim.rigid_body_model import RigidBodySingleFan2D
-from inverted_drone_sim.safety import check_safety
-from inverted_drone_sim.singlecopter_mixer import SingleCopterMixer
-from inverted_drone_sim.thrust_curve import ThrottleToThrustModel
-from inverted_drone_sim.wind import SimpleWindModel
+from moving_mass_model import MovingMassSingleFan2D
+from rigid_body_model import RigidBodySingleFan2D
+from safety import check_safety
+from singlecopter_mixer import SingleCopterMixer
+from thrust_curve import ThrottleToThrustModel
+from wind import SimpleWindModel
 
 
 class RigidBodyPhysicsTests(unittest.TestCase):
@@ -417,7 +417,7 @@ class MovingMassAndAllocationTests(unittest.TestCase):
         self.assertAlmostEqual(compute_thrust_offset_moment(0.0, offset), 0.0)
 
     def test_moving_mass_internal_motion_conserves_angular_momentum(self):
-        from inverted_drone_sim.config import MovingMassConfig
+        from config import MovingMassConfig
 
         plant = MovingMassSingleFan2D(MovingMassConfig(thrust=0.0, g=0.0))
         plant.reset()
@@ -426,7 +426,7 @@ class MovingMassAndAllocationTests(unittest.TestCase):
         self.assertAlmostEqual(plant.last_breakdown.angular_momentum, 0.0, places=6)
 
     def test_positive_q_accel_creates_opposite_body_reaction(self):
-        from inverted_drone_sim.config import MovingMassConfig
+        from config import MovingMassConfig
 
         plant = MovingMassSingleFan2D(MovingMassConfig(thrust=0.0, g=0.0))
         plant.reset()
@@ -434,7 +434,7 @@ class MovingMassAndAllocationTests(unittest.TestCase):
         self.assertLess(plant.last_breakdown.reaction_moment, 0.0)
 
     def test_moving_mass_offset_shifts_cg(self):
-        from inverted_drone_sim.config import MovingMassConfig
+        from config import MovingMassConfig
 
         plant = MovingMassSingleFan2D(MovingMassConfig())
         state = plant.reset()
@@ -444,7 +444,7 @@ class MovingMassAndAllocationTests(unittest.TestCase):
         self.assertNotAlmostEqual(cg0[0], cg1[0])
 
     def test_moving_mass_limits(self):
-        from inverted_drone_sim.config import MovingMassConfig
+        from config import MovingMassConfig
 
         cfg = MovingMassConfig(q_limit=0.05, q_rate_limit=0.1)
         plant = MovingMassSingleFan2D(cfg)
@@ -455,7 +455,7 @@ class MovingMassAndAllocationTests(unittest.TestCase):
         self.assertLessEqual(abs(plant.state[9]), cfg.q_rate_limit + 1e-12)
 
     def test_moving_mass_vane_force_creates_moment_at_application_point(self):
-        from inverted_drone_sim.config import MovingMassConfig
+        from config import MovingMassConfig
 
         cfg = MovingMassConfig()
         plant = MovingMassSingleFan2D(cfg)
