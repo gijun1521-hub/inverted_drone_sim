@@ -349,6 +349,25 @@ def _scenario_rows(rows: list[dict[str, float | str | bool]], scenario: str) -> 
     return [row for row in rows if row["scenario_name"] == scenario]
 
 
+def _row_passes(row: dict[str, float | str | bool]) -> bool:
+    value = row["pass"]
+    if isinstance(value, str):
+        return value.lower() in {"true", "1", "yes", "pass"}
+    return bool(value)
+
+
+def _row_location(row: dict[str, float | str | bool]) -> str:
+    return (
+        f"{row['vane_angle_max_deg']} deg, {row['vane_rate_limit_deg_s']} deg/s, "
+        f"T_max_factor {row['T_max_factor']}"
+    )
+
+
+def _failure_label(row: dict[str, float | str | bool]) -> str:
+    reason = str(row.get("failure_reason", "")).strip()
+    return reason or "unknown_failure"
+
+
 def recommended_regions(rows: list[dict[str, float | str | bool]]) -> list[str]:
     lines: list[str] = []
     scenarios = sorted({str(row["scenario_name"]) for row in rows})
@@ -356,23 +375,53 @@ def recommended_regions(rows: list[dict[str, float | str | bool]]) -> list[str]:
         subset = _scenario_rows(rows, scenario)
         if not subset:
             continue
-        best_error = min(subset, key=lambda r: float(r["final_abs_x_error"]))
-        best_score = max(subset, key=lambda r: float(r["combined_design_score"]))
-        passing = [row for row in subset if row["pass"]]
+        best_overall_error = min(subset, key=lambda r: float(r["final_abs_x_error"]))
+        passing = [row for row in subset if _row_passes(row)]
         lines += [
             f"### {scenario}",
             "",
-            f"- Best final horizontal error: {float(best_error['final_abs_x_error']):.3f} m at "
-            f"{best_error['vane_angle_max_deg']} deg, {best_error['vane_rate_limit_deg_s']} deg/s, T_max_factor {best_error['T_max_factor']}.",
-            f"- Best combined design score: {float(best_score['combined_design_score']):.3f} at "
-            f"{best_score['vane_angle_max_deg']} deg, {best_score['vane_rate_limit_deg_s']} deg/s, T_max_factor {best_score['T_max_factor']}.",
         ]
-        if passing:
-            lines.append(f"- Lowest passing vane angle in this analytical grid: {min(float(r['vane_angle_max_deg']) for r in passing):g} deg.")
-            lines.append(f"- Lowest passing servo rate in this analytical grid: {min(float(r['vane_rate_limit_deg_s']) for r in passing):g} deg/s.")
-            lines.append(f"- Lowest passing T_max_factor in this analytical grid: {min(float(r['T_max_factor']) for r in passing):g}.")
+        if _row_passes(best_overall_error):
+            lines.append(
+                f"- Best overall final horizontal error: {float(best_overall_error['final_abs_x_error']):.3f} m "
+                f"(PASS) at {_row_location(best_overall_error)}."
+            )
         else:
-            lines.append("- No passing cases in this grid; treat the scenario/grid combination as a stress signal, not a design requirement.")
+            lines.append(
+                f"- Best overall final horizontal error, but failed due to {_failure_label(best_overall_error)}: "
+                f"{float(best_overall_error['final_abs_x_error']):.3f} m at {_row_location(best_overall_error)}."
+            )
+        if passing:
+            best_passing_error = min(passing, key=lambda r: float(r["final_abs_x_error"]))
+            best_passing_score = max(passing, key=lambda r: float(r["combined_design_score"]))
+            lines.append(
+                f"- Best passing final horizontal error: {float(best_passing_error['final_abs_x_error']):.3f} m "
+                f"at {_row_location(best_passing_error)}."
+            )
+            lines.append(
+                f"- Best passing combined design score: {float(best_passing_score['combined_design_score']):.3f} "
+                f"at {_row_location(best_passing_score)}."
+            )
+            lines.append(
+                f"- Lowest passing vane angle in this analytical grid: "
+                f"{min(float(r['vane_angle_max_deg']) for r in passing):g} deg. This is the minimum passing grid point, not a recommended hardware value."
+            )
+            lines.append(
+                f"- Lowest passing servo rate in this analytical grid: "
+                f"{min(float(r['vane_rate_limit_deg_s']) for r in passing):g} deg/s. This is the minimum passing grid point, not a recommended hardware value."
+            )
+            lines.append(
+                f"- Lowest passing T_max_factor in this analytical grid: "
+                f"{min(float(r['T_max_factor']) for r in passing):g}. This is the minimum passing grid point, not a recommended hardware value."
+            )
+            lines.append(
+                "- Recommended regions should be chosen from passing rows with high combined_design_score and low saturation activity."
+            )
+        else:
+            lines.append("- No passing cases were found in this scenario/grid.")
+            lines.append(
+                "- A denser grid, different controller tuning, or different scenario thresholds may be needed before drawing a design trend."
+            )
         high_limit = [row for row in subset if max(float(row["authority_limited_percent"]), float(row["mixer_saturation_percent"])) >= 10.0]
         high_rate = [row for row in subset if float(row["servo_rate_saturation_percent"]) >= 10.0]
         bad = [row for row in subset if float(row["combined_design_score"]) < 0.35 or row["crash_reason"]]
@@ -441,9 +490,13 @@ def write_markdown(rows: list[dict[str, float | str | bool]], path: Path, scenar
         "## Recommended Design Regions",
         "",
         *recommended_regions(rows),
+        "## Scenario Notes",
+        "",
+        *scenario_notes(rows),
         "## Engineering Takeaway",
         "",
-        "- Configurations below the lowest passing vane angle in each scenario are generally under-actuated in this analytical grid.",
+        "- Minimum passing angle, rate, and thrust entries are only the lowest passing points in the tested analytical grid.",
+        "- Prefer passing regions with stronger combined_design_score and low saturation activity over isolated low-error failed cases.",
         "- Servo rates that repeatedly show rate saturation should be treated as candidates for slower recovery or overshoot risk.",
         "- Increasing thrust margin helps most after sufficient vane angle and servo rate are available.",
         "- These are analytical trends, not calibrated flight requirements.",
@@ -460,6 +513,40 @@ def write_markdown(rows: list[dict[str, float | str | bool]], path: Path, scenar
     return path
 
 
+def scenario_notes(rows: list[dict[str, float | str | bool]]) -> list[str]:
+    lines: list[str] = []
+    percent_metrics = {
+        "authority_limited_percent": "No authority limiting was triggered",
+        "servo_rate_saturation_percent": "No servo rate saturation was triggered",
+    }
+    for scenario in sorted({str(row["scenario_name"]) for row in rows}):
+        subset = _scenario_rows(rows, scenario)
+        if not subset:
+            continue
+        passing = [row for row in subset if _row_passes(row)]
+        best_error = min(subset, key=lambda r: float(r["final_abs_x_error"]))
+        lines.append(f"### {scenario}")
+        lines.append("")
+        if not passing:
+            lines.append("- No passing cases were found for this scenario in this grid.")
+        if not _row_passes(best_error):
+            lines.append(
+                f"- Best overall final horizontal error is not a passing case: "
+                f"{float(best_error['final_abs_x_error']):.3f} m (FAIL, {_failure_label(best_error)})."
+            )
+        if len({round(float(row["final_abs_x_error"]), 6) for row in subset}) == 1:
+            lines.append("- final_abs_x_error is invariant across this scenario/grid.")
+        if len({round(float(row["combined_design_score"]), 6) for row in subset}) == 1:
+            lines.append("- combined_design_score is invariant across this scenario/grid.")
+        for metric, message in percent_metrics.items():
+            if max(float(row[metric]) for row in subset) == 0.0:
+                lines.append(f"- {message} in this scenario/grid.")
+        if passing:
+            lines.append("- Recommended regions for this scenario are based on passing rows and combined_design_score.")
+        lines.append("")
+    return lines
+
+
 def _grid(rows, scenario: str, thrust_factor: float, metric: str):
     subset = [r for r in rows if r["scenario_name"] == scenario and float(r["T_max_factor"]) == thrust_factor]
     angles = sorted({float(r["vane_angle_max_deg"]) for r in subset})
@@ -468,6 +555,73 @@ def _grid(rows, scenario: str, thrust_factor: float, metric: str):
     for row in subset:
         data[rates.index(float(row["vane_rate_limit_deg_s"])), angles.index(float(row["vane_angle_max_deg"]))] = float(row[metric])
     return angles, rates, data
+
+
+PERCENT_METRIC_MESSAGES = {
+    "authority_limited_percent": "No authority limiting triggered",
+    "servo_rate_saturation_percent": "No servo rate saturation triggered",
+    "mixer_saturation_percent": "No mixer saturation triggered",
+    "motor_saturation_percent": "No motor saturation triggered",
+}
+
+
+def _annotate_center(ax, text: str) -> None:
+    ax.text(
+        0.5,
+        0.5,
+        text,
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        fontsize=12,
+        bbox={"boxstyle": "round,pad=0.35", "facecolor": "white", "edgecolor": "0.35", "alpha": 0.9},
+    )
+
+
+def _annotate_cells(ax, data: np.ndarray, metric: str) -> None:
+    if data.size > 20:
+        return
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            value = data[i, j]
+            if np.isnan(value):
+                label = ""
+            elif metric == "pass":
+                label = "P" if value >= 0.5 else "F"
+            elif metric.endswith("_percent"):
+                label = f"{value:.0f}%"
+            elif metric == "combined_design_score":
+                label = f"{value:.2f}"
+            else:
+                label = f"{value:.2f}"
+            ax.text(j, i, label, ha="center", va="center", fontsize=8, color="black")
+
+
+def _imshow_metric(ax, data: np.ndarray, metric: str, plt):
+    finite = data[np.isfinite(data)]
+    if metric == "pass":
+        from matplotlib.colors import ListedColormap
+
+        image = ax.imshow(data, origin="lower", aspect="auto", vmin=0, vmax=1, cmap=ListedColormap(["#d73027", "#1a9850"]))
+        if finite.size and np.all(finite == 0):
+            _annotate_center(ax, "All cases failed")
+        elif finite.size and np.all(finite == 1):
+            _annotate_center(ax, "All cases passed")
+        return image
+    if metric in PERCENT_METRIC_MESSAGES:
+        image = ax.imshow(data, origin="lower", aspect="auto", vmin=0, vmax=100, cmap="viridis")
+        if finite.size and np.allclose(finite, 0.0):
+            _annotate_center(ax, PERCENT_METRIC_MESSAGES[metric])
+        return image
+    if metric == "combined_design_score":
+        return ax.imshow(data, origin="lower", aspect="auto", vmin=0, vmax=1, cmap="viridis")
+    if finite.size and np.allclose(finite, finite[0]):
+        value = float(finite[0])
+        delta = max(abs(value) * 0.1, 0.5)
+        image = ax.imshow(data, origin="lower", aspect="auto", vmin=value - delta, vmax=value + delta, cmap="viridis")
+        _annotate_center(ax, "All cells have the same value.")
+        return image
+    return ax.imshow(data, origin="lower", aspect="auto", cmap="viridis")
 
 
 def write_plots(rows: list[dict[str, float | str | bool]], output_dir: Path, required: bool = False) -> list[Path]:
@@ -491,8 +645,10 @@ def write_plots(rows: list[dict[str, float | str | bool]], output_dir: Path, req
     metrics = [
         ("final_abs_x_error", "Final abs x error", "m"),
         ("pass", "Pass/fail", "0 fail / 1 pass"),
+        ("mixer_saturation_percent", "Mixer saturation", "%"),
         ("authority_limited_percent", "Authority limited", "%"),
         ("servo_rate_saturation_percent", "Servo rate saturation", "%"),
+        ("motor_saturation_percent", "Motor saturation", "%"),
         ("combined_design_score", "Combined design score", "score"),
     ]
     for scenario in scenarios:
@@ -502,7 +658,7 @@ def write_plots(rows: list[dict[str, float | str | bool]], output_dir: Path, req
                 if data.size == 0:
                     continue
                 fig, ax = plt.subplots(figsize=(7, 5), constrained_layout=True)
-                image = ax.imshow(data, origin="lower", aspect="auto")
+                image = _imshow_metric(ax, data, metric, plt)
                 ax.set_title(f"{scenario}: {title}, T_max_factor={thrust_factor:g}")
                 ax.set_xticks(range(len(angles)))
                 ax.set_xticklabels([f"{v:g}" for v in angles])
@@ -510,7 +666,11 @@ def write_plots(rows: list[dict[str, float | str | bool]], output_dir: Path, req
                 ax.set_yticklabels([f"{v:g}" for v in rates])
                 ax.set_xlabel("vane_angle_max_deg")
                 ax.set_ylabel("vane_rate_limit_deg_s")
-                fig.colorbar(image, ax=ax, label=label)
+                colorbar = fig.colorbar(image, ax=ax, label=label)
+                if metric == "pass":
+                    colorbar.set_ticks([0, 1])
+                    colorbar.set_ticklabels(["FAIL", "PASS"])
+                _annotate_cells(ax, data, metric)
                 path = plot_dir / f"{scenario}_{metric}_Tmax_{str(thrust_factor).replace('.', 'p')}.png"
                 fig.savefig(path, dpi=140)
                 plt.close(fig)
@@ -523,16 +683,24 @@ def write_plots(rows: list[dict[str, float | str | bool]], output_dir: Path, req
         if not subset:
             continue
         fig, ax = plt.subplots(figsize=(8, 5), constrained_layout=True)
-        for rate in rates[:5]:
-            values = []
-            for angle in angles:
-                candidates = [r for r in subset if float(r["vane_rate_limit_deg_s"]) == rate and float(r["vane_angle_max_deg"]) == angle and r["pass"]]
-                values.append(min((float(r["T_max_factor"]) for r in candidates), default=np.nan))
-            ax.plot(angles, values, marker="o", label=f"{rate:g} deg/s")
+        if not any(_row_passes(row) for row in subset):
+            ax.axis("off")
+            _annotate_center(ax, "No passing cases in this scenario/grid.")
+        else:
+            for rate in rates[:5]:
+                values = []
+                for angle in angles:
+                    candidates = [
+                        r
+                        for r in subset
+                        if float(r["vane_rate_limit_deg_s"]) == rate and float(r["vane_angle_max_deg"]) == angle and _row_passes(r)
+                    ]
+                    values.append(min((float(r["T_max_factor"]) for r in candidates), default=np.nan))
+                ax.plot(angles, values, marker="o", label=f"{rate:g} deg/s")
+            ax.set_xlabel("vane_angle_max_deg")
+            ax.set_ylabel("minimum passing T_max_factor")
+            ax.legend(fontsize=7)
         ax.set_title(f"{scenario}: minimum passing T_max_factor")
-        ax.set_xlabel("vane_angle_max_deg")
-        ax.set_ylabel("minimum passing T_max_factor")
-        ax.legend(fontsize=7)
         path = plot_dir / f"{scenario}_minimum_passing_Tmax_summary.png"
         fig.savefig(path, dpi=140)
         plt.close(fig)
