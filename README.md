@@ -235,6 +235,7 @@ Vane visualization:
 - Solid vane: actual servo angle.
 - Ghost vane: commanded vane angle.
 - Neutral line: zero-deflection reference.
+- The simulated vane is drawn as a downstream vertical control plate aligned with the duct/thrust axis at zero deflection.
 - `SAT`: actuator or mixer saturation.
 - `RATE`: servo rate limit.
 - `AUTH`: mixer authority limited.
