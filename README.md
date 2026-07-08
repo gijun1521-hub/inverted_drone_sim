@@ -257,6 +257,8 @@ Run deterministic LOITER comparisons without opening pygame:
 ```bash
 python compare_loiter_params.py
 python sweep_loiter_authority.py
+python sweep_loiter_authority.py --quick
+python sweep_loiter_authority.py --scenario all --no-plots
 ```
 
 The comparison script runs the sluggish, nominal, and aggressive LOITER
@@ -270,7 +272,7 @@ The authority sweep writes:
 
 - `results/analysis/loiter_authority_sweep.csv`
 - `results/analysis/loiter_authority_sweep.md`
-- `results/analysis/loiter_authority_sweep_Tmax_*.png` heatmaps when matplotlib is available
+- `results/analysis/authority_maps/*.png` heatmaps and summary plots when matplotlib is available
 
 Key metrics:
 
@@ -278,6 +280,7 @@ Key metrics:
 - `rms_x_error`: run-level horizontal tracking error.
 - `max_theta_deg`: peak pitch demand/response.
 - `max_vane_cmd_deg`: peak requested vane angle.
+- `combined_design_score`: analytical ranking score for comparing candidates within the same scenario.
 - `mixer_saturation_percent`: percent of samples where mixer output saturated.
 - `authority_limited_percent`: requested moment exceeded current thrust/vane authority.
 - `servo_rate_saturation_percent`: percent of samples clipped by servo rate limit.
@@ -286,7 +289,9 @@ These are analytical indicators, not calibrated real-flight predictions.
 Saturation is not always a failure; it is a design signal. Compare results
 relatively across parameter sets and scenarios. See
 [docs/loiter_tuning_analysis.md](docs/loiter_tuning_analysis.md) for scenario
-definitions, metric interpretation, and limitations.
+definitions, metric interpretation, and limitations, and
+[docs/vane_authority_mapping.md](docs/vane_authority_mapping.md) for the
+expanded vane authority mapping workflow.
 
 Troubleshooting:
 
