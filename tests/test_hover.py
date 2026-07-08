@@ -4,10 +4,10 @@ from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from inverted_drone_sim.config import DroneConfig
-from inverted_drone_sim.drone_model import InvertedDrone2D
+from config import DroneConfig
+from drone_model import InvertedDrone2D
 
 
 class HoverTests(unittest.TestCase):

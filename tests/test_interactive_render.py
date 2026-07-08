@@ -5,10 +5,10 @@ from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from inverted_drone_sim.interactive_sim import ControlMode, InteractiveApp
-from inverted_drone_sim.params import load_interactive_config
+from interactive_sim import ControlMode, InteractiveApp
+from params import load_interactive_config
 
 
 class InteractiveRenderSmokeTests(unittest.TestCase):
