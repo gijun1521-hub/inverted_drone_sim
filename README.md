@@ -270,7 +270,7 @@ The authority sweep writes:
 
 - `results/analysis/loiter_authority_sweep.csv`
 - `results/analysis/loiter_authority_sweep.md`
-- `results/analysis/loiter_authority_sweep.png` when matplotlib is available
+- `results/analysis/loiter_authority_sweep_Tmax_*.png` heatmaps when matplotlib is available
 
 Key metrics:
 

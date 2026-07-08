@@ -42,6 +42,8 @@ Compare parameter sets relatively. The most useful signals are changes in error,
 
 Use `sweep_loiter_authority.py` as a small preliminary authority map. It sweeps vane angle limit, vane rate limit, and thrust margin to identify regions that are obviously under-actuated or saturation-heavy.
 
+The default authority sweep uses an `authority_stress` scenario with a low-altitude margin, horizontal offset, and horizontal impulse. Its default grid intentionally includes very low vane angles, slow vane rates, and low thrust margins so the report can show transitions between crash, large error, actuator/authority limits, and acceptable analytical recovery. If the selected grid does not change important metrics, the Markdown report marks the sweep as `INCONCLUSIVE`.
+
 A later full authority PR can expand this into denser maps, richer plots, and preparation for a four-vane SingleCopter mixer.
 
 ## Limitations

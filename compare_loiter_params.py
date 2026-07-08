@@ -117,12 +117,18 @@ def write_markdown(results: list[LoiterRunResult], path: Path) -> Path:
         avg_rows.append((avg_x, avg_sat, avg_auth, param))
     most_stable = min(avg_rows, default=(0.0, 0.0, 0.0, "n/a"))[3]
     most_saturated = max(avg_rows, default=(0.0, 0.0, 0.0, "n/a"), key=lambda x: x[1] + x[2])[3]
+    max_limit_activity = max((sat + auth for _x, sat, auth, _param in avg_rows), default=0.0)
+    limit_line = (
+        f"- Highest average saturation/authority activity in this run: `{most_saturated}`."
+        if max_limit_activity > 0.0
+        else "- No saturation or authority limits were triggered in this comparison run."
+    )
     lines += [
         "",
         "## Interpretation",
         "",
         f"- Lowest average final horizontal error in this run: `{most_stable}`.",
-        f"- Highest average saturation/authority activity in this run: `{most_saturated}`.",
+        limit_line,
         "- Sluggish parameter sets should show slower recovery and larger residual errors; aggressive sets may reduce error faster but can demand more pitch/vane activity.",
         "- Saturation is not automatically a failure. It is a design signal that the requested moment or actuator motion is approaching the current model limits.",
         "",

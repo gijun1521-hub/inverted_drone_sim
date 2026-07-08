@@ -136,12 +136,36 @@ def default_loiter_scenarios(duration_s: float | None = None) -> list[LoiterScen
     return [replace(s, duration_s=duration_s) for s in scenarios]
 
 
+def authority_stress_scenario(duration_s: float | None = None) -> LoiterScenarioConfig:
+    scenario = LoiterScenarioConfig(
+        name="authority_stress",
+        duration_s=7.0,
+        initial_x=1.6,
+        initial_z=0.85,
+        target_x=0.0,
+        target_z=1.2,
+        disturbance_start_s=0.8,
+        disturbance_duration_s=0.45,
+        disturbance_force_x=12.0,
+        max_final_x_error=2.1,
+        max_final_z_error=0.35,
+        max_rms_x_error=3.0,
+        max_rms_z_error=1.2,
+        max_theta_deg_limit=80.0,
+        max_saturation_percent=100.0,
+        notes="Authority stress case with low altitude margin, initial x offset, and horizontal impulse.",
+    )
+    return replace(scenario, duration_s=duration_s) if duration_s is not None else scenario
+
+
 def scenario_by_name(name: str, duration_s: float | None = None) -> LoiterScenarioConfig:
     for scenario in default_loiter_scenarios(duration_s):
         if scenario.name == name:
             return scenario
+    if name == "authority_stress":
+        return authority_stress_scenario(duration_s)
     names = ", ".join(s.name for s in default_loiter_scenarios())
-    raise ValueError(f"unknown scenario {name!r}; expected one of: {names}")
+    raise ValueError(f"unknown scenario {name!r}; expected one of: {names}, authority_stress")
 
 
 def _apply_overrides(instance, overrides: dict | None):
@@ -315,6 +339,17 @@ def run_headless_loiter(
             break
 
     metrics = compute_loiter_metrics(rows, scenario_cfg, str(param_path or "<default>"))
+    metrics.update(
+        {
+            "effective_vane_angle_max_deg": float(rb_cfg.vane_angle_max_deg),
+            "effective_vane_angle_max_rad": float(rb_cfg.vane_angle_max),
+            "effective_vane_rate_limit_deg_s": float(rb_cfg.vane_rate_limit_deg_s),
+            "effective_vane_rate_limit_rad_s": float(rb_cfg.vane_rate_limit),
+            "effective_T_max_factor": float(rb_cfg.T_max_factor),
+            "effective_T_max_N": float(rb_cfg.T_max),
+            "effective_hover_thrust_N": float(rb_cfg.hover_thrust),
+        }
+    )
     return LoiterRunResult(str(param_path or "<default>"), scenario_cfg, rows, metrics, bool(crash_reason), crash_reason)
 
 
