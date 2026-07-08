@@ -104,7 +104,7 @@ class FourVaneMixerOutput:
         return (
             f"{mode}: roll={self.requested_roll_moment:.3f}, pitch={self.requested_pitch_moment:.3f}, "
             f"yaw={self.requested_yaw_moment:.3f}, vanes="
-            f"F/Rr/R/L {self.command.front_vane_deg:.2f}/"
+            f"front/right/rear/left {self.command.front_vane_deg:.2f}/"
             f"{self.command.right_vane_deg:.2f}/{self.command.rear_vane_deg:.2f}/"
             f"{self.command.left_vane_deg:.2f} deg, saturated={int(self.saturated)}"
         )

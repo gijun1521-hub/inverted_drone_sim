@@ -104,6 +104,7 @@ class FourVaneMixerPrepTests(unittest.TestCase):
         self.assertEqual(row["thrust_cmd"], 3.0)
         self.assertIn("front_vane_cmd_deg", row)
         self.assertIn("mode_2d_equivalent", row)
+        self.assertIn("front/right/rear/left", mixer.mix(FourVaneMixerInput(pitch_moment_cmd=0.2)).diagnostic_text())
 
     def test_current_2d_mixer_output_still_feeds_adapter_without_recomputing_physics(self):
         cfg = RigidBodyConfig()
