@@ -615,11 +615,14 @@ class InteractiveApp:
     ) -> dict[str, np.ndarray | float]:
         visual_scale = self.ui_cfg.vane_visual_scale
         hinge = bottom - self.ui_cfg.vane_visual_offset_m * body_up
-        actual_dir = np.cos(actual_vane * visual_scale) * body_right + np.sin(actual_vane * visual_scale) * body_up
-        command_dir = np.cos(command_vane * visual_scale) * body_right + np.sin(command_vane * visual_scale) * body_up
+        neutral_dir = -body_up
+        actual_angle = actual_vane * visual_scale
+        command_angle = command_vane * visual_scale
+        actual_dir = np.cos(actual_angle) * neutral_dir + np.sin(actual_angle) * body_right
+        command_dir = np.cos(command_angle) * neutral_dir + np.sin(command_angle) * body_right
         return {
             "hinge": hinge,
-            "neutral_dir": body_right,
+            "neutral_dir": neutral_dir,
             "actual_dir": actual_dir,
             "command_dir": command_dir,
             "length": float(self.ui_cfg.vane_visual_length_m),
