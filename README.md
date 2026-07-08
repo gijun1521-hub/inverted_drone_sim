@@ -293,6 +293,11 @@ definitions, metric interpretation, and limitations, and
 [docs/vane_authority_mapping.md](docs/vane_authority_mapping.md) for the
 expanded vane authority mapping workflow.
 
+Future four-vane SingleCopter mixer preparation is documented in
+[docs/four_vane_mixer_prep.md](docs/four_vane_mixer_prep.md). The current
+simulator still uses one equivalent 2D pitch-axis vane/moment; the four-vane
+types are an architecture layer for later work, not full 3D physics.
+
 Troubleshooting:
 
 - If `pygame` install fails on Windows, try Python 3.11.
