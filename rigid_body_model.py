@@ -31,6 +31,11 @@ class ForceMomentBreakdown:
     vane_moment: float
     damping_moment: float
     disturbance_moment: float
+    moving_mass_offset_m: float
+    moving_mass_velocity_m_s: float
+    moving_mass_target_m: float
+    moving_mass_moment: float
+    moving_mass_saturated: bool
     total_moment: float
     x_ddot: float
     z_ddot: float
@@ -44,6 +49,59 @@ class RigidBodySingleFan2D:
         self.cfg = config
         self.state = np.zeros(8, dtype=float)
         self.last_breakdown: ForceMomentBreakdown | None = None
+        self.last_moving_mass_saturated = False
+
+    def _with_moving_mass_state(self, state: np.ndarray) -> np.ndarray:
+        mm = self.cfg.moving_mass
+        state = np.asarray(state, dtype=float)
+        if state.shape == (11,):
+            return state.copy()
+        if state.shape != (8,):
+            raise ValueError("state must have shape (8,) or (11,)")
+        if not mm.enabled:
+            return state.copy()
+        offset = float(np.clip(mm.initial_offset_m, -mm.max_offset_m, mm.max_offset_m))
+        return np.concatenate([state, np.array([offset, 0.0, offset], dtype=float)])
+
+    def _moving_mass_update(
+        self,
+        offset: float,
+        velocity: float,
+        command: float,
+        dt: float,
+    ) -> tuple[float, float, float, bool]:
+        mm = self.cfg.moving_mass
+        limit = abs(float(mm.max_offset_m))
+        target = float(np.clip(command, -limit, limit))
+        command_clipped = abs(float(command) - target) > 1e-12
+        if dt <= 0.0:
+            return float(np.clip(offset, -limit, limit)), 0.0, target, command_clipped
+
+        max_rate = max(0.0, float(mm.max_rate_m_s))
+        max_accel = max(0.0, float(mm.max_accel_m_s2))
+        if max_rate <= 0.0 or max_accel <= 0.0:
+            return float(np.clip(offset, -limit, limit)), 0.0, target, command_clipped
+
+        desired_velocity = float(np.clip((target - offset) / dt, -max_rate, max_rate))
+        raw_delta_v = desired_velocity - velocity
+        delta_v = float(np.clip(raw_delta_v, -max_accel * dt, max_accel * dt))
+        new_velocity = float(np.clip(velocity + delta_v, -max_rate, max_rate))
+        new_offset = float(offset + new_velocity * dt)
+
+        if (target - offset) * (target - new_offset) <= 0.0:
+            new_offset = target
+            new_velocity = 0.0
+        if abs(new_offset) > limit:
+            new_offset = float(np.clip(new_offset, -limit, limit))
+            new_velocity = 0.0
+
+        saturated = (
+            command_clipped
+            or abs(raw_delta_v - delta_v) > 1e-12
+            or abs(desired_velocity) >= max_rate - 1e-12
+            or abs(new_offset) >= limit - 1e-12
+        )
+        return new_offset, new_velocity, target, bool(saturated)
 
     def reset(self, state: np.ndarray | None = None) -> np.ndarray:
         if state is None:
@@ -61,10 +119,9 @@ class RigidBodySingleFan2D:
                 dtype=float,
             )
 
-        self.state = np.asarray(state, dtype=float).copy()
-        if self.state.shape != (8,):
-            raise ValueError("state must have shape (8,)")
+        self.state = self._with_moving_mass_state(np.asarray(state, dtype=float))
         self.last_breakdown = None
+        self.last_moving_mass_saturated = False
         return self.state.copy()
 
     def body_axes(self, theta: float) -> tuple[np.ndarray, np.ndarray]:
@@ -78,7 +135,10 @@ class RigidBodySingleFan2D:
         disturbance_force: np.ndarray | None = None,
         disturbance_moment: float = 0.0,
     ) -> ForceMomentBreakdown:
-        x, z, theta, vx, vz, omega, thrust, vane_angle = np.asarray(state, dtype=float)
+        full_state = np.asarray(state, dtype=float)
+        if full_state.shape not in ((8,), (11,)):
+            raise ValueError("state must have shape (8,) or (11,)")
+        x, z, theta, vx, vz, omega, thrust, vane_angle = full_state[:8]
         if disturbance_force is None:
             disturbance_force = np.zeros(2, dtype=float)
         else:
@@ -122,7 +182,26 @@ class RigidBodySingleFan2D:
         thrust_moment = float(thrust_moment_arm[1] * thrust_force[0] - thrust_moment_arm[0] * thrust_force[1])
         vane_moment = float(vane_moment_arm[1] * vane_force[0] - vane_moment_arm[0] * vane_force[1])
         damping_moment = -self.cfg.angular_damping * omega
-        total_moment = thrust_moment + vane_moment + damping_moment + disturbance_moment
+        moving_mass_offset = 0.0
+        moving_mass_velocity = 0.0
+        moving_mass_target = 0.0
+        moving_mass_moment = 0.0
+        moving_mass_saturated = False
+        if self.cfg.moving_mass.enabled and full_state.shape == (11,):
+            moving_mass_offset = float(full_state[8])
+            moving_mass_velocity = float(full_state[9])
+            moving_mass_target = float(full_state[10])
+            # Sign convention: positive moving-mass offset produces positive
+            # pitch moment in this 2D pitch-assist channel. This is a
+            # quasi-static CG torque placeholder, not reaction-kick dynamics.
+            moving_mass_moment = float(self.cfg.moving_mass.mass_kg * self.cfg.g * moving_mass_offset)
+            limit = abs(float(self.cfg.moving_mass.max_offset_m))
+            moving_mass_saturated = bool(
+                self.last_moving_mass_saturated
+                or abs(moving_mass_offset) >= limit - 1e-12
+                or abs(moving_mass_target) >= limit - 1e-12
+            )
+        total_moment = thrust_moment + vane_moment + damping_moment + disturbance_moment + moving_mass_moment
 
         x_ddot = float(total_force[0] / self.cfg.m)
         z_ddot = float(total_force[1] / self.cfg.m)
@@ -148,6 +227,11 @@ class RigidBodySingleFan2D:
             vane_moment=vane_moment,
             damping_moment=float(damping_moment),
             disturbance_moment=float(disturbance_moment),
+            moving_mass_offset_m=moving_mass_offset,
+            moving_mass_velocity_m_s=moving_mass_velocity,
+            moving_mass_target_m=moving_mass_target,
+            moving_mass_moment=moving_mass_moment,
+            moving_mass_saturated=moving_mass_saturated,
             total_moment=float(total_moment),
             x_ddot=x_ddot,
             z_ddot=z_ddot,
@@ -162,9 +246,9 @@ class RigidBodySingleFan2D:
         disturbance_force: np.ndarray | None = None,
         disturbance_moment: float = 0.0,
     ) -> np.ndarray:
-        _x, _z, _theta, vx, vz, omega, _thrust, _vane_angle = state
+        _x, _z, _theta, vx, vz, omega, _thrust, _vane_angle = state[:8]
         terms = self.force_moment_breakdown(state, disturbance_force, disturbance_moment)
-        return np.array(
+        base = np.array(
             [
                 vx,
                 vz,
@@ -177,6 +261,11 @@ class RigidBodySingleFan2D:
             ],
             dtype=float,
         )
+        if self.cfg.moving_mass.enabled and np.asarray(state).shape == (11,):
+            offset, velocity, target = [float(v) for v in state[8:11]]
+            new_offset, new_velocity, _new_target, _saturated = self._moving_mass_update(offset, velocity, target, self.cfg.dt)
+            return np.concatenate([base, np.array([velocity, (new_velocity - velocity) / self.cfg.dt, 0.0])])
+        return base
 
     def step(
         self,
@@ -184,9 +273,10 @@ class RigidBodySingleFan2D:
         vane_angle_dot: float,
         disturbance_force: np.ndarray | None = None,
         disturbance_moment: float = 0.0,
+        moving_mass_target_m: float | None = None,
     ) -> np.ndarray:
         dt = self.cfg.dt
-        x, z, theta, vx, vz, omega, thrust, vane_angle = self.state
+        x, z, theta, vx, vz, omega, thrust, vane_angle = self.state[:8]
         terms = self.force_moment_breakdown(self.state, disturbance_force, disturbance_moment)
 
         vx += terms.x_ddot * dt
@@ -202,6 +292,18 @@ class RigidBodySingleFan2D:
         z += vz * dt
         theta += omega * dt
 
-        self.state = np.array([x, z, theta, vx, vz, omega, thrust, vane_angle], dtype=float)
+        state_values = [x, z, theta, vx, vz, omega, thrust, vane_angle]
+        if self.cfg.moving_mass.enabled:
+            if self.state.shape == (8,):
+                self.state = self._with_moving_mass_state(self.state)
+            offset, velocity, current_target = [float(v) for v in self.state[8:11]]
+            command = current_target if moving_mass_target_m is None else float(moving_mass_target_m)
+            new_offset, new_velocity, target, saturated = self._moving_mass_update(offset, velocity, command, dt)
+            self.last_moving_mass_saturated = saturated
+            state_values.extend([new_offset, new_velocity, target])
+        else:
+            self.last_moving_mass_saturated = False
+
+        self.state = np.array(state_values, dtype=float)
         self.last_breakdown = self.force_moment_breakdown(self.state, disturbance_force, disturbance_moment)
         return self.state.copy()

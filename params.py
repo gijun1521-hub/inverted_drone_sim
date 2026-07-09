@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import fields, replace
+from dataclasses import fields, is_dataclass, replace
 from pathlib import Path
 from typing import TypeVar
 
@@ -29,7 +29,17 @@ def apply_dataclass_overrides(instance: T, overrides: dict, section: str = "para
     unknown = sorted(set(overrides) - allowed)
     if unknown:
         raise ValueError(f"unknown {section} parameter(s): {', '.join(unknown)}")
-    return replace(instance, **overrides)
+    converted = {}
+    for f in fields(instance):
+        if f.name not in overrides:
+            continue
+        value = overrides[f.name]
+        current = getattr(instance, f.name)
+        if is_dataclass(current) and isinstance(value, dict):
+            converted[f.name] = apply_dataclass_overrides(current, value, f"{section}.{f.name}")
+        else:
+            converted[f.name] = value
+    return replace(instance, **converted)
 
 
 def _split_overrides(data: dict) -> tuple[dict, dict, dict]:

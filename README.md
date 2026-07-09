@@ -300,6 +300,8 @@ types are an architecture layer for later work, not full 3D physics.
 The ArduPilot SingleCopter Motor1/Motor2/Motor3/Motor4 flap naming relationship
 to this repository's front/right/rear/left convention is documented in
 [docs/ardupilot_singlecopter_mapping.md](docs/ardupilot_singlecopter_mapping.md).
+Disabled-by-default 2D moving-mass pitch assist is documented in
+[docs/moving_mass_pitch_assist.md](docs/moving_mass_pitch_assist.md).
 
 Troubleshooting:
 

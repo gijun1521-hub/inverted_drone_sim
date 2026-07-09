@@ -32,6 +32,7 @@ SUMMARY_FIELDS = [
     "final_abs_z_error",
     "rms_z_error",
     "max_theta_deg",
+    "rms_theta_deg",
     "final_theta_deg",
     "max_omega_deg_s",
     "max_vane_cmd_deg",
@@ -44,6 +45,9 @@ SUMMARY_FIELDS = [
     "mixer_saturation_percent",
     "mixer_angle_saturation_percent",
     "authority_limited_percent",
+    "moving_mass_enabled",
+    "moving_mass_max_offset_m",
+    "moving_mass_saturation_percent",
     "final_x",
     "final_z",
     "final_vx",
@@ -82,8 +86,8 @@ def write_markdown(results: list[LoiterRunResult], path: Path) -> Path:
         "",
         f"Summary: {passed}/{total} analytical scenario checks passed.",
         "",
-        "| param_file | scenario | pass | final_x_err | final_z_err | rms_x | max_theta_deg | mixer_sat_% | authority_limited_% | servo_rate_sat_% | notes |",
-        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+        "| param_file | scenario | pass | final_x_err | final_z_err | rms_x | max_theta_deg | moving_mass_max_m | mixer_sat_% | authority_limited_% | servo_rate_sat_% | notes |",
+        "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for result in results:
         m = result.metrics
@@ -98,6 +102,7 @@ def write_markdown(results: list[LoiterRunResult], path: Path) -> Path:
                     _fmt(m["final_abs_z_error"]),
                     _fmt(m["rms_x_error"]),
                     _fmt(m["max_theta_deg"]),
+                    _fmt(m.get("moving_mass_max_offset_m", 0.0)),
                     _fmt(m["mixer_saturation_percent"]),
                     _fmt(m["authority_limited_percent"]),
                     _fmt(m["servo_rate_saturation_percent"]),

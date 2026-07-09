@@ -19,7 +19,7 @@ try:
         ManualControlSystem,
         RuntimeTargets,
     )
-    from ..params import load_interactive_config
+    from ..params import apply_dataclass_overrides, load_interactive_config
     from ..rigid_body_model import RigidBodySingleFan2D
     from ..safety import check_safety
     from ..thrust_curve import ThrottleToThrustModel
@@ -28,7 +28,7 @@ except ImportError:  # pragma: no cover - supports top-level script execution
     from config import ControllerConfig, InteractiveSimConfig, RigidBodyConfig
     from interactive_logging import INTERACTIVE_FIELDS, interactive_row
     from interactive_sim import ControlMode, LoiterInputShaper, ManualCommands, ManualControlSystem, RuntimeTargets
-    from params import load_interactive_config
+    from params import apply_dataclass_overrides, load_interactive_config
     from rigid_body_model import RigidBodySingleFan2D
     from safety import check_safety
     from thrust_curve import ThrottleToThrustModel
@@ -67,6 +67,9 @@ class LoiterScenarioConfig:
     vane_angle_max_deg: float | None = None
     vane_rate_limit_deg_s: float | None = None
     T_max_factor: float | None = None
+    moving_mass_enabled: bool = False
+    moving_mass_target_m: float = 0.0
+    moving_mass_assist_gain_m_per_Nm: float = 0.0
     notes: str = ""
 
 
@@ -158,20 +161,47 @@ def authority_stress_scenario(duration_s: float | None = None) -> LoiterScenario
     return replace(scenario, duration_s=duration_s) if duration_s is not None else scenario
 
 
+def moving_mass_pitch_assist_scenario(duration_s: float | None = None) -> LoiterScenarioConfig:
+    scenario = LoiterScenarioConfig(
+        name="pitch_assist_probe",
+        duration_s=7.0,
+        initial_x=1.0,
+        target_x=0.0,
+        moving_mass_enabled=True,
+        moving_mass_assist_gain_m_per_Nm=0.025,
+        max_final_x_error=0.75,
+        max_saturation_percent=100.0,
+        notes="Headless probe for comparing vane-only behavior with optional moving-mass pitch assist.",
+    )
+    return replace(scenario, duration_s=duration_s) if duration_s is not None else scenario
+
+
 def scenario_by_name(name: str, duration_s: float | None = None) -> LoiterScenarioConfig:
     for scenario in default_loiter_scenarios(duration_s):
         if scenario.name == name:
             return scenario
     if name == "authority_stress":
         return authority_stress_scenario(duration_s)
+    if name == "pitch_assist_probe":
+        return moving_mass_pitch_assist_scenario(duration_s)
     names = ", ".join(s.name for s in default_loiter_scenarios())
-    raise ValueError(f"unknown scenario {name!r}; expected one of: {names}, authority_stress")
+    raise ValueError(f"unknown scenario {name!r}; expected one of: {names}, authority_stress, pitch_assist_probe")
 
 
 def _apply_overrides(instance, overrides: dict | None):
     if not overrides:
         return instance
-    return replace(instance, **overrides)
+    return apply_dataclass_overrides(instance, overrides, "headless override")
+
+
+def _merge_nested(base: dict, overrides: dict) -> dict:
+    merged = dict(base)
+    for key, value in overrides.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _merge_nested(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
 
 
 def _initial_state(cfg: RigidBodyConfig, scenario: LoiterScenarioConfig) -> np.ndarray:
@@ -234,7 +264,9 @@ def run_headless_loiter(
         }.items()
         if value is not None
     }
-    rb_overrides = {**scenario_rb_overrides, **(rb_overrides or {})}
+    if scenario_cfg.moving_mass_enabled:
+        scenario_rb_overrides["moving_mass"] = {"enabled": True}
+    rb_overrides = _merge_nested(scenario_rb_overrides, rb_overrides or {})
     rb_cfg = _apply_overrides(rb_cfg, rb_overrides)
     ui_cfg = _apply_overrides(ui_cfg, ui_overrides)
     controller_cfg = _apply_overrides(controller_cfg, controller_overrides)
@@ -274,6 +306,7 @@ def run_headless_loiter(
     last_control = control.compute(mode, state, commands, ui_cfg.controller_dt, targets)
     last_motor = motor.update(float(state[6]), last_control.thrust_cmd)
     last_servo = servo.update(float(state[7]), last_control.vane_angle_cmd)
+    moving_mass_target = float(scenario_cfg.moving_mass_target_m)
     crash_reason = ""
     min_body_z = float("nan")
     steps = int(math.ceil(scenario_cfg.duration_s / rb_cfg.dt))
@@ -291,12 +324,23 @@ def run_headless_loiter(
         if controller_time_remaining <= 1e-12:
             _update_loiter_targets(mode, state, commands, targets, loiter_shaper, ui_cfg.controller_dt)
             last_control = control.compute(mode, state, commands, ui_cfg.controller_dt, targets)
+            if rb_cfg.moving_mass.enabled:
+                if scenario_cfg.moving_mass_assist_gain_m_per_Nm:
+                    moving_mass_target = scenario_cfg.moving_mass_assist_gain_m_per_Nm * last_control.desired_moment
+                else:
+                    moving_mass_target = scenario_cfg.moving_mass_target_m
             controller_time_remaining += ui_cfg.controller_dt
 
         last_motor = motor.update(float(state[6]), last_control.thrust_cmd + controller_cfg.motor_thrust_bias)
         servo_cmd = last_control.vane_angle_cmd + math.radians(controller_cfg.servo_bias_deg)
         last_servo = servo.update(float(state[7]), servo_cmd)
-        state = plant.step(last_motor.thrust_dot, last_servo.vane_angle_dot, disturbance_force, disturbance_moment)
+        state = plant.step(
+            last_motor.thrust_dot,
+            last_servo.vane_angle_dot,
+            disturbance_force,
+            disturbance_moment,
+            moving_mass_target_m=moving_mass_target,
+        )
         sim_time += rb_cfg.dt
         controller_time_remaining -= rb_cfg.dt
 
@@ -348,6 +392,10 @@ def run_headless_loiter(
             "effective_T_max_factor": float(rb_cfg.T_max_factor),
             "effective_T_max_N": float(rb_cfg.T_max),
             "effective_hover_thrust_N": float(rb_cfg.hover_thrust),
+            "moving_mass_enabled": bool(rb_cfg.moving_mass.enabled),
+            "effective_moving_mass_kg": float(rb_cfg.moving_mass.mass_kg),
+            "effective_moving_mass_max_offset_m": float(rb_cfg.moving_mass.max_offset_m),
+            "effective_moving_mass_max_rate_m_s": float(rb_cfg.moving_mass.max_rate_m_s),
         }
     )
     return LoiterRunResult(str(param_path or "<default>"), scenario_cfg, rows, metrics, bool(crash_reason), crash_reason)
@@ -386,6 +434,7 @@ def compute_loiter_metrics(
     vane_actual = _values(rows, "vane_angle_actual")
     thrust_cmd = _values(rows, "thrust_cmd")
     thrust_actual = _values(rows, "thrust_actual")
+    moving_mass_offset = _values(rows, "moving_mass_offset_m")
     final = rows[-1]
     crash_reason = str(final.get("crash_reason", ""))
     mixer_saturation_percent = _percent(rows, "mixer_saturated")
@@ -420,6 +469,7 @@ def compute_loiter_metrics(
         "final_abs_z_error": abs(float(final["z_error"])),
         "rms_z_error": float(np.sqrt(np.mean(z_error * z_error))),
         "max_theta_deg": float(np.rad2deg(np.max(np.abs(theta)))),
+        "rms_theta_deg": float(np.rad2deg(np.sqrt(np.mean(theta * theta)))),
         "final_theta_deg": float(np.rad2deg(float(final["theta"]))),
         "max_omega_deg_s": float(np.rad2deg(np.max(np.abs(omega)))),
         "max_vane_cmd_deg": float(np.rad2deg(np.max(np.abs(vane_cmd)))),
@@ -432,6 +482,8 @@ def compute_loiter_metrics(
         "mixer_saturation_percent": mixer_saturation_percent,
         "mixer_angle_saturation_percent": _percent(rows, "mixer_angle_saturated"),
         "authority_limited_percent": authority_limited_percent,
+        "moving_mass_max_offset_m": float(np.max(np.abs(moving_mass_offset))) if moving_mass_offset.size else 0.0,
+        "moving_mass_saturation_percent": _percent(rows, "moving_mass_saturated"),
         "final_x": float(final["x"]),
         "final_z": float(final["z"]),
         "final_vx": float(final["vx"]),

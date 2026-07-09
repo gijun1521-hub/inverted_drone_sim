@@ -46,7 +46,7 @@ def check_safety(state: np.ndarray, cfg: RigidBodyConfig) -> SafetyStatus:
     if min_body_z <= 0.0:
         return SafetyStatus(True, "ground contact", min_body_z)
 
-    x, z, theta, vx, vz, omega, thrust, vane_angle = state
+    x, z, theta, vx, vz, omega, thrust, vane_angle = state[:8]
     if abs(x) > cfg.x_limit_abs:
         return SafetyStatus(True, "x limit exceeded", min_body_z)
     if z < cfg.z_limit_min or z > cfg.z_limit_max:
