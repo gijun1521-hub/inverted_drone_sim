@@ -302,6 +302,8 @@ to this repository's front/right/rear/left convention is documented in
 [docs/ardupilot_singlecopter_mapping.md](docs/ardupilot_singlecopter_mapping.md).
 Disabled-by-default 2D moving-mass pitch assist is documented in
 [docs/moving_mass_pitch_assist.md](docs/moving_mass_pitch_assist.md).
+Headless vane-only versus moving-mass assist comparison reporting is documented
+in [docs/moving_mass_comparison_analysis.md](docs/moving_mass_comparison_analysis.md).
 
 Troubleshooting:
 
