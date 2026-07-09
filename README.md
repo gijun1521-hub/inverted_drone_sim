@@ -297,6 +297,9 @@ Future four-vane SingleCopter mixer preparation is documented in
 [docs/four_vane_mixer_prep.md](docs/four_vane_mixer_prep.md). The current
 simulator still uses one equivalent 2D pitch-axis vane/moment; the four-vane
 types are an architecture layer for later work, not full 3D physics.
+The ArduPilot SingleCopter Motor1/Motor2/Motor3/Motor4 flap naming relationship
+to this repository's front/right/rear/left convention is documented in
+[docs/ardupilot_singlecopter_mapping.md](docs/ardupilot_singlecopter_mapping.md).
 
 Troubleshooting:
 
