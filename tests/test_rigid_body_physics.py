@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from actuators import FirstOrderMotor, VaneServo
 from cascaded_controller import AttitudeController, RatePIDController
-from config import RigidBodyConfig
+from config import MovingMassPitchAssistConfig, RigidBodyConfig
 from interactive_sim import ControlMode, InteractiveApp, ManualCommands, ManualControlSystem
 from math_utils import shortest_angle_error, wrap_pi
 from moment_allocator import MomentAllocator
@@ -404,6 +404,112 @@ class ControllerArchitectureTests(unittest.TestCase):
 
 
 class MovingMassAndAllocationTests(unittest.TestCase):
+    def test_pitch_assist_disabled_preserves_rigid_body_breakdown(self):
+        state = np.array([0.0, 1.0, 0.1, 0.2, -0.1, 0.3, 8.0, 0.05])
+        base = RigidBodySingleFan2D(RigidBodyConfig(translational_drag=0.0, angular_damping=0.0))
+        disabled = RigidBodySingleFan2D(
+            RigidBodyConfig(
+                translational_drag=0.0,
+                angular_damping=0.0,
+                moving_mass=MovingMassPitchAssistConfig(enabled=False, mass_kg=5.0, initial_offset_m=0.05),
+            )
+        )
+
+        base_terms = base.force_moment_breakdown(state)
+        disabled_terms = disabled.force_moment_breakdown(state)
+
+        self.assertEqual(base.reset(state).shape, (8,))
+        self.assertEqual(disabled.reset(state).shape, (8,))
+        self.assertAlmostEqual(disabled_terms.moving_mass_moment, 0.0)
+        self.assertAlmostEqual(base_terms.total_moment, disabled_terms.total_moment)
+        self.assertAlmostEqual(base_terms.theta_ddot, disabled_terms.theta_ddot)
+
+    def test_pitch_assist_moment_sign(self):
+        cfg = RigidBodyConfig(
+            moving_mass=MovingMassPitchAssistConfig(enabled=True, mass_kg=0.5, max_offset_m=0.05)
+        )
+        plant = RigidBodySingleFan2D(cfg)
+        positive = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0, 0.02, 0.0, 0.02])
+        negative = positive.copy()
+        negative[8] = -0.02
+        negative[10] = -0.02
+        zero = positive.copy()
+        zero[8] = 0.0
+        zero[10] = 0.0
+
+        pos_terms = plant.force_moment_breakdown(positive)
+        neg_terms = plant.force_moment_breakdown(negative)
+        zero_terms = plant.force_moment_breakdown(zero)
+
+        self.assertGreater(pos_terms.moving_mass_moment, 0.0)
+        self.assertLess(neg_terms.moving_mass_moment, 0.0)
+        self.assertAlmostEqual(pos_terms.moving_mass_moment, -neg_terms.moving_mass_moment)
+        self.assertAlmostEqual(zero_terms.moving_mass_moment, 0.0)
+
+    def test_pitch_assist_state_extends_only_when_enabled(self):
+        disabled_state = RigidBodySingleFan2D(RigidBodyConfig()).reset()
+        enabled_cfg = RigidBodyConfig(
+            moving_mass=MovingMassPitchAssistConfig(enabled=True, initial_offset_m=0.03, max_offset_m=0.05)
+        )
+        enabled_state = RigidBodySingleFan2D(enabled_cfg).reset()
+
+        self.assertEqual(disabled_state.shape, (8,))
+        self.assertEqual(enabled_state.shape, (11,))
+        self.assertAlmostEqual(enabled_state[8], 0.03)
+        self.assertAlmostEqual(enabled_state[10], 0.03)
+
+    def test_pitch_assist_actuator_limits(self):
+        cfg = RigidBodyConfig(
+            dt=0.1,
+            moving_mass=MovingMassPitchAssistConfig(
+                enabled=True,
+                max_offset_m=0.05,
+                max_rate_m_s=0.10,
+                max_accel_m_s2=10.0,
+            ),
+        )
+        plant = RigidBodySingleFan2D(cfg)
+        plant.reset(np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0]))
+        state = plant.step(0.0, 0.0, moving_mass_target_m=1.0)
+
+        self.assertLessEqual(abs(state[8]), 0.05 + 1e-12)
+        self.assertLessEqual(abs(state[9]), 0.10 + 1e-12)
+        self.assertAlmostEqual(state[10], 0.05)
+        self.assertTrue(plant.last_breakdown.moving_mass_saturated)
+
+    def test_pitch_assist_acceleration_limit(self):
+        cfg = RigidBodyConfig(
+            dt=0.1,
+            moving_mass=MovingMassPitchAssistConfig(
+                enabled=True,
+                max_offset_m=0.20,
+                max_rate_m_s=1.0,
+                max_accel_m_s2=0.20,
+            ),
+        )
+        plant = RigidBodySingleFan2D(cfg)
+        plant.reset(np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0]))
+        state = plant.step(0.0, 0.0, moving_mass_target_m=0.20)
+
+        self.assertLessEqual(abs(state[9]), cfg.moving_mass.max_accel_m_s2 * cfg.dt + 1e-12)
+
+    def test_pitch_assist_target_crossing_respects_acceleration_limit(self):
+        cfg = RigidBodyConfig(
+            dt=0.1,
+            moving_mass=MovingMassPitchAssistConfig(
+                enabled=True,
+                max_offset_m=0.20,
+                max_rate_m_s=1.0,
+                max_accel_m_s2=0.20,
+            ),
+        )
+        plant = RigidBodySingleFan2D(cfg)
+        plant.reset(np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0, 0.001, -0.2, 0.0]))
+        state = plant.step(0.0, 0.0, moving_mass_target_m=0.0)
+
+        delta_v = state[9] - (-0.2)
+        self.assertLessEqual(abs(delta_v), cfg.moving_mass.max_accel_m_s2 * cfg.dt + 1e-12)
+
     def test_reaction_helper_limits(self):
         self.assertAlmostEqual(moving_mass_reaction_body_delta(1.0, 100.0, 0.2), -0.2, delta=0.003)
         self.assertAlmostEqual(moving_mass_reaction_body_delta(100.0, 1.0, 0.2), -0.001980198, places=6)

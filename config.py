@@ -110,6 +110,19 @@ class ControllerConfig:
 
         return math.radians(self.atc_angle_max_deg)
 
+
+@dataclass
+class MovingMassPitchAssistConfig:
+    """Disabled-by-default 2D pitch-axis moving mass assist."""
+
+    enabled: bool = False
+    mass_kg: float = 0.5
+    max_offset_m: float = 0.05
+    max_rate_m_s: float = 0.20
+    max_accel_m_s2: float = 1.0
+    initial_offset_m: float = 0.0
+
+
 @dataclass
 class RigidBodyConfig:
     """Parameters for the CG-referenced single-fan rigid-body model."""
@@ -159,6 +172,8 @@ class RigidBodyConfig:
     alpha_target_max: float = 30.0
     thrust_control_floor_factor: float = 0.20
     attitude_priority_thrust_mixing: bool = False
+
+    moving_mass: MovingMassPitchAssistConfig = field(default_factory=MovingMassPitchAssistConfig)
 
     x_limit_abs: float = 8.0
     z_limit_min: float = -0.5

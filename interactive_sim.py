@@ -272,7 +272,7 @@ class ManualControlSystem:
         targets: RuntimeTargets,
         dt: float,
     ) -> RigidBodyControlOutput:
-        x, z, theta, vx, vz, _omega, _thrust, _vane = [float(v) for v in state]
+        x, z, theta, vx, vz, _omega, _thrust, _vane = [float(v) for v in state[:8]]
         cfg = self.controller_cfg
         stick_z = float(np.clip(commands.stick_z, -1.0, 1.0))
         if abs(stick_z) <= cfg.thr_dz:
@@ -655,7 +655,7 @@ class InteractiveApp:
         if len(self.trace) > 1:
             pygame.draw.lines(screen, (70, 130, 200), False, [world_to_screen(p) for p in self.trace], 1)
 
-        x, z, theta, _vx, _vz, _omega, thrust, vane = self.state
+        x, z, theta, _vx, _vz, _omega, thrust, vane = self.state[:8]
         x_err, z_err = self.render_errors(float(x), float(z))
         translational_energy = 0.5 * self.rb_cfg.m * (self.state[3] ** 2 + self.state[4] ** 2)
         rotational_energy = 0.5 * self.rb_cfg.Iyy * self.state[5] ** 2

@@ -365,6 +365,50 @@ class HeadlessLoiterTests(unittest.TestCase):
         self.assertGreater(structured_controller.loit_speed_ms, 0.0)
         self.assertEqual(structured_rb.vane_model, "nonlinear_with_axial_loss")
 
+    def test_nested_moving_mass_params_load(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "moving_mass.json"
+            path.write_text(
+                """
+{
+  "rigid_body": {
+    "moving_mass": {
+      "enabled": true,
+      "mass_kg": 0.6,
+      "max_offset_m": 0.07,
+      "max_rate_m_s": 0.3
+    }
+  }
+}
+""",
+                encoding="utf-8",
+            )
+
+            rb_cfg, _ui_cfg, _controller_cfg = load_interactive_config(path)
+
+        self.assertTrue(rb_cfg.moving_mass.enabled)
+        self.assertAlmostEqual(rb_cfg.moving_mass.mass_kg, 0.6)
+        self.assertAlmostEqual(rb_cfg.moving_mass.max_offset_m, 0.07)
+        self.assertAlmostEqual(rb_cfg.moving_mass.max_rate_m_s, 0.3)
+
+    def test_headless_moving_mass_enabled_smoke(self):
+        scenario = LoiterScenarioConfig(
+            name="moving_mass_short",
+            duration_s=0.2,
+            capture_current_target=True,
+            moving_mass_enabled=True,
+            moving_mass_target_m=0.02,
+        )
+
+        result = run_headless_loiter("params/loiter_example.json", scenario)
+
+        self.assertFalse(result.crashed, result.crash_reason)
+        self.assertIn("moving_mass_offset_m", result.rows[-1])
+        self.assertIn("moving_mass_moment", result.rows[-1])
+        self.assertIn("moving_mass_max_offset_m", result.metrics)
+        self.assertTrue(result.metrics["moving_mass_enabled"])
+        self.assertGreaterEqual(float(result.metrics["moving_mass_max_offset_m"]), 0.0)
+
     def test_headless_tools_do_not_import_pygame(self):
         sys.modules.pop("pygame", None)
 
