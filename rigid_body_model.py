@@ -88,7 +88,7 @@ class RigidBodySingleFan2D:
         new_velocity = float(np.clip(velocity + delta_v, -max_rate, max_rate))
         new_offset = float(offset + new_velocity * dt)
 
-        if (target - offset) * (target - new_offset) <= 0.0:
+        if (target - offset) * (target - new_offset) <= 0.0 and abs(new_velocity) <= max_accel * dt + 1e-12:
             new_offset = target
             new_velocity = 0.0
         if abs(new_offset) > limit:
