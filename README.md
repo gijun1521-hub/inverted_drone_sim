@@ -1,20 +1,26 @@
 # 2D Inverted Drone Simulator
 
-A small Python prototype for a 2D moving-base inverted-pendulum-style drone.
+A small Python prototype for a 2D single-fan / inverted-drone simulator.
 
-This project intentionally starts with a simple horizontal base acceleration
-command, `ax_cmd`, instead of a full aerodynamic vane model. The first goal is
-to verify sign conventions, geometry, dynamics, logging, and visualization
-before tuning gains or adding hardware-specific effects.
+The project now has two layers:
+
+- a simple moving-base inverted-pendulum baseline that uses `ax_cmd`
+- a more physical 2D single-fan rigid-body model with thrust, one equivalent
+  pitch-axis vane, motor lag, servo lag, cascaded LOITER control, saturation
+  reporting, and authority mapping
+
+The current focus is analytical clarity: verify sign conventions, geometry,
+dynamics, logging, visualization, and relative authority before adding
+hardware-specific effects.
 
 The current direction is analytical rather than experimentally calibrated. The
 models use nominal physical assumptions and parameter sweeps to study sign
 correctness, conservation laws, relative authority, and feasibility trends. Do
 not interpret outputs as exact flight predictions until bench data is added.
 
-## Control Model
+## Baseline Control Model
 
-The simulator now follows a moving-base inverted pendulum model:
+The original baseline follows a moving-base inverted pendulum model:
 
 ```python
 state = [x, z, theta, vx, vz, omega]
@@ -115,10 +121,10 @@ python simulate_passive.py
 This runs the model with hover throttle and zero horizontal base acceleration so the initial tilt
 falls away from upright, confirming the unstable inverted-pendulum term.
 
-## Rigid-Body Single-Fan Model
+## Current 2D Single-Fan Model
 
-The moving-base model remains as a conceptual baseline. A second model is
-available for more physical single-fan work:
+The moving-base model remains as a conceptual baseline. The current single-fan
+work uses a 2D rigid-body model:
 
 ```bash
 python simulate_rigid_body.py
@@ -131,9 +137,9 @@ plant state:
 state = [x_cg, z_cg, theta, vx, vz, omega, thrust, vane_angle]
 ```
 
-It computes real force and moment terms from fan thrust, vane side-force,
+It computes analytical force and moment terms from fan thrust, vane side-force,
 gravity, translational drag, angular damping, motor lag, servo lag/rate limits,
-and a cascaded ArduPilot-like controller:
+and a cascaded ArduCopter-inspired controller:
 
 ```text
 position -> theta target -> rate target -> desired moment -> vane angle
@@ -234,7 +240,8 @@ Vane visualization:
 
 - Solid vane: actual servo angle.
 - Ghost vane: commanded vane angle.
-- Neutral line: zero-deflection reference.
+- Neutral line: zero-deflection reference, drawn downstream along the body
+  thrust axis.
 - `SAT`: actuator or mixer saturation.
 - `RATE`: servo rate limit.
 - `AUTH`: mixer authority limited.

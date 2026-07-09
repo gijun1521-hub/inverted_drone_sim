@@ -71,7 +71,8 @@ Use the maps to identify relative under-actuated regions and promising regions b
 
 ## Future Work
 
-- PR #4: prepare future four-vane SingleCopter mixer structure.
+- Use the four-vane mixer prep structures in `mixers.py` when a future PR is
+  ready to introduce a broader vehicle model.
 - Add 3D modeling later.
 - Calibrate thrust and vane parameters with bench data.
 - Calibrate controller and disturbance assumptions with real flight logs.
