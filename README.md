@@ -388,7 +388,7 @@ PID baseline simulation:
 python simulate_pid.py
 ```
 
-Repository root에서 실행할 경우:
+상위 작업 디렉터리에서 실행할 경우:
 
 ```bash
 python inverted_drone_sim/simulate_pid.py
