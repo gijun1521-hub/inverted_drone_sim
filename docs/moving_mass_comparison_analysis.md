@@ -85,9 +85,16 @@ calibration support that conclusion.
 
 - Still 2D only.
 - Uses the existing quasi-static CG pitch moment only.
-- No reaction kick or inertial moving-mass effect.
+- Does not yet include an explicit total-CG geometry shift.
+- Does not yet include a moving-mass-induced thrust-line pitch moment.
+- Does not yet include position-dependent inertia (`Iyy`) changes.
+- Does not yet include inertial reaction kick from moving-mass acceleration.
 - No flip controller.
 - No reinforcement learning.
 - No full 3D dynamics.
 - No four-vane physics wiring.
 - No real-flight calibration.
+
+Results from the current simplified model are provisional. They must not be
+used as final validation for a large moving mass, such as approximately 0.5 kg,
+until the missing physics terms above are modeled and calibrated.

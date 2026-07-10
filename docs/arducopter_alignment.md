@@ -19,16 +19,20 @@ This simulator is ArduCopter-inspired, not a copy of ArduPilot firmware and not 
 
 ## SingleCopter Simplifications
 
-The current model represents one equivalent pitch vane/moment downstream of a single fan. It does not yet model the full four-flap SingleCopter mixer.
+The current physics model represents one equivalent pitch vane/moment downstream of a single fan. It does not yet model the full four-flap SingleCopter dynamics.
 
 Real ArduPilot SingleCopter vehicles use one motor and four independent flaps. Roll, pitch, and yaw are created by flap deflection. Yaw is controlled by all four fins pointing slightly clockwise or counter-clockwise. This simulator only models the pitch-axis equivalent for now.
 
-A future structure should be able to expose:
+The repository now includes a preparation layer in `mixers.py` and
+`docs/four_vane_mixer_prep.md` with conceptual commands for:
 
 - `front_flap`
 - `right_flap`
 - `rear_flap`
 - `left_flap`
+
+Those structures are not wired into the plant yet. They are a documentation,
+type, and diagnostics layer for future four-vane work.
 
 ## Mapping To This Research Simulator
 

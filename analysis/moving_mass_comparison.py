@@ -330,7 +330,9 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
         "- Positive `attitude_improvement_score` means max and RMS pitch angle decreased on average.",
         "- A run can reduce RMS theta but increase final x error; inspect attitude and position metrics together.",
         "- These outputs compare the existing 2D quasi-static CG torque model only.",
-        "- No reaction kick, flip controller, reinforcement learning, 3D dynamics, or real-flight calibration is included.",
+        "- The current model does not yet include explicit total-CG geometry shift, moving-mass-induced thrust-line pitch moment, position-dependent inertia (`Iyy`) changes, inertial reaction kick from moving-mass acceleration, or full 3D coupled dynamics.",
+        "- Results are provisional and must not be used as final validation for a large moving mass such as approximately 0.5 kg.",
+        "- No flip controller, reinforcement learning, four-vane physics wiring, or real-flight calibration is included.",
         "",
     ]
     path.write_text("\n".join(lines), encoding="utf-8")
