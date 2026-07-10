@@ -186,6 +186,10 @@ class RigidBodyConfig:
     omega_limit_abs: float = 60.0
 
     def __post_init__(self) -> None:
+        self.validate()
+
+    def validate(self) -> None:
+        """Validate moving-mass mode and mass-accounting invariants."""
         mm = self.moving_mass
         if mm.use_total_com_geometry and mm.use_legacy_gravity_offset_moment:
             raise ValueError(

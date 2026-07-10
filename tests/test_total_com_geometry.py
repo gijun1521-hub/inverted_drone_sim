@@ -53,6 +53,42 @@ class TotalComGeometryTests(unittest.TestCase):
         self.assertEqual(terms.thrust_moment, 0.0)
         self.assertFalse(terms.total_com_geometry_active)
 
+    def test_legacy_enabled_eleven_state_force_and_moment_are_preserved(self):
+        cfg = RigidBodyConfig(
+            m=2.0,
+            translational_drag=0.0,
+            angular_damping=0.0,
+            moving_mass=MovingMassPitchAssistConfig(
+                enabled=True,
+                mass_kg=0.5,
+                max_offset_m=0.05,
+            ),
+        )
+        theta = 0.4
+        thrust = 12.0
+        vane_angle = 0.1
+        offset = 0.05
+        state = np.array(
+            [0.2, 1.1, theta, 0.0, 0.0, 0.0, thrust, vane_angle, offset, 0.0, offset]
+        )
+        plant = RigidBodySingleFan2D(cfg)
+        terms = plant.force_moment_breakdown(state)
+        body_up, body_right = plant.body_axes(theta)
+        expected_vane_force = cfg.k_vane_force * thrust * vane_angle * body_right
+        expected_vane_moment = -cfg.l * cfg.k_vane_force * thrust * vane_angle
+        expected_legacy_moment = cfg.moving_mass.mass_kg * cfg.g * offset
+
+        np.testing.assert_allclose(terms.thrust_force, thrust * body_up)
+        np.testing.assert_allclose(terms.vane_force, expected_vane_force)
+        self.assertEqual(terms.thrust_moment, 0.0)
+        self.assertAlmostEqual(terms.vane_moment, expected_vane_moment)
+        self.assertAlmostEqual(terms.moving_mass_moment, expected_legacy_moment)
+        self.assertAlmostEqual(terms.legacy_moving_mass_moment, expected_legacy_moment)
+        self.assertAlmostEqual(terms.total_moment, expected_vane_moment + expected_legacy_moment)
+        self.assertFalse(terms.total_com_geometry_active)
+        self.assertEqual(terms.thrust_moment_from_com_offset, 0.0)
+        self.assertEqual(terms.vane_moment_about_total_com, 0.0)
+
     def test_state_shapes_remain_compatible(self):
         disabled_cfg = geometry_config(enabled=False)
         disabled_plant = RigidBodySingleFan2D(disabled_cfg)
@@ -77,6 +113,18 @@ class TotalComGeometryTests(unittest.TestCase):
                     use_legacy_gravity_offset_moment=True,
                 )
             )
+
+    def test_post_construction_mutation_cannot_bypass_mode_validation(self):
+        cfg = RigidBodyConfig()
+        cfg.moving_mass.use_total_com_geometry = True
+        with self.assertRaisesRegex(ValueError, "cannot both be enabled"):
+            RigidBodySingleFan2D(cfg)
+
+        cfg = geometry_config()
+        plant = RigidBodySingleFan2D(cfg)
+        cfg.moving_mass.use_legacy_gravity_offset_moment = True
+        with self.assertRaisesRegex(ValueError, "cannot both be enabled"):
+            plant.force_moment_breakdown(geometry_state(cfg, 0.05))
 
     def test_nonpositive_moving_mass_is_rejected_when_geometry_is_active(self):
         for mass_kg in (0.0, -0.1):
@@ -183,6 +231,25 @@ class TotalComGeometryTests(unittest.TestCase):
         self.assertAlmostEqual(terms.vane_moment, expected)
         self.assertAlmostEqual(terms.vane_moment_about_total_com, expected)
         self.assertGreater(abs(terms.vane_moment), abs(nominal_cg_moment))
+
+    def test_geometry_mode_runs_through_reset_step_and_integration(self):
+        cfg = geometry_config()
+        plant = RigidBodySingleFan2D(cfg)
+        initial = geometry_state(cfg, 0.05)
+        state = plant.reset(initial)
+        before = plant.force_moment_breakdown(state)
+
+        state = plant.step(0.0, 0.0, moving_mass_target_m=0.05)
+
+        self.assertEqual(state.shape, (11,))
+        self.assertAlmostEqual(state[8], 0.05)
+        self.assertAlmostEqual(state[5], before.theta_ddot * cfg.dt)
+        self.assertAlmostEqual(plant.last_breakdown.total_com_body_right_m, 0.0125)
+        self.assertAlmostEqual(
+            plant.last_breakdown.thrust_moment_from_com_offset,
+            0.0125 * state[6],
+        )
+        self.assertEqual(plant.last_breakdown.legacy_moving_mass_moment, 0.0)
 
 
 if __name__ == "__main__":

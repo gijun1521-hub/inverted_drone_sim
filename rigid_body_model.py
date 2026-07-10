@@ -56,6 +56,7 @@ class RigidBodySingleFan2D:
     """2D rigid body with fan thrust and a lower vane force."""
 
     def __init__(self, config: RigidBodyConfig):
+        config.validate()
         self.cfg = config
         self.state = np.zeros(8, dtype=float)
         self.last_breakdown: ForceMomentBreakdown | None = None
@@ -155,6 +156,10 @@ class RigidBodySingleFan2D:
         disturbance_force: np.ndarray | None = None,
         disturbance_moment: float = 0.0,
     ) -> ForceMomentBreakdown:
+        # RigidBodyConfig is intentionally mutable. Revalidate here so a
+        # post-construction mode change cannot combine geometry and legacy
+        # moving-mass moments or invalidate the total-mass convention.
+        self.cfg.validate()
         full_state = np.asarray(state, dtype=float)
         if full_state.shape not in ((8,), (11,)):
             raise ValueError("state must have shape (8,) or (11,)")
