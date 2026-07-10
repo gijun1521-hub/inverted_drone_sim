@@ -36,6 +36,16 @@ class ForceMomentBreakdown:
     moving_mass_target_m: float
     moving_mass_moment: float
     moving_mass_saturated: bool
+    total_com_body_right_m: float
+    total_com_body_up_m: float
+    thrust_application_arm_body_right_m: float
+    thrust_application_arm_body_up_m: float
+    vane_application_arm_body_right_m: float
+    vane_application_arm_body_up_m: float
+    thrust_moment_from_com_offset: float
+    vane_moment_about_total_com: float
+    legacy_moving_mass_moment: float
+    total_com_geometry_active: bool
     total_moment: float
     x_ddot: float
     z_ddot: float
@@ -43,9 +53,10 @@ class ForceMomentBreakdown:
 
 
 class RigidBodySingleFan2D:
-    """CG-referenced 2D rigid body with fan thrust and a lower vane force."""
+    """2D rigid body with fan thrust and a lower vane force."""
 
     def __init__(self, config: RigidBodyConfig):
+        config.validate()
         self.cfg = config
         self.state = np.zeros(8, dtype=float)
         self.last_breakdown: ForceMomentBreakdown | None = None
@@ -129,12 +140,26 @@ class RigidBodySingleFan2D:
         body_right = np.array([np.cos(theta), -np.sin(theta)], dtype=float)
         return body_up, body_right
 
+    def _total_com_body(self, moving_mass_offset: float) -> np.ndarray:
+        """Return the instantaneous total COM in [body_right, body_up]."""
+        mm = self.cfg.moving_mass
+        fixed_body_mass = self.cfg.m - mm.mass_kg
+        fixed_body_com = np.zeros(2, dtype=float)
+        moving_mass_position = np.array(
+            [moving_mass_offset, mm.moving_mass_body_up_offset_m], dtype=float
+        )
+        return (fixed_body_mass * fixed_body_com + mm.mass_kg * moving_mass_position) / self.cfg.m
+
     def force_moment_breakdown(
         self,
         state: np.ndarray,
         disturbance_force: np.ndarray | None = None,
         disturbance_moment: float = 0.0,
     ) -> ForceMomentBreakdown:
+        # RigidBodyConfig is intentionally mutable. Revalidate here so a
+        # post-construction mode change cannot combine geometry and legacy
+        # moving-mass moments or invalidate the total-mass convention.
+        self.cfg.validate()
         full_state = np.asarray(state, dtype=float)
         if full_state.shape not in ((8,), (11,)):
             raise ValueError("state must have shape (8,) or (11,)")
@@ -168,11 +193,40 @@ class RigidBodySingleFan2D:
 
         thrust_force = axial_force_mag * body_up
         vane_force = side_force_mag * body_right
+
+        moving_mass_offset = 0.0
+        moving_mass_velocity = 0.0
+        moving_mass_target = 0.0
+        moving_mass_saturated = False
+        if self.cfg.moving_mass.enabled and full_state.shape == (11,):
+            moving_mass_offset = float(full_state[8])
+            moving_mass_velocity = float(full_state[9])
+            moving_mass_target = float(full_state[10])
+            limit = abs(float(self.cfg.moving_mass.max_offset_m))
+            moving_mass_saturated = bool(
+                self.last_moving_mass_saturated
+                or abs(moving_mass_offset) >= limit - 1e-12
+                or abs(moving_mass_target) >= limit - 1e-12
+            )
+
         cg = np.array([x, z], dtype=float)
-        thrust_application_point = cg.copy()
-        vane_application_point = cg - self.cfg.l * body_up
-        thrust_moment_arm = thrust_application_point - cg
-        vane_moment_arm = vane_application_point - cg
+        total_com_geometry_active = bool(self.cfg.moving_mass.use_total_com_geometry)
+        if total_com_geometry_active:
+            total_com_body = self._total_com_body(moving_mass_offset)
+            thrust_arm_body = -total_com_body
+            vane_arm_body = np.array([0.0, -self.cfg.l], dtype=float) - total_com_body
+            thrust_moment_arm = thrust_arm_body[0] * body_right + thrust_arm_body[1] * body_up
+            vane_moment_arm = vane_arm_body[0] * body_right + vane_arm_body[1] * body_up
+            thrust_application_point = cg + thrust_moment_arm
+            vane_application_point = cg + vane_moment_arm
+        else:
+            total_com_body = np.zeros(2, dtype=float)
+            thrust_arm_body = np.zeros(2, dtype=float)
+            vane_arm_body = np.array([0.0, -self.cfg.l], dtype=float)
+            thrust_application_point = cg.copy()
+            vane_application_point = cg - self.cfg.l * body_up
+            thrust_moment_arm = thrust_application_point - cg
+            vane_moment_arm = vane_application_point - cg
 
         gravity_force = np.array([0.0, -self.cfg.m * self.cfg.g], dtype=float)
         relative_velocity = np.array([vx, vz], dtype=float) - np.asarray(self.cfg.wind_velocity_world, dtype=float)
@@ -182,25 +236,21 @@ class RigidBodySingleFan2D:
         thrust_moment = float(thrust_moment_arm[1] * thrust_force[0] - thrust_moment_arm[0] * thrust_force[1])
         vane_moment = float(vane_moment_arm[1] * vane_force[0] - vane_moment_arm[0] * vane_force[1])
         damping_moment = -self.cfg.angular_damping * omega
-        moving_mass_offset = 0.0
-        moving_mass_velocity = 0.0
-        moving_mass_target = 0.0
-        moving_mass_moment = 0.0
-        moving_mass_saturated = False
-        if self.cfg.moving_mass.enabled and full_state.shape == (11,):
-            moving_mass_offset = float(full_state[8])
-            moving_mass_velocity = float(full_state[9])
-            moving_mass_target = float(full_state[10])
+        legacy_moving_mass_moment = 0.0
+        if (
+            self.cfg.moving_mass.use_legacy_gravity_offset_moment
+            and self.cfg.moving_mass.enabled
+            and full_state.shape == (11,)
+        ):
             # Sign convention: positive moving-mass offset produces positive
             # pitch moment in this 2D pitch-assist channel. This is a
             # quasi-static CG torque placeholder, not reaction-kick dynamics.
-            moving_mass_moment = float(self.cfg.moving_mass.mass_kg * self.cfg.g * moving_mass_offset)
-            limit = abs(float(self.cfg.moving_mass.max_offset_m))
-            moving_mass_saturated = bool(
-                self.last_moving_mass_saturated
-                or abs(moving_mass_offset) >= limit - 1e-12
-                or abs(moving_mass_target) >= limit - 1e-12
+            legacy_moving_mass_moment = float(
+                self.cfg.moving_mass.mass_kg * self.cfg.g * moving_mass_offset
             )
+        moving_mass_moment = legacy_moving_mass_moment
+        thrust_moment_from_com_offset = thrust_moment if total_com_geometry_active else 0.0
+        vane_moment_about_total_com = vane_moment if total_com_geometry_active else 0.0
         total_moment = thrust_moment + vane_moment + damping_moment + disturbance_moment + moving_mass_moment
 
         x_ddot = float(total_force[0] / self.cfg.m)
@@ -232,6 +282,16 @@ class RigidBodySingleFan2D:
             moving_mass_target_m=moving_mass_target,
             moving_mass_moment=moving_mass_moment,
             moving_mass_saturated=moving_mass_saturated,
+            total_com_body_right_m=float(total_com_body[0]),
+            total_com_body_up_m=float(total_com_body[1]),
+            thrust_application_arm_body_right_m=float(thrust_arm_body[0]),
+            thrust_application_arm_body_up_m=float(thrust_arm_body[1]),
+            vane_application_arm_body_right_m=float(vane_arm_body[0]),
+            vane_application_arm_body_up_m=float(vane_arm_body[1]),
+            thrust_moment_from_com_offset=float(thrust_moment_from_com_offset),
+            vane_moment_about_total_com=float(vane_moment_about_total_com),
+            legacy_moving_mass_moment=float(legacy_moving_mass_moment),
+            total_com_geometry_active=total_com_geometry_active,
             total_moment=float(total_moment),
             x_ddot=x_ddot,
             z_ddot=z_ddot,

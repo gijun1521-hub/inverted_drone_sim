@@ -121,11 +121,14 @@ class MovingMassPitchAssistConfig:
     max_rate_m_s: float = 0.20
     max_accel_m_s2: float = 1.0
     initial_offset_m: float = 0.0
+    use_total_com_geometry: bool = False
+    use_legacy_gravity_offset_moment: bool = True
+    moving_mass_body_up_offset_m: float = 0.12
 
 
 @dataclass
 class RigidBodyConfig:
-    """Parameters for the CG-referenced single-fan rigid-body model."""
+    """Parameters for the single-fan rigid-body model and optional COM geometry."""
 
     H: float = 0.50
     W: float = 0.10
@@ -181,6 +184,24 @@ class RigidBodyConfig:
     theta_limit_abs: float = 4.0 * 3.141592653589793
     velocity_limit_abs: float = 30.0
     omega_limit_abs: float = 60.0
+
+    def __post_init__(self) -> None:
+        self.validate()
+
+    def validate(self) -> None:
+        """Validate moving-mass mode and mass-accounting invariants."""
+        mm = self.moving_mass
+        if mm.use_total_com_geometry and mm.use_legacy_gravity_offset_moment:
+            raise ValueError(
+                "moving_mass.use_total_com_geometry and "
+                "moving_mass.use_legacy_gravity_offset_moment cannot both be enabled"
+            )
+        if (mm.enabled or mm.use_total_com_geometry) and mm.mass_kg <= 0.0:
+            raise ValueError("moving_mass.mass_kg must be greater than zero")
+        if mm.use_total_com_geometry and mm.mass_kg >= self.m:
+            raise ValueError(
+                "moving_mass.mass_kg must be less than RigidBodyConfig.m when total-COM geometry is enabled"
+            )
 
     @property
     def l(self) -> float:
