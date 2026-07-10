@@ -40,6 +40,7 @@ METRIC_FIELDS = [
     "effective_moving_mass_kg",
     "effective_moving_mass_max_offset_m",
     "effective_moving_mass_max_rate_m_s",
+    "effective_moving_mass_max_accel_m_s2",
     "max_abs_total_com_body_right_m",
     "max_abs_total_com_body_up_m",
     "max_abs_thrust_moment_from_com_offset",
@@ -192,6 +193,44 @@ def _row_for_result(
     result: LoiterRunResult,
 ) -> dict[str, float | int | str | bool]:
     metrics = result.metrics
+    effective_flags = (
+        bool(metrics.get("moving_mass_enabled", False)),
+        bool(metrics.get("total_com_geometry_active", False)),
+        bool(metrics.get("use_legacy_gravity_offset_moment", False)),
+    )
+    requested_flags = (
+        variant.moving_mass_enabled,
+        variant.use_total_com_geometry,
+        variant.use_legacy_gravity_offset_moment,
+    )
+    if effective_flags != requested_flags:
+        raise ValueError(
+            f"variant {variant.name!r} requested moving-mass flags {requested_flags!r} "
+            f"but the effective run used {effective_flags!r}"
+        )
+    effective_legacy_active = effective_flags[0] and effective_flags[2]
+    if bool(metrics.get("legacy_gravity_offset_active", False)) != effective_legacy_active:
+        raise ValueError(
+            f"variant {variant.name!r} reported inconsistent effective legacy-moment activity"
+        )
+    expected_state_dimension = 11 if effective_flags[0] else 8
+    if int(metrics.get("state_dimension", 0)) != expected_state_dimension:
+        raise ValueError(
+            f"variant {variant.name!r} expected a {expected_state_dimension}-state run "
+            f"but reported {metrics.get('state_dimension')!r}"
+        )
+    effective_mode = (
+        "total_com_geometry"
+        if effective_flags[1]
+        else "legacy_gravity_offset"
+        if effective_flags[0] and effective_flags[2]
+        else "disabled"
+    )
+    if effective_mode != variant.moving_mass_model_mode:
+        raise ValueError(
+            f"variant {variant.name!r} requested model mode "
+            f"{variant.moving_mass_model_mode!r} but the effective mode is {effective_mode!r}"
+        )
     row: dict[str, float | int | str | bool] = {
         "param_file": param_file,
         "scenario_name": scenario.name,
@@ -200,11 +239,11 @@ def _row_for_result(
         "pass": bool(metrics.get("pass", False)),
         "crash_reason": str(metrics.get("crash_reason", "")),
         "moving_mass_enabled": bool(metrics.get("moving_mass_enabled", False)),
-        "moving_mass_model_mode": variant.moving_mass_model_mode,
+        "moving_mass_model_mode": effective_mode,
         "baseline_variant": "vane_only",
         "mode_baseline_variant": variant.mode_baseline_variant,
         "total_com_geometry_active": bool(metrics.get("total_com_geometry_active", False)),
-        "legacy_gravity_offset_active": bool(metrics.get("legacy_gravity_offset_active", False)),
+        "legacy_gravity_offset_active": effective_legacy_active,
         "state_dimension": int(metrics.get("state_dimension", 0)),
         "total_mass_kg": float(metrics.get("total_mass_kg", 0.0)),
         "moving_mass_mass_kg": float(metrics.get("effective_moving_mass_kg", 0.0)),
@@ -317,6 +356,10 @@ def _fmt(value) -> str:
     return str(value)
 
 
+def _md_cell(value) -> str:
+    return str(value).replace("|", "\\|").replace("\r", " ").replace("\n", " ")
+
+
 def _best_attitude_rows(rows: list[dict[str, float | int | str | bool]]) -> list[dict[str, float | int | str | bool]]:
     non_baseline = [row for row in rows if row["variant"] != "vane_only"]
     return sorted(non_baseline, key=lambda row: float(row["attitude_improvement_score"]), reverse=True)
@@ -391,7 +434,7 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
             "| "
             + " | ".join(
                 [
-                    param_file,
+                    _md_cell(param_file),
                     _fmt(row["total_mass_kg"]),
                     _fmt(row["moving_mass_mass_kg"]),
                     _fmt(row["effective_moving_mass_max_offset_m"]),
@@ -412,16 +455,16 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
             "| "
             + " | ".join(
                 [
-                    str(row["scenario_name"]),
-                    str(row["variant"]),
-                    str(row["moving_mass_model_mode"]),
-                    str(row["mode_baseline_variant"]),
+                    _md_cell(row["scenario_name"]),
+                    _md_cell(row["variant"]),
+                    _md_cell(row["moving_mass_model_mode"]),
+                    _md_cell(row["mode_baseline_variant"]),
                     _fmt(row["max_theta_deg"]),
                     _fmt(row["rms_theta_deg"]),
                     _fmt(row["final_abs_x_error"]),
                     _fmt(row["rms_x_error"]),
                     _fmt(row["moving_mass_max_offset_m"]),
-                    str(row["notes"]).replace("|", "/"),
+                    _md_cell(row["notes"]),
                 ]
             )
             + " |"
@@ -440,9 +483,9 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
             "| "
             + " | ".join(
                 [
-                    str(row["scenario_name"]),
-                    str(row["variant"]),
-                    str(row["mode_baseline_variant"]),
+                    _md_cell(row["scenario_name"]),
+                    _md_cell(row["variant"]),
+                    _md_cell(row["mode_baseline_variant"]),
                     _fmt(row["delta_vs_mode_baseline_max_theta_deg"]),
                     _fmt(row["delta_vs_mode_baseline_rms_theta_deg"]),
                     _fmt(row["delta_vs_mode_baseline_final_abs_x_error"]),
@@ -456,6 +499,7 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
         "## Geometry Diagnostics",
         "",
         "`vane_moment_about_total_com` is the complete vane moment about the selected COM; it is not attributed solely to moving-mass motion.",
+        "COM metrics use metres; thrust, vane, and legacy moment metrics use N·m. RMS uses every logged post-step sample.",
         "",
         "| scenario | variant | max_abs_com_right_m | max_abs_com_up_m | max_abs_thrust_com_moment | rms_thrust_com_moment | max_abs_vane_com_moment | max_abs_legacy_moment |",
         "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
@@ -465,8 +509,8 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
             "| "
             + " | ".join(
                 [
-                    str(row["scenario_name"]),
-                    str(row["variant"]),
+                    _md_cell(row["scenario_name"]),
+                    _md_cell(row["variant"]),
                     _fmt(row["max_abs_total_com_body_right_m"]),
                     _fmt(row["max_abs_total_com_body_up_m"]),
                     _fmt(row["max_abs_thrust_moment_from_com_offset"]),
@@ -491,8 +535,8 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
                 "| "
                 + " | ".join(
                     [
-                        str(row["scenario_name"]),
-                        str(row["variant"]),
+                        _md_cell(row["scenario_name"]),
+                        _md_cell(row["variant"]),
                         _fmt(row["delta_max_theta_deg"]),
                         _fmt(row["delta_rms_theta_deg"]),
                         _fmt(row["attitude_improvement_score"]),
@@ -517,8 +561,8 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
                 "| "
                 + " | ".join(
                     [
-                        str(row["scenario_name"]),
-                        str(row["variant"]),
+                        _md_cell(row["scenario_name"]),
+                        _md_cell(row["variant"]),
                         _fmt(row["delta_max_theta_deg"]),
                         _fmt(row["delta_rms_theta_deg"]),
                         _fmt(row["delta_final_abs_x_error"]),

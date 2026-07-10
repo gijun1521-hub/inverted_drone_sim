@@ -398,10 +398,16 @@ def run_headless_loiter(
             "effective_moving_mass_kg": float(rb_cfg.moving_mass.mass_kg),
             "effective_moving_mass_max_offset_m": float(rb_cfg.moving_mass.max_offset_m),
             "effective_moving_mass_max_rate_m_s": float(rb_cfg.moving_mass.max_rate_m_s),
+            "effective_moving_mass_max_accel_m_s2": float(
+                rb_cfg.moving_mass.max_accel_m_s2
+            ),
             "effective_moving_mass_body_up_offset_m": float(
                 rb_cfg.moving_mass.moving_mass_body_up_offset_m
             ),
             "total_com_geometry_active": bool(rb_cfg.moving_mass.use_total_com_geometry),
+            "use_legacy_gravity_offset_moment": bool(
+                rb_cfg.moving_mass.use_legacy_gravity_offset_moment
+            ),
             "legacy_gravity_offset_active": bool(
                 rb_cfg.moving_mass.enabled
                 and rb_cfg.moving_mass.use_legacy_gravity_offset_moment

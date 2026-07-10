@@ -1,15 +1,18 @@
 import copy
 import csv
+import json
 import subprocess
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from analysis.moving_mass_comparison import (
     CSV_FIELDS,
+    _row_for_result,
     add_baseline_deltas,
     default_variants,
     resolve_comparison_scenarios,
@@ -132,6 +135,23 @@ class MovingMassComparisonTests(unittest.TestCase):
             self.assertGreater(float(row["max_abs_thrust_moment_from_com_offset"]), 0.0)
             self.assertEqual(float(row["max_abs_legacy_moving_mass_moment"]), 0.0)
 
+        geometry_result = next(
+            result
+            for result in results
+            if result.variant.name == "total_com_geometry_fixed_target"
+        )
+        thrust_moments = [
+            float(row["thrust_moment_from_com_offset"])
+            for row in geometry_result.run.rows
+        ]
+        expected_rms = (
+            sum(value * value for value in thrust_moments) / len(thrust_moments)
+        ) ** 0.5
+        self.assertAlmostEqual(
+            float(geometry_result.row["rms_thrust_moment_from_com_offset"]),
+            expected_rms,
+        )
+
         for row in by_variant.values():
             self.assertEqual(float(row["total_mass_kg"]), 1.5)
             self.assertEqual(float(row["moving_mass_mass_kg"]), 0.5)
@@ -142,6 +162,59 @@ class MovingMassComparisonTests(unittest.TestCase):
                 and bool(row["legacy_gravity_offset_active"])
             )
         self.assertNotIn("pygame", sys.modules)
+
+    def test_requested_and_effective_model_mode_must_match(self):
+        result = next(
+            result
+            for result in run_moving_mass_comparison(
+                param_path="params/loiter_example.json",
+                scenarios=resolve_comparison_scenarios("pitch_assist_probe", duration_s=0.02),
+            )
+            if result.variant.name == "total_com_geometry_fixed_target"
+        )
+        mismatched_metrics = dict(result.run.metrics)
+        mismatched_metrics["total_com_geometry_active"] = False
+        mismatched_run = replace(result.run, metrics=mismatched_metrics)
+
+        with self.assertRaisesRegex(ValueError, "effective run used"):
+            _row_for_result(
+                result.run.param_file,
+                result.scenario,
+                result.variant,
+                mismatched_run,
+            )
+
+    def test_nested_mode_overrides_preserve_loaded_moving_mass_values(self):
+        configured = {
+            "rigid_body": {
+                "m": 2.0,
+                "moving_mass": {
+                    "mass_kg": 0.4,
+                    "max_offset_m": 0.071,
+                    "max_rate_m_s": 0.31,
+                    "max_accel_m_s2": 0.92,
+                    "moving_mass_body_up_offset_m": 0.14,
+                },
+            }
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            param_path = Path(tmp) / "moving_mass_values.json"
+            param_path.write_text(json.dumps(configured), encoding="utf-8")
+            results = run_moving_mass_comparison(
+                param_path=str(param_path),
+                scenarios=resolve_comparison_scenarios(
+                    "pitch_assist_probe", duration_s=0.02
+                ),
+            )
+
+        for result in results:
+            row = result.row
+            self.assertEqual(float(row["total_mass_kg"]), 2.0)
+            self.assertEqual(float(row["moving_mass_mass_kg"]), 0.4)
+            self.assertEqual(float(row["effective_moving_mass_max_offset_m"]), 0.071)
+            self.assertEqual(float(row["effective_moving_mass_max_rate_m_s"]), 0.31)
+            self.assertEqual(float(row["effective_moving_mass_max_accel_m_s2"]), 0.92)
+            self.assertEqual(float(row["moving_mass_body_up_offset_m"]), 0.14)
 
     def test_baselines_are_explicit_order_independent_and_missing_rows_fail(self):
         results = run_moving_mass_comparison(
@@ -194,6 +267,11 @@ class MovingMassComparisonTests(unittest.TestCase):
         ):
             add_baseline_deltas(without_centered)
 
+        duplicate = [copy.deepcopy(row) for row in reordered]
+        duplicate.append(copy.deepcopy(duplicate[0]))
+        with self.assertRaisesRegex(ValueError, "duplicate moving-mass comparison row"):
+            add_baseline_deltas(duplicate)
+
     def test_comparison_writes_stable_csv_and_grouped_markdown(self):
         results = run_moving_mass_comparison(
             param_path="params/loiter_example.json",
@@ -208,6 +286,7 @@ class MovingMassComparisonTests(unittest.TestCase):
                 rows = list(csv.DictReader(f))
 
             self.assertEqual(len(rows), 6)
+            self.assertEqual(len(CSV_FIELDS), len(set(CSV_FIELDS)))
             self.assertEqual(list(rows[0].keys()), CSV_FIELDS)
             self.assertEqual({row["variant"] for row in rows}, EXPECTED_VARIANTS)
             for old_field in (
@@ -228,6 +307,10 @@ class MovingMassComparisonTests(unittest.TestCase):
                 "max_abs_thrust_moment_from_com_offset",
             ):
                 self.assertIn(new_field, CSV_FIELDS)
+            for row in rows:
+                self.assertIn(row["total_com_geometry_active"], {"True", "False"})
+                self.assertIn(row["legacy_gravity_offset_active"], {"True", "False"})
+                float(row["total_mass_kg"])
 
             md_text = md_path.read_text(encoding="utf-8")
             self.assertIn("Historical baseline", md_text)
@@ -238,6 +321,16 @@ class MovingMassComparisonTests(unittest.TestCase):
             self.assertIn("vane_moment_about_total_com", md_text)
             self.assertIn("does not include reaction kick", md_text)
             self.assertIn("not calibrated flight values", md_text)
+
+            escaped_results = copy.deepcopy(results)
+            escaped_results[0].row["param_file"] = "params|special.json"
+            escaped_results[0].row["notes"] = "note|with separator"
+            escaped_path = write_markdown(
+                escaped_results, Path(tmp) / "moving_mass_comparison_escaped.md"
+            )
+            escaped_text = escaped_path.read_text(encoding="utf-8")
+            self.assertIn("params\\|special.json", escaped_text)
+            self.assertIn("note\\|with separator", escaped_text)
 
     def test_cli_all_short_duration_no_plots(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -264,6 +357,11 @@ class MovingMassComparisonTests(unittest.TestCase):
             ) as f:
                 rows = list(csv.DictReader(f))
             self.assertEqual(len(rows), 5 * 6)
+            keys = [
+                (row["param_file"], row["scenario_name"], row["variant"])
+                for row in rows
+            ]
+            self.assertEqual(len(keys), len(set(keys)))
             scenarios = {row["scenario_name"] for row in rows}
             self.assertEqual(len(scenarios), 5)
             for scenario_name in scenarios:

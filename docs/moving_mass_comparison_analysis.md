@@ -89,10 +89,14 @@ Effective configuration is reported rather than silently replaced:
 - `moving_mass_mass_kg`
 - `effective_moving_mass_max_offset_m` (the configured travel limit)
 - `moving_mass_body_up_offset_m`
+- `effective_moving_mass_max_rate_m_s`
+- `effective_moving_mass_max_accel_m_s2`
 
 The existing `moving_mass_max_offset_m` column remains the maximum actual offset
 observed during a run. Existing CSV columns and vane-only delta meanings are
-preserved.
+preserved. Requested variant flags are checked against the effective headless
+configuration before a row is published; a model-mode mismatch is an analysis
+error rather than a mislabeled result.
 
 ## Geometry Diagnostics
 
@@ -105,6 +109,10 @@ time-series:
 - `rms_thrust_moment_from_com_offset`
 - `max_abs_vane_moment_about_total_com`
 - `max_abs_legacy_moving_mass_moment`
+
+The two COM metrics use metres. All thrust, vane, and legacy moment metrics use
+N·m. Maxima and RMS values use every logged post-step time-series sample in the
+run.
 
 Geometry-specific COM and thrust-moment metrics are zero in inactive modes.
 Legacy moment is zero in total-COM geometry mode. The centered geometry variant
