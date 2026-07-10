@@ -393,9 +393,25 @@ def run_headless_loiter(
             "effective_T_max_N": float(rb_cfg.T_max),
             "effective_hover_thrust_N": float(rb_cfg.hover_thrust),
             "moving_mass_enabled": bool(rb_cfg.moving_mass.enabled),
+            "state_dimension": int(state.size),
+            "total_mass_kg": float(rb_cfg.m),
             "effective_moving_mass_kg": float(rb_cfg.moving_mass.mass_kg),
             "effective_moving_mass_max_offset_m": float(rb_cfg.moving_mass.max_offset_m),
             "effective_moving_mass_max_rate_m_s": float(rb_cfg.moving_mass.max_rate_m_s),
+            "effective_moving_mass_max_accel_m_s2": float(
+                rb_cfg.moving_mass.max_accel_m_s2
+            ),
+            "effective_moving_mass_body_up_offset_m": float(
+                rb_cfg.moving_mass.moving_mass_body_up_offset_m
+            ),
+            "total_com_geometry_active": bool(rb_cfg.moving_mass.use_total_com_geometry),
+            "use_legacy_gravity_offset_moment": bool(
+                rb_cfg.moving_mass.use_legacy_gravity_offset_moment
+            ),
+            "legacy_gravity_offset_active": bool(
+                rb_cfg.moving_mass.enabled
+                and rb_cfg.moving_mass.use_legacy_gravity_offset_moment
+            ),
         }
     )
     return LoiterRunResult(str(param_path or "<default>"), scenario_cfg, rows, metrics, bool(crash_reason), crash_reason)
@@ -435,6 +451,11 @@ def compute_loiter_metrics(
     thrust_cmd = _values(rows, "thrust_cmd")
     thrust_actual = _values(rows, "thrust_actual")
     moving_mass_offset = _values(rows, "moving_mass_offset_m")
+    total_com_body_right = _values(rows, "total_com_body_right_m")
+    total_com_body_up = _values(rows, "total_com_body_up_m")
+    thrust_moment_from_com_offset = _values(rows, "thrust_moment_from_com_offset")
+    vane_moment_about_total_com = _values(rows, "vane_moment_about_total_com")
+    legacy_moving_mass_moment = _values(rows, "legacy_moving_mass_moment")
     final = rows[-1]
     crash_reason = str(final.get("crash_reason", ""))
     mixer_saturation_percent = _percent(rows, "mixer_saturated")
@@ -484,6 +505,20 @@ def compute_loiter_metrics(
         "authority_limited_percent": authority_limited_percent,
         "moving_mass_max_offset_m": float(np.max(np.abs(moving_mass_offset))) if moving_mass_offset.size else 0.0,
         "moving_mass_saturation_percent": _percent(rows, "moving_mass_saturated"),
+        "max_abs_total_com_body_right_m": float(np.max(np.abs(total_com_body_right))),
+        "max_abs_total_com_body_up_m": float(np.max(np.abs(total_com_body_up))),
+        "max_abs_thrust_moment_from_com_offset": float(
+            np.max(np.abs(thrust_moment_from_com_offset))
+        ),
+        "rms_thrust_moment_from_com_offset": float(
+            np.sqrt(np.mean(thrust_moment_from_com_offset * thrust_moment_from_com_offset))
+        ),
+        "max_abs_vane_moment_about_total_com": float(
+            np.max(np.abs(vane_moment_about_total_com))
+        ),
+        "max_abs_legacy_moving_mass_moment": float(
+            np.max(np.abs(legacy_moving_mass_moment))
+        ),
         "final_x": float(final["x"]),
         "final_z": float(final["z"]),
         "final_vx": float(final["vx"]),
