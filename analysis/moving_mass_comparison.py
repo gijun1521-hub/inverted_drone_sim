@@ -40,6 +40,24 @@ METRIC_FIELDS = [
     "effective_moving_mass_kg",
     "effective_moving_mass_max_offset_m",
     "effective_moving_mass_max_rate_m_s",
+    "max_abs_total_com_body_right_m",
+    "max_abs_total_com_body_up_m",
+    "max_abs_thrust_moment_from_com_offset",
+    "rms_thrust_moment_from_com_offset",
+    "max_abs_vane_moment_about_total_com",
+    "max_abs_legacy_moving_mass_moment",
+]
+
+METADATA_FIELDS = [
+    "moving_mass_model_mode",
+    "baseline_variant",
+    "mode_baseline_variant",
+    "total_com_geometry_active",
+    "legacy_gravity_offset_active",
+    "state_dimension",
+    "total_mass_kg",
+    "moving_mass_mass_kg",
+    "moving_mass_body_up_offset_m",
 ]
 
 DERIVED_FIELDS = [
@@ -48,6 +66,10 @@ DERIVED_FIELDS = [
     "delta_final_abs_x_error",
     "delta_rms_x_error",
     "attitude_improvement_score",
+    "delta_vs_mode_baseline_max_theta_deg",
+    "delta_vs_mode_baseline_rms_theta_deg",
+    "delta_vs_mode_baseline_final_abs_x_error",
+    "delta_vs_mode_baseline_rms_x_error",
 ]
 
 CSV_FIELDS = [
@@ -58,6 +80,7 @@ CSV_FIELDS = [
     "pass",
     "crash_reason",
     "moving_mass_enabled",
+    *METADATA_FIELDS,
     *METRIC_FIELDS,
     *DERIVED_FIELDS,
     "notes",
@@ -71,6 +94,17 @@ class MovingMassVariant:
     moving_mass_enabled: bool
     moving_mass_target_m: float = 0.0
     moving_mass_assist_gain_m_per_Nm: float = 0.0
+    use_total_com_geometry: bool = False
+    use_legacy_gravity_offset_moment: bool = True
+    mode_baseline_variant: str = "vane_only"
+
+    @property
+    def moving_mass_model_mode(self) -> str:
+        if self.use_total_com_geometry:
+            return "total_com_geometry"
+        if self.moving_mass_enabled and self.use_legacy_gravity_offset_moment:
+            return "legacy_gravity_offset"
+        return "disabled"
 
 
 @dataclass(frozen=True)
@@ -103,6 +137,31 @@ def default_variants(
             description="Moving mass enabled; target is proportional to desired pitch moment.",
             moving_mass_enabled=True,
             moving_mass_assist_gain_m_per_Nm=proportional_gain_m_per_Nm,
+        ),
+        MovingMassVariant(
+            name="total_com_geometry_centered",
+            description="Total-COM geometry enabled with the moving mass fixed at zero lateral offset.",
+            moving_mass_enabled=False,
+            use_total_com_geometry=True,
+            use_legacy_gravity_offset_moment=False,
+        ),
+        MovingMassVariant(
+            name="total_com_geometry_fixed_target",
+            description="Total-COM geometry with the same fixed target command as the legacy variant.",
+            moving_mass_enabled=True,
+            moving_mass_target_m=fixed_target_m,
+            use_total_com_geometry=True,
+            use_legacy_gravity_offset_moment=False,
+            mode_baseline_variant="total_com_geometry_centered",
+        ),
+        MovingMassVariant(
+            name="total_com_geometry_proportional_assist",
+            description="Total-COM geometry with the same proportional command as the legacy variant.",
+            moving_mass_enabled=True,
+            moving_mass_assist_gain_m_per_Nm=proportional_gain_m_per_Nm,
+            use_total_com_geometry=True,
+            use_legacy_gravity_offset_moment=False,
+            mode_baseline_variant="total_com_geometry_centered",
         ),
     ]
 
@@ -141,6 +200,17 @@ def _row_for_result(
         "pass": bool(metrics.get("pass", False)),
         "crash_reason": str(metrics.get("crash_reason", "")),
         "moving_mass_enabled": bool(metrics.get("moving_mass_enabled", False)),
+        "moving_mass_model_mode": variant.moving_mass_model_mode,
+        "baseline_variant": "vane_only",
+        "mode_baseline_variant": variant.mode_baseline_variant,
+        "total_com_geometry_active": bool(metrics.get("total_com_geometry_active", False)),
+        "legacy_gravity_offset_active": bool(metrics.get("legacy_gravity_offset_active", False)),
+        "state_dimension": int(metrics.get("state_dimension", 0)),
+        "total_mass_kg": float(metrics.get("total_mass_kg", 0.0)),
+        "moving_mass_mass_kg": float(metrics.get("effective_moving_mass_kg", 0.0)),
+        "moving_mass_body_up_offset_m": float(
+            metrics.get("effective_moving_mass_body_up_offset_m", 0.0)
+        ),
         "notes": str(metrics.get("notes", "")),
     }
     for field in METRIC_FIELDS:
@@ -151,19 +221,48 @@ def _row_for_result(
 
 
 def add_baseline_deltas(rows: list[dict[str, float | int | str | bool]]) -> None:
-    baselines = {
-        (str(row["param_file"]), str(row["scenario_name"])): row
-        for row in rows
-        if row["variant"] == "vane_only"
+    indexed: dict[tuple[str, str, str], dict[str, float | int | str | bool]] = {}
+    for row in rows:
+        key = (str(row["param_file"]), str(row["scenario_name"]), str(row["variant"]))
+        if key in indexed:
+            raise ValueError(
+                "duplicate moving-mass comparison row for "
+                f"param_file={key[0]!r}, scenario={key[1]!r}, variant={key[2]!r}"
+            )
+        indexed[key] = row
+
+    delta_metrics = {
+        "max_theta_deg": "delta_max_theta_deg",
+        "rms_theta_deg": "delta_rms_theta_deg",
+        "final_abs_x_error": "delta_final_abs_x_error",
+        "rms_x_error": "delta_rms_x_error",
+    }
+    mode_delta_metrics = {
+        "max_theta_deg": "delta_vs_mode_baseline_max_theta_deg",
+        "rms_theta_deg": "delta_vs_mode_baseline_rms_theta_deg",
+        "final_abs_x_error": "delta_vs_mode_baseline_final_abs_x_error",
+        "rms_x_error": "delta_vs_mode_baseline_rms_x_error",
     }
     for row in rows:
-        baseline = baselines.get((str(row["param_file"]), str(row["scenario_name"])))
+        group = (str(row["param_file"]), str(row["scenario_name"]))
+        historical_name = str(row["baseline_variant"])
+        mode_name = str(row["mode_baseline_variant"])
+        baseline = indexed.get((*group, historical_name))
         if baseline is None:
-            continue
-        row["delta_max_theta_deg"] = float(row["max_theta_deg"]) - float(baseline["max_theta_deg"])
-        row["delta_rms_theta_deg"] = float(row["rms_theta_deg"]) - float(baseline["rms_theta_deg"])
-        row["delta_final_abs_x_error"] = float(row["final_abs_x_error"]) - float(baseline["final_abs_x_error"])
-        row["delta_rms_x_error"] = float(row["rms_x_error"]) - float(baseline["rms_x_error"])
+            raise ValueError(
+                f"missing baseline variant {historical_name!r} for "
+                f"param_file={group[0]!r}, scenario={group[1]!r}"
+            )
+        mode_baseline = indexed.get((*group, mode_name))
+        if mode_baseline is None:
+            raise ValueError(
+                f"missing mode baseline variant {mode_name!r} for "
+                f"param_file={group[0]!r}, scenario={group[1]!r}"
+            )
+        for metric, delta_field in delta_metrics.items():
+            row[delta_field] = float(row[metric]) - float(baseline[metric])
+        for metric, delta_field in mode_delta_metrics.items():
+            row[delta_field] = float(row[metric]) - float(mode_baseline[metric])
         row["attitude_improvement_score"] = -0.5 * (
             float(row["delta_max_theta_deg"]) + float(row["delta_rms_theta_deg"])
         )
@@ -181,7 +280,17 @@ def run_moving_mass_comparison(
     for scenario in scenarios:
         for variant in selected_variants:
             variant_scenario = scenario_for_variant(scenario, variant)
-            run = run_headless_loiter(param_path, variant_scenario)
+            run = run_headless_loiter(
+                param_path,
+                variant_scenario,
+                rb_overrides={
+                    "moving_mass": {
+                        "enabled": variant.moving_mass_enabled,
+                        "use_total_com_geometry": variant.use_total_com_geometry,
+                        "use_legacy_gravity_offset_moment": variant.use_legacy_gravity_offset_moment,
+                    }
+                },
+            )
             row = _row_for_result(param_path, scenario, variant, run)
             rows.append(row)
             results.append(MovingMassComparisonResult(variant, scenario, run, row))
@@ -237,20 +346,66 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
         "",
         "## Purpose",
         "",
-        "This report compares the existing 2D quasi-static moving-mass pitch assist model against the vane-only baseline.",
-        "It is a headless measurement workflow, not a physics change or calibrated flight prediction.",
+        "This report compares the legacy gravity-offset and total-COM geometry formulations in the same headless scenarios.",
+        "It is an analytical measurement workflow, not a physics change or calibrated flight prediction.",
+        "",
+        "## Baseline Definitions",
+        "",
+        "- `baseline_variant` is `vane_only`; the existing `delta_*` fields remain differences versus the historical simulator baseline.",
+        "- `mode_baseline_variant` selects the formulation-matched reference used by `delta_vs_mode_baseline_*` fields.",
+        "- Geometry active variants use `total_com_geometry_centered` as their mode baseline, isolating the additional effect of lateral mass motion.",
+        "- Negative error or angle deltas mean the raw metric decreased. Positive `attitude_improvement_score` means the average of max and RMS pitch angle decreased versus `vane_only`.",
         "",
         "## Variant Definitions",
         "",
     ]
-    for name, description in variants.items():
-        lines.append(f"- `{name}`: {description}")
+    variant_groups = [
+        ("Historical baseline", ["vane_only"]),
+        ("Legacy gravity-offset variants", ["moving_mass_fixed_target", "moving_mass_proportional_assist"]),
+        ("Total-COM centered baseline", ["total_com_geometry_centered"]),
+        (
+            "Total-COM active variants",
+            ["total_com_geometry_fixed_target", "total_com_geometry_proportional_assist"],
+        ),
+    ]
+    for heading, names in variant_groups:
+        present = [name for name in names if name in variants]
+        if not present:
+            continue
+        lines += [f"### {heading}", ""]
+        for name in present:
+            lines.append(f"- `{name}`: {variants[name]}")
+
+    effective_by_param: dict[str, dict[str, float | int | str | bool]] = {}
+    for row in rows:
+        effective_by_param.setdefault(str(row["param_file"]), row)
+    lines += [
+        "",
+        "## Effective Mass And Geometry Configuration",
+        "",
+        "| parameter source | total_mass_kg | moving_mass_mass_kg | configured_max_offset_m | moving_mass_body_up_offset_m |",
+        "| --- | ---: | ---: | ---: | ---: |",
+    ]
+    for param_file, row in effective_by_param.items():
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    param_file,
+                    _fmt(row["total_mass_kg"]),
+                    _fmt(row["moving_mass_mass_kg"]),
+                    _fmt(row["effective_moving_mass_max_offset_m"]),
+                    _fmt(row["moving_mass_body_up_offset_m"]),
+                ]
+            )
+            + " |"
+        )
     lines += [
         "",
         "## Scenario Summary",
         "",
-        "| scenario | variant | max_theta_deg | rms_theta_deg | final_abs_x_error | rms_x_error | mm_max_offset_m | mm_sat_% | notes |",
-        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+        "| scenario | variant | model mode | mode baseline | max_theta_deg | rms_theta_deg | final_abs_x_error | rms_x_error | mm_max_offset_m | notes |",
+        "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for row in rows:
         lines.append(
@@ -259,12 +414,13 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
                 [
                     str(row["scenario_name"]),
                     str(row["variant"]),
+                    str(row["moving_mass_model_mode"]),
+                    str(row["mode_baseline_variant"]),
                     _fmt(row["max_theta_deg"]),
                     _fmt(row["rms_theta_deg"]),
                     _fmt(row["final_abs_x_error"]),
                     _fmt(row["rms_x_error"]),
                     _fmt(row["moving_mass_max_offset_m"]),
-                    _fmt(row["moving_mass_saturation_percent"]),
                     str(row["notes"]).replace("|", "/"),
                 ]
             )
@@ -272,7 +428,58 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
         )
     lines += [
         "",
-        "## Best Attitude Reduction",
+        "## Deltas Versus Mode-Matched Baseline",
+        "",
+        "| scenario | variant | mode baseline | delta_max_theta_deg | delta_rms_theta_deg | delta_final_abs_x_error | delta_rms_x_error |",
+        "| --- | --- | --- | ---: | ---: | ---: | ---: |",
+    ]
+    for row in rows:
+        if row["variant"] == row["mode_baseline_variant"]:
+            continue
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    str(row["scenario_name"]),
+                    str(row["variant"]),
+                    str(row["mode_baseline_variant"]),
+                    _fmt(row["delta_vs_mode_baseline_max_theta_deg"]),
+                    _fmt(row["delta_vs_mode_baseline_rms_theta_deg"]),
+                    _fmt(row["delta_vs_mode_baseline_final_abs_x_error"]),
+                    _fmt(row["delta_vs_mode_baseline_rms_x_error"]),
+                ]
+            )
+            + " |"
+        )
+    lines += [
+        "",
+        "## Geometry Diagnostics",
+        "",
+        "`vane_moment_about_total_com` is the complete vane moment about the selected COM; it is not attributed solely to moving-mass motion.",
+        "",
+        "| scenario | variant | max_abs_com_right_m | max_abs_com_up_m | max_abs_thrust_com_moment | rms_thrust_com_moment | max_abs_vane_com_moment | max_abs_legacy_moment |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for row in rows:
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    str(row["scenario_name"]),
+                    str(row["variant"]),
+                    _fmt(row["max_abs_total_com_body_right_m"]),
+                    _fmt(row["max_abs_total_com_body_up_m"]),
+                    _fmt(row["max_abs_thrust_moment_from_com_offset"]),
+                    _fmt(row["rms_thrust_moment_from_com_offset"]),
+                    _fmt(row["max_abs_vane_moment_about_total_com"]),
+                    _fmt(row["max_abs_legacy_moving_mass_moment"]),
+                ]
+            )
+            + " |"
+        )
+    lines += [
+        "",
+        "## Best Attitude Reduction Versus Vane-Only",
         "",
         "| scenario | variant | delta_max_theta_deg | delta_rms_theta_deg | attitude_score | delta_final_abs_x_error |",
         "| --- | --- | ---: | ---: | ---: | ---: |",
@@ -298,7 +505,7 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
         lines.append("| no improvement under this configuration | n/a | 0.000 | 0.000 | 0.000 | 0.000 |")
     lines += [
         "",
-        "## Cases Where Moving Mass Worsens Performance",
+        "## Cases That Worsen Versus Vane-Only",
         "",
         "| scenario | variant | delta_max_theta_deg | delta_rms_theta_deg | delta_final_abs_x_error | delta_rms_x_error |",
         "| --- | --- | ---: | ---: | ---: | ---: |",
@@ -326,12 +533,13 @@ def write_markdown(results: list[MovingMassComparisonResult], path: str | Path) 
         "",
         "## Notes And Limitations",
         "",
-        "- Negative delta values mean the moving-mass variant reduced that metric versus `vane_only`.",
-        "- Positive `attitude_improvement_score` means max and RMS pitch angle decreased on average.",
+        "- Under this analytical scenario, deltas describe numerical differences only; they do not establish real-flight accuracy or global benefit.",
+        "- Geometry variants should be judged both versus `vane_only` and relative to the geometry-centered baseline.",
+        "- The geometry formulation changes thrust and vane arms about the instantaneous total COM and does not apply the legacy `m_m * g * offset` term.",
         "- A run can reduce RMS theta but increase final x error; inspect attitude and position metrics together.",
-        "- These outputs compare the existing 2D quasi-static CG torque model only.",
-        "- The current model does not yet include explicit total-CG geometry shift, moving-mass-induced thrust-line pitch moment, position-dependent inertia (`Iyy`) changes, inertial reaction kick from moving-mass acceleration, or full 3D coupled dynamics.",
-        "- Results are provisional and must not be used as final validation for a large moving mass such as approximately 0.5 kg.",
+        "- This does not include reaction kick, moving-mass acceleration reaction, internal momentum coupling, or position-dependent inertia (`Iyy`).",
+        "- The comparison remains 2D and does not validate a 3D aircraft.",
+        "- Effective parameters are loaded assumptions, not calibrated flight values.",
         "- No flip controller, reinforcement learning, four-vane physics wiring, or real-flight calibration is included.",
         "",
     ]

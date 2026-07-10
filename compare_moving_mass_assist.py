@@ -14,7 +14,9 @@ from analysis.moving_mass_comparison import (
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Compare vane-only and moving-mass pitch-assist variants.")
+    parser = argparse.ArgumentParser(
+        description="Compare vane-only, legacy moving-mass, and total-COM geometry variants."
+    )
     parser.add_argument("--output-dir", default="results/analysis/moving_mass_comparison")
     parser.add_argument("--params", default="params/loiter_example.json")
     parser.add_argument("--scenario", default="pitch_assist_probe", help="Scenario name, or 'all'.")

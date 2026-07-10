@@ -377,7 +377,7 @@ Motor 5: Motor        -> scalar fan thrust
 - [docs/four_vane_mixer_prep.md](docs/four_vane_mixer_prep.md): future four-vane mixer architecture 준비
 - [docs/ardupilot_singlecopter_mapping.md](docs/ardupilot_singlecopter_mapping.md): ArduPilot SingleCopter flap naming 대응
 - [docs/moving_mass_pitch_assist.md](docs/moving_mass_pitch_assist.md): disabled-by-default moving-mass pitch assist 모델
-- [docs/moving_mass_comparison_analysis.md](docs/moving_mass_comparison_analysis.md): vane-only와 moving-mass assist variant 비교 분석 workflow
+- [docs/moving_mass_comparison_analysis.md](docs/moving_mass_comparison_analysis.md): vane-only, legacy, total-COM geometry 6개 variant 비교 분석 workflow
 
 ---
 
