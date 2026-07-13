@@ -7,11 +7,37 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from interactive_sim import ControlMode, InteractiveApp
+from interactive_sim import ControlMode, InteractiveApp, configure_actuator_lab
 from params import load_interactive_config
 
 
 class InteractiveRenderSmokeTests(unittest.TestCase):
+    def test_actuator_lab_render_smoke_with_dummy_surface(self):
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        try:
+            import pygame
+        except ImportError as exc:
+            raise unittest.SkipTest("pygame is not installed") from exc
+
+        rb_cfg, ui_cfg, controller_cfg = load_interactive_config(
+            "params/moving_mass_prototype_2kg.json"
+        )
+        app = InteractiveApp(
+            configure_actuator_lab(rb_cfg),
+            ui_cfg,
+            controller_cfg,
+            actuator_lab_enabled=True,
+        )
+
+        pygame.init()
+        try:
+            screen = pygame.display.set_mode((1200, 820))
+            font = pygame.font.SysFont("consolas", 18)
+            small_font = pygame.font.SysFont("consolas", 16)
+            app.render(pygame, screen, font, small_font)
+        finally:
+            pygame.quit()
+
     def test_render_errors_follow_mode(self):
         rb_cfg, ui_cfg, controller_cfg = load_interactive_config("params/loiter_example.json")
         app = InteractiveApp(rb_cfg, ui_cfg, controller_cfg)

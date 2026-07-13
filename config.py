@@ -310,6 +310,14 @@ class InteractiveSimConfig:
     manual_theta_max_deg: float = 18.0
     manual_omega_max_deg_s: float = 120.0
 
+    actuator_lab_mass_limit_m: float = 0.010
+    actuator_lab_mass_step_m: float = 0.001
+    actuator_lab_mass_coarse_step_m: float = 0.005
+    actuator_lab_vane_limit_deg: float = 5.0
+    actuator_lab_vane_step_deg: float = 0.5
+    actuator_lab_vane_coarse_step_deg: float = 2.0
+    actuator_lab_moment_deadband_Nm: float = 0.002
+
     disturbance_force_x_N: float = 4.0
     disturbance_force_z_N: float = 4.0
     disturbance_moment_Nm: float = 0.20
