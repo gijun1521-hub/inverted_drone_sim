@@ -8,9 +8,9 @@ The workflow addresses persistent ribbon/comet-like LOITER motion with repeatabl
 
 The stages always follow this dependency order when `--stage all` is used:
 
-1. `rate_pd`: moving mass disabled, `atc_rat_pit_i=0`, joint coarse P/D grid, then a half-step local search around the five best accepted coarse candidates.
-2. `rate_i`: fixes the top three P/D candidates and sweeps I, including `I=0` and positive/negative persistent moment-bias cases.
-3. `attitude_p`: fixes the selected rate PID and sweeps Angle P with ±5, ±10, and ±15 degree initial attitudes.
+1. `rate_pd`: moving mass disabled, `atc_rat_pit_i=0`, joint coarse P/D grid, then a half-step local search around the five best accepted coarse candidates. Signed 10 deg/s primary recoveries must settle; 120 deg/s and low-authority cases are robustness-only.
+2. `rate_i`: fixes the top three P/D candidates and sweeps I, including `I=0` and positive/negative persistent moment-bias cases. Primary recoveries must settle and bias cases must meet the documented tail and terminal limits.
+3. `attitude_p`: fixes the selected rate PID and sweeps Angle P with ±5, ±10, and ±15 degree initial attitudes. Each five-second case must settle or meet the terminal 7 degree / 12 deg/s bounds.
 4. `loiter_xy`: fixes the rate and attitude loops and sweeps only the active horizontal position P and velocity P fields. Moving mass remains disabled.
 5. `moving_mass_gain`: fixes the selected vane-only controller, enables total-COM geometry, and sweeps the proportional assist gain against a mode-matched centered baseline.
 
@@ -30,7 +30,9 @@ Decimal grids are constructed from decimal arithmetic so endpoints and counts ar
 
 ## Scenarios and scoring scope
 
-RATE P-D uses 1.5-second positive and negative 60 deg/s and 120 deg/s initial-rate recovery cases plus mirrored low-authority cases. RATE I keeps the recovery cases and adds mirrored persistent ±0.005 Nm disturbances in LOITER so the non-rate axes remain bounded while steady-state error, integrator output, inhibition, and anti-windup are measured. Angle P uses the six required signed initial attitudes. RATE and STABILIZE tests start with 6 m of analytical altitude margin because those modes intentionally do not run the altitude controller; this prevents a pitch-loop experiment from being rejected merely because hover thrust at a temporary tilt has less vertical component.
+RATE P-D uses 3-second positive and negative 10 deg/s primary recoveries plus 1.5-second signed 120 deg/s and mirrored low-authority robustness cases. RATE I uses 3-second signed 10 deg/s recoveries and mirrored persistent ±0.001 Nm disturbances in LOITER so the non-rate axes remain bounded while steady-state error, integrator output, inhibition, and anti-windup are measured. The bias gate requires tail mean absolute rate error at or below 40 deg/s and terminal absolute rate error at or below 30 deg/s. Angle P uses the six required signed initial attitudes. RATE and STABILIZE tests start with 6 m of analytical altitude margin and an analysis-only 50 m horizontal safety envelope because those modes intentionally do not run position or altitude control.
+
+Tail windows are stage-specific: RATE P-D and RATE recovery use the final 0.75 seconds, RATE I bias and attitude use the final 1.0 second, and LOITER/moving-mass use the configurable final 2.0 seconds by default. If a requested tail is longer than the sampled run, metrics use only the strict final half rather than silently duplicating whole-run metrics.
 
 LOITER uses upright hold, mirrored initial-offset recovery, mirrored horizontal impulses, mirrored stick move/release, and mirrored authority-stress cases. Authority stress participates in crash and hard-rejection checks, but its metrics do not enter the primary aggregate score.
 
@@ -79,10 +81,12 @@ Ranking first uses the normalized score in `1e-6` equivalence buckets. Tie-break
 
 ## Commands and resume
 
+Every cached scenario row and prerequisite-stage aggregate set is bound to a deterministic workflow fingerprint. The fingerprint hashes an explicit cache schema and grid-definition version, the controller-search and simulator implementation files, both parameter sources, quick/full mode, the tail policy, and dependent-stage options. A mismatch fails before stale rows can be reused and directs the caller to `--no-resume` or a new output directory.
+
 Full workflow:
 
 ```powershell
-.venv\Scripts\python.exe sweep_controller_gains.py --stage all --output-dir results/analysis/controller_grid_search
+.venv\Scripts\python.exe sweep_controller_gains.py --stage all --no-resume --output-dir results/analysis/controller_grid_search
 ```
 
 Quick end-to-end smoke:

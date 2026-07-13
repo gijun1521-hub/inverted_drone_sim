@@ -36,6 +36,26 @@ except ImportError:  # pragma: no cover - supports top-level script execution
 
 
 STAGES = ("rate_pd", "rate_i", "attitude_p", "loiter_xy", "moving_mass_gain")
+CACHE_SCHEMA_VERSION = 2
+STAGE_GRID_DEFINITION_VERSION = "2026-07-13.2"
+TAIL_POLICY_VERSION = "2026-07-13.2"
+WORKFLOW_IMPLEMENTATION_FILES = (
+    "analysis/controller_grid_search.py",
+    "analysis/headless_loiter.py",
+    "interactive_sim.py",
+    "cascaded_controller.py",
+    "rigid_body_model.py",
+    "actuators.py",
+    "singlecopter_mixer.py",
+    "config.py",
+    "params.py",
+)
+
+RATE_BIAS_DISTURBANCE_MOMENT_NM = 0.001
+RATE_BIAS_MAX_TAIL_MEAN_ERROR_DEG_S = 40.0
+RATE_BIAS_MAX_TERMINAL_ERROR_DEG_S = 30.0
+ATTITUDE_MAX_TERMINAL_THETA_DEG = 7.0
+ATTITUDE_MAX_TERMINAL_OMEGA_DEG_S = 12.0
 SHEET_NAMES = (
     "01_rate_pd_all",
     "02_rate_pd_top50",
@@ -67,10 +87,13 @@ SCENARIO_METRIC_FIELDS = (
     "rms_rate_error_deg_s",
     "tail_rms_rate_error_deg_s",
     "tail_mean_abs_rate_error_deg_s",
+    "terminal_abs_rate_error_deg_s",
     "rate_overshoot_deg_s",
     "rate_zero_crossings",
     "rms_theta_deg",
     "tail_rms_theta_deg",
+    "terminal_abs_theta_deg",
+    "terminal_abs_omega_deg_s",
     "theta_overshoot_deg",
     "tail_peak_to_peak_theta_deg",
     "max_omega_deg_s",
@@ -120,6 +143,7 @@ SCENARIO_METRIC_FIELDS = (
 
 SCENARIO_CSV_FIELDS = (
     "run_key",
+    "cache_fingerprint",
     "stage",
     "candidate_id",
     "candidate_key",
@@ -195,6 +219,9 @@ class SearchScenario:
     config: LoiterScenarioConfig
     primary_score: bool = True
     symmetry_group: str = ""
+    tail_window_s: float | None = None
+    validity_gate: str = ""
+    analytical_x_limit_abs: float | None = None
 
 
 @dataclass(frozen=True)
@@ -372,39 +399,53 @@ def _duration(value: float, quick: bool) -> float:
     return 0.30 if quick else value
 
 
+def _stage_tail_window(value: float, quick: bool) -> float:
+    return 0.10 if quick else value
+
+
 def rate_pd_scenarios(quick: bool = False) -> list[SearchScenario]:
-    duration = _duration(1.5, quick)
+    primary_duration = _duration(3.0, quick)
+    robustness_duration = _duration(1.5, quick)
+    tail_window = _stage_tail_window(0.75, quick)
     scenarios = []
-    for label, omega in (("pos_moderate", 60.0), ("neg_moderate", -60.0), ("pos_strong", 120.0), ("neg_strong", -120.0)):
+    for label, omega in (("pos_moderate", 10.0), ("neg_moderate", -10.0), ("pos_strong", 120.0), ("neg_strong", -120.0)):
         scenarios.append(
             SearchScenario(
                 LoiterScenarioConfig(
-                    name=f"rate_{label}", mode="RATE", duration_s=duration,
+                    name=f"rate_{label}", mode="RATE",
+                    duration_s=primary_duration if "moderate" in label else robustness_duration,
                     initial_z=6.0,
                     initial_omega_deg_s=omega, capture_current_target=True,
                     max_theta_deg_limit=90.0, max_saturation_percent=100.0,
                 ),
+                primary_score="moderate" in label,
                 symmetry_group=label.replace("pos_", "").replace("neg_", ""),
+                tail_window_s=tail_window,
+                validity_gate="" if quick or "moderate" not in label else "settled",
+                analytical_x_limit_abs=50.0,
             )
         )
     for label, omega in (("pos", 60.0), ("neg", -60.0)):
         scenarios.append(
             SearchScenario(
                 LoiterScenarioConfig(
-                    name=f"rate_low_authority_{label}", mode="RATE", duration_s=duration,
+                    name=f"rate_low_authority_{label}", mode="RATE", duration_s=robustness_duration,
                     initial_z=6.0,
                     initial_omega_deg_s=omega, capture_current_target=True,
                     vane_angle_max_deg=8.0, vane_rate_limit_deg_s=90.0,
                     max_theta_deg_limit=100.0, max_saturation_percent=100.0,
                 ),
+                primary_score=False,
                 symmetry_group="low_authority",
+                tail_window_s=tail_window,
+                analytical_x_limit_abs=50.0,
             )
         )
     return scenarios
 
 
 def rate_i_scenarios(quick: bool = False) -> list[SearchScenario]:
-    recovery_duration = _duration(1.5, quick)
+    recovery_duration = _duration(3.0, quick)
     bias_duration = _duration(4.0, quick)
     scenarios = [
         SearchScenario(
@@ -415,38 +456,47 @@ def rate_i_scenarios(quick: bool = False) -> list[SearchScenario]:
                 max_theta_deg_limit=90.0, max_saturation_percent=100.0,
             ),
             symmetry_group="moderate",
+            tail_window_s=_stage_tail_window(0.75, quick),
+            validity_gate="" if quick else "settled",
+            analytical_x_limit_abs=50.0,
         )
-        for label, omega in (("pos_moderate", 60.0), ("neg_moderate", -60.0))
+        for label, omega in (("pos_moderate", 10.0), ("neg_moderate", -10.0))
     ]
-    for label, moment in (("positive_bias", 0.005), ("negative_bias", -0.005)):
+    for label, sign in (("positive_bias", 1.0), ("negative_bias", -1.0)):
         scenarios.append(
             SearchScenario(
                 LoiterScenarioConfig(
                     name=f"rate_i_{label}", mode="LOITER", duration_s=bias_duration,
                     initial_z=1.0,
                     disturbance_start_s=0.0, disturbance_duration_s=bias_duration,
-                    disturbance_moment=moment, capture_current_target=True,
+                    disturbance_moment=sign * RATE_BIAS_DISTURBANCE_MOMENT_NM,
+                    capture_current_target=True,
                     max_theta_deg_limit=90.0, max_saturation_percent=100.0,
                 ),
                 symmetry_group="persistent_bias",
+                tail_window_s=_stage_tail_window(1.0, quick),
+                validity_gate="" if quick else "rate_bias",
             )
         )
     return scenarios
 
 
 def attitude_p_scenarios(quick: bool = False) -> list[SearchScenario]:
-    duration = _duration(4.0, quick)
+    duration = _duration(5.0, quick)
     scenarios = []
     for angle in (5, -5, 10, -10, 15, -15):
         scenarios.append(
             SearchScenario(
                 LoiterScenarioConfig(
                     name=f"attitude_{angle:+d}deg", mode="STABILIZE", duration_s=duration,
-                    initial_z=6.0,
+                    initial_z=7.0,
                     initial_theta_deg=float(angle), capture_current_target=True,
                     max_theta_deg_limit=80.0, max_saturation_percent=100.0,
                 ),
                 symmetry_group=f"attitude_{abs(angle)}deg",
+                tail_window_s=_stage_tail_window(1.0, quick),
+                validity_gate="" if quick else "attitude_terminal",
+                analytical_x_limit_abs=50.0,
             )
         )
     return scenarios
@@ -584,7 +634,24 @@ def _percent(values: np.ndarray) -> float:
 def _tail_mask(times: np.ndarray, tail_window_s: float) -> np.ndarray:
     if not times.size:
         return np.array([], dtype=bool)
-    return times >= max(float(times[0]), float(times[-1]) - tail_window_s)
+    if times.size == 1:
+        return np.ones(1, dtype=bool)
+    duration = max(0.0, float(times[-1] - times[0]))
+    positive_steps = np.diff(times)
+    positive_steps = positive_steps[positive_steps > 0.0]
+    minimum_window = float(np.median(positive_steps)) if positive_steps.size else 0.0
+    strict_window = max(0.5 * duration, minimum_window)
+    effective_window = min(float(tail_window_s), strict_window)
+    mask = times >= float(times[-1]) - effective_window
+    if np.all(mask):
+        mask[0] = False
+    if not np.any(mask):
+        mask[-1] = True
+    return mask
+
+
+def _effective_tail_window_s(scenario: SearchScenario, default_tail_window_s: float) -> float:
+    return float(scenario.tail_window_s or default_tail_window_s)
 
 
 def _row_values(rows: list[dict[str, Any]], key: str) -> np.ndarray:
@@ -672,10 +739,13 @@ def compute_scenario_metrics(
         "rms_rate_error_deg_s": _rms(rate_error_deg_s),
         "tail_rms_rate_error_deg_s": _rms(rate_error_deg_s[tail]),
         "tail_mean_abs_rate_error_deg_s": float(np.mean(np.abs(rate_error_deg_s[tail]))),
+        "terminal_abs_rate_error_deg_s": abs(float(rate_error_deg_s[-1])),
         "rate_overshoot_deg_s": _overshoot_to_zero(rate_error_deg_s),
         "rate_zero_crossings": zero_crossing_count(rate_error_deg_s, 0.05),
         "rms_theta_deg": _rms(theta_deg),
         "tail_rms_theta_deg": _rms(theta_deg[tail]),
+        "terminal_abs_theta_deg": abs(float(theta_deg[-1])),
+        "terminal_abs_omega_deg_s": abs(float(omega_deg_s[-1])),
         "theta_overshoot_deg": _overshoot_to_zero(theta_deg),
         "tail_peak_to_peak_theta_deg": float(np.ptp(theta_deg[tail])) if np.any(tail) else 0.0,
         "max_omega_deg_s": float(np.max(np.abs(omega_deg_s))),
@@ -772,6 +842,46 @@ def compute_scenario_metrics(
         }
     )
     return metrics
+
+
+def stage_validity_reasons(
+    stage: str,
+    scenario: SearchScenario,
+    metrics: dict[str, Any],
+) -> list[str]:
+    gate = scenario.validity_gate
+    if not gate:
+        return []
+    if gate == "settled":
+        if not _as_bool(metrics.get("settled")):
+            return [f"required {stage} recovery did not settle"]
+        return []
+    if gate == "rate_bias":
+        reasons = []
+        if _as_float(metrics.get("tail_mean_abs_rate_error_deg_s")) > RATE_BIAS_MAX_TAIL_MEAN_ERROR_DEG_S:
+            reasons.append(
+                "persistent-bias tail mean rate error exceeded "
+                f"{RATE_BIAS_MAX_TAIL_MEAN_ERROR_DEG_S:g} deg/s"
+            )
+        if _as_float(metrics.get("terminal_abs_rate_error_deg_s")) > RATE_BIAS_MAX_TERMINAL_ERROR_DEG_S:
+            reasons.append(
+                "persistent-bias terminal rate error exceeded "
+                f"{RATE_BIAS_MAX_TERMINAL_ERROR_DEG_S:g} deg/s"
+            )
+        return reasons
+    if gate == "attitude_terminal":
+        if _as_bool(metrics.get("settled")):
+            return []
+        theta_ok = _as_float(metrics.get("terminal_abs_theta_deg")) <= ATTITUDE_MAX_TERMINAL_THETA_DEG
+        omega_ok = _as_float(metrics.get("terminal_abs_omega_deg_s")) <= ATTITUDE_MAX_TERMINAL_OMEGA_DEG_S
+        if theta_ok and omega_ok:
+            return []
+        return [
+            "required attitude recovery neither settled nor met terminal "
+            f"theta/omega limits ({ATTITUDE_MAX_TERMINAL_THETA_DEG:g} deg, "
+            f"{ATTITUDE_MAX_TERMINAL_OMEGA_DEG_S:g} deg/s)"
+        ]
+    raise ValueError(f"unknown scenario validity gate {gate!r}")
 
 
 def normalized_score(row: dict[str, Any], stage: str) -> tuple[float, str]:
@@ -903,13 +1013,20 @@ def mark_selection_roles(rows: list[dict[str, Any]]) -> None:
 
 
 class ScenarioResultStore:
-    def __init__(self, path: Path, *, resume: bool = True):
+    def __init__(self, path: Path, *, cache_fingerprint: str, resume: bool = True):
         self.path = path
+        self.cache_fingerprint = cache_fingerprint
         self.rows: list[dict[str, Any]] = []
         self.by_key: dict[str, dict[str, Any]] = {}
         if resume and path.exists():
             with path.open("r", newline="", encoding="utf-8-sig") as handle:
                 for row in csv.DictReader(handle):
+                    row_fingerprint = str(row.get("cache_fingerprint", ""))
+                    if row_fingerprint != self.cache_fingerprint:
+                        raise ValueError(
+                            "stale scenario cache fingerprint; rerun with --no-resume "
+                            "or use a new output directory"
+                        )
                     key = str(row.get("run_key", ""))
                     if not key:
                         raise ValueError("scenario result row is missing run_key")
@@ -925,6 +1042,8 @@ class ScenarioResultStore:
 
     def add(self, row: dict[str, Any]) -> None:
         key = str(row["run_key"])
+        if str(row.get("cache_fingerprint", "")) != self.cache_fingerprint:
+            raise ValueError("scenario row cache fingerprint does not match the result store")
         if key in self.by_key:
             raise ValueError(f"duplicate run key: {key}")
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -961,13 +1080,15 @@ def _scenario_run_key(
     scenario: SearchScenario,
     param_path: str | Path,
     tail_window_s: float,
+    cache_fingerprint: str,
 ) -> str:
-    config_json = json.dumps(asdict(scenario.config), sort_keys=True, separators=(",", ":"))
+    config_json = json.dumps(asdict(scenario), sort_keys=True, separators=(",", ":"))
     config_digest = hashlib.sha1(config_json.encode("utf-8")).hexdigest()[:10]
     source_digest = hashlib.sha1(Path(param_path).read_bytes()).hexdigest()[:10]
     return (
         f"{candidate.key}|scenario={scenario.config.name}|cfg={config_digest}"
         f"|tail={_format_number(tail_window_s)}|source={source_digest}"
+        f"|workflow={cache_fingerprint}"
     )
 
 
@@ -981,7 +1102,8 @@ def _scenario_row(
     tail_window_s: float,
     baseline: dict[str, Any] | None = None,
     run_key: str | None = None,
-    enforce_primary_pass: bool = False,
+    cache_fingerprint: str,
+    enforce_primary_validity: bool = False,
 ) -> dict[str, Any]:
     metrics = compute_scenario_metrics(stage, result, tail_window_s=tail_window_s, baseline=baseline)
     mismatches = _effective_mismatch(candidate, result)
@@ -993,7 +1115,7 @@ def _scenario_row(
         mismatch_reason = "effective parameter mismatch: " + "; ".join(mismatches)
         metrics["rejection_reasons"] = "; ".join(filter(None, (reasons, mismatch_reason)))
     if (
-        enforce_primary_pass
+        enforce_primary_validity
         and stage == "loiter_xy"
         and scenario.primary_score
         and not _as_bool(metrics.get("analytical_pass"))
@@ -1004,8 +1126,20 @@ def _scenario_row(
         metrics["rejection_reasons"] = "; ".join(
             filter(None, (reasons, "primary scenario analytical recovery threshold failed"))
         )
+    if enforce_primary_validity:
+        validity_reasons = stage_validity_reasons(stage, scenario, metrics)
+        if validity_reasons:
+            metrics["rejected"] = True
+            metrics["pass"] = False
+            reasons = str(metrics.get("rejection_reasons", ""))
+            metrics["rejection_reasons"] = "; ".join(
+                filter(None, (reasons, *validity_reasons))
+            )
     row: dict[str, Any] = {
-        "run_key": run_key or _scenario_run_key(candidate, scenario, param_path, tail_window_s),
+        "run_key": run_key or _scenario_run_key(
+            candidate, scenario, param_path, tail_window_s, cache_fingerprint
+        ),
+        "cache_fingerprint": cache_fingerprint,
         "stage": stage,
         "candidate_id": candidate.candidate_id,
         "candidate_key": candidate.key,
@@ -1040,7 +1174,14 @@ def _run_candidate_scenarios(
     stage_rows: list[dict[str, Any]] = []
     for candidate_index, candidate in enumerate(candidates, 1):
         for scenario in scenarios:
-            run_key = _scenario_run_key(candidate, scenario, param_path, tail_window_s)
+            scenario_tail_window_s = _effective_tail_window_s(scenario, tail_window_s)
+            run_key = _scenario_run_key(
+                candidate,
+                scenario,
+                param_path,
+                scenario_tail_window_s,
+                store.cache_fingerprint,
+            )
             cached = store.get(run_key)
             if cached is not None:
                 row = cached
@@ -1053,6 +1194,8 @@ def _run_candidate_scenarios(
                         "use_legacy_gravity_offset_moment": not bool(moving_mass_geometry),
                     }
                 }
+                if scenario.analytical_x_limit_abs is not None:
+                    rb_overrides["x_limit_abs"] = float(scenario.analytical_x_limit_abs)
                 if moving_mass_geometry:
                     scenario_cfg = replace(
                         scenario_cfg,
@@ -1075,10 +1218,11 @@ def _run_candidate_scenarios(
                     scenario,
                     param_path,
                     result,
-                    tail_window_s=tail_window_s,
+                    tail_window_s=scenario_tail_window_s,
                     baseline=baseline,
                     run_key=run_key,
-                    enforce_primary_pass=not quick,
+                    cache_fingerprint=store.cache_fingerprint,
+                    enforce_primary_validity=not quick,
                 )
                 store.add(row)
             stage_rows.append(row)
@@ -1105,7 +1249,14 @@ def _run_moving_mass_baselines(
     candidate = Candidate("moving_mass_baseline", controller_parameters, "baseline")
     baselines: dict[str, dict[str, Any]] = {}
     for scenario in scenarios:
-        run_key = _scenario_run_key(candidate, scenario, param_path, tail_window_s)
+        scenario_tail_window_s = _effective_tail_window_s(scenario, tail_window_s)
+        run_key = _scenario_run_key(
+            candidate,
+            scenario,
+            param_path,
+            scenario_tail_window_s,
+            store.cache_fingerprint,
+        )
         cached = store.get(run_key)
         if cached is not None:
             baselines[scenario.config.name] = cached
@@ -1134,8 +1285,9 @@ def _run_moving_mass_baselines(
             scenario,
             param_path,
             result,
-            tail_window_s=tail_window_s,
+            tail_window_s=scenario_tail_window_s,
             run_key=run_key,
+            cache_fingerprint=store.cache_fingerprint,
         )
         store.add(row)
         baselines[scenario.config.name] = row
@@ -1161,6 +1313,19 @@ def read_csv_rows(path: Path) -> list[dict[str, Any]]:
 
 def best_aggregate_row(rows: Sequence[dict[str, Any]]) -> dict[str, Any] | None:
     return next((dict(row) for row in rows if not _as_bool(row.get("rejected"))), None)
+
+
+def require_best_aggregate_row(
+    stage: str,
+    rows: Sequence[dict[str, Any]],
+) -> dict[str, Any]:
+    selected = best_aggregate_row(rows)
+    if selected is None:
+        raise RuntimeError(
+            f"no valid candidate exists for required stage {stage!r}; "
+            "no dependent stage or tuned profile was published"
+        )
+    return selected
 
 
 def _parameters_from_row(row: dict[str, Any] | None, names: Sequence[str], defaults: dict[str, float]) -> dict[str, float]:
@@ -1323,12 +1488,12 @@ def write_profiles(
     with moving_mass_source.open("r", encoding="utf-8-sig") as handle:
         moving_profile = json.load(handle)
 
-    rate_pd = best_aggregate_row(stage_aggregates.get("rate_pd", []))
-    rate_i = best_aggregate_row(stage_aggregates.get("rate_i", []))
-    attitude = best_aggregate_row(stage_aggregates.get("attitude_p", []))
-    loiter = best_aggregate_row(stage_aggregates.get("loiter_xy", []))
-    moving = best_aggregate_row(stage_aggregates.get("moving_mass_gain", []))
-    selected_rows = [row for row in (rate_pd, rate_i, attitude, loiter) if row is not None]
+    selected_by_stage = {
+        stage: require_best_aggregate_row(stage, stage_aggregates.get(stage, []))
+        for stage in STAGES
+    }
+    selected_rows = [selected_by_stage[stage] for stage in STAGES[:-1]]
+    moving = selected_by_stage["moving_mass_gain"]
     selected: dict[str, float] = {}
     for row in selected_rows:
         for name in CONTROLLER_PARAMETER_FIELDS:
@@ -1409,13 +1574,15 @@ def write_markdown_summary(
         "## Reproduction",
         "",
         "```powershell",
-        ".venv\\Scripts\\python.exe sweep_controller_gains.py --stage all --output-dir results/analysis/controller_grid_search",
+        ".venv\\Scripts\\python.exe sweep_controller_gains.py --stage all --no-resume --output-dir results/analysis/controller_grid_search",
         ".venv\\Scripts\\python.exe sweep_controller_gains.py --stage all --quick --output-dir results/analysis/controller_grid_search_quick",
         "```",
         "",
         f"- Git SHA: `{metadata.get('git_sha', '')}`",
+        f"- Workflow fingerprint: `{metadata.get('workflow_fingerprint', '')}`",
+        f"- Cache schema: `{metadata.get('cache_schema_version', '')}`; grid definition: `{metadata.get('stage_grid_definition_version', '')}`",
         f"- Parameter source: `{metadata.get('vane_param_source', '')}`",
-        f"- Tail window: `{metadata.get('tail_window_s', '')}` s",
+        "- Tail windows: RATE P/D and recovery 0.75 s; RATE I bias and attitude 1.0 s; LOITER and moving mass 2.0 s by default.",
         f"- Runtime: `{metadata.get('runtime_s', '')}` s",
         f"- Ribbon/comet assessment: **{_ribbon_assessment(stage_aggregates.get('loiter_xy', []))}**.",
         "- `psc_ne_vel_i` and `psc_ne_vel_d` remain inactive and were not swept or optimized.",
@@ -1518,7 +1685,9 @@ def write_markdown_summary(
         "",
         "## Rejection And Tie-Break Rules",
         "",
-        "Candidates are rejected for crashes, ground contact, non-finite data, attitude-limit violations, unbounded growth, excessive sustained saturation, missing scenarios, duplicate run keys, or effective-parameter mismatches. Moving-mass candidates are also rejected when horizontal hold is materially worse than the total-COM centered baseline.",
+        "Candidates are rejected for crashes, ground contact, non-finite data, attitude-limit violations, unbounded growth, excessive sustained saturation, missing scenarios, duplicate run keys, effective-parameter mismatches, or failure of a required stage validity gate. Moving-mass candidates are also rejected when horizontal hold is materially worse than the total-COM centered baseline.",
+        "Signed 10 deg/s RATE recoveries must settle. Strong and low-authority RATE cases are robustness-only. RATE I bias rows and attitude rows use the documented terminal/tail thresholds stored in metadata.",
+        "Resume rows and prerequisite aggregate CSVs are accepted only when their workflow fingerprint matches the current implementation, parameter sources, quick/full mode, tail policy, and grid version.",
         "Ties favor lower tail oscillation, then lower saturation, lower control effort, and finally smaller gain magnitude.",
         "Authority-stress LOITER rows participate in hard rejection and robustness reporting but not the primary aggregate score.",
         "",
@@ -1548,6 +1717,58 @@ class WorkflowOptions:
     moving_mass_param_source: Path = Path("params/moving_mass_prototype_2kg.json")
     profile_output_dir: Path = Path("params")
     top_pd_count: int = 3
+
+
+@dataclass(frozen=True)
+class WorkflowFingerprint:
+    digest: str
+    payload: dict[str, Any]
+
+
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _tail_policy_metadata(quick: bool, default_tail_window_s: float) -> dict[str, Any]:
+    return {
+        "version": TAIL_POLICY_VERSION,
+        "rate_pd_recovery_s": _stage_tail_window(0.75, quick),
+        "rate_i_recovery_s": _stage_tail_window(0.75, quick),
+        "rate_i_bias_s": _stage_tail_window(1.0, quick),
+        "attitude_s": _stage_tail_window(1.0, quick),
+        "loiter_and_moving_mass_s": float(default_tail_window_s),
+        "oversized_window_fallback": "strict final half of available sampled duration",
+    }
+
+
+def build_workflow_fingerprint(
+    options: WorkflowOptions,
+    *,
+    cache_schema_version: int | None = None,
+) -> WorkflowFingerprint:
+    repository_root = Path(__file__).resolve().parents[1]
+    implementation_hashes = {
+        relative: _sha256_file(repository_root / relative)
+        for relative in WORKFLOW_IMPLEMENTATION_FILES
+    }
+    vane_source = Path(options.vane_param_source).resolve()
+    moving_source = Path(options.moving_mass_param_source).resolve()
+    payload: dict[str, Any] = {
+        "cache_schema_version": (
+            CACHE_SCHEMA_VERSION if cache_schema_version is None else int(cache_schema_version)
+        ),
+        "stage_grid_definition_version": STAGE_GRID_DEFINITION_VERSION,
+        "implementation_hashes": implementation_hashes,
+        "parameter_source_hashes": {
+            "vane": _sha256_file(vane_source),
+            "moving_mass": _sha256_file(moving_source),
+        },
+        "quick_mode": bool(options.quick),
+        "tail_policy": _tail_policy_metadata(options.quick, options.tail_window_s),
+        "top_pd_count": int(options.top_pd_count),
+    }
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return WorkflowFingerprint(hashlib.sha256(canonical.encode("utf-8")).hexdigest(), payload)
 
 
 def _git_sha() -> str:
@@ -1622,6 +1843,24 @@ def _previous_metadata(output_dir: Path) -> dict[str, str]:
     }
 
 
+def validate_previous_stage_metadata(
+    output_dir: Path,
+    previous_metadata: dict[str, str],
+    fingerprint: WorkflowFingerprint,
+) -> None:
+    existing_results = (output_dir / "scenario_results.csv").exists() or any(
+        (output_dir / filename).exists() for filename in STAGE_CSV_FILES.values()
+    )
+    if not existing_results:
+        return
+    previous_digest = previous_metadata.get("workflow_fingerprint", "")
+    if previous_digest != fingerprint.digest:
+        raise ValueError(
+            "existing scenario or prerequisite-stage results use a stale workflow fingerprint; "
+            "rerun with --no-resume for --stage all, or use a new output directory"
+        )
+
+
 def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
     if options.stage != "all" and options.stage not in STAGES:
         raise ValueError(f"unknown stage {options.stage!r}")
@@ -1632,11 +1871,34 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
 
     output_dir = Path(options.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    store = ScenarioResultStore(output_dir / "scenario_results.csv", resume=options.resume)
-    initial_scenario_row_count = len(store.rows)
+    fingerprint = build_workflow_fingerprint(options)
     previous_metadata = _previous_metadata(output_dir)
-    aggregates = _load_stage_aggregates(output_dir)
+    if options.resume or options.stage != "all":
+        validate_previous_stage_metadata(output_dir, previous_metadata, fingerprint)
+    store = ScenarioResultStore(
+        output_dir / "scenario_results.csv",
+        cache_fingerprint=fingerprint.digest,
+        resume=options.resume,
+    )
+    initial_scenario_row_count = len(store.rows)
+    if options.resume or options.stage != "all":
+        loaded_aggregates = _load_stage_aggregates(output_dir)
+    else:
+        loaded_aggregates = {stage: [] for stage in STAGES}
+    if options.stage == "all":
+        aggregates = loaded_aggregates
+    else:
+        selected_index = STAGES.index(options.stage)
+        aggregates = {
+            stage: loaded_aggregates.get(stage, []) if index < selected_index else []
+            for index, stage in enumerate(STAGES)
+        }
     selected_stages = set(STAGES if options.stage == "all" else (options.stage,))
+    stage_index = STAGES.index(options.stage) if options.stage in STAGES else len(STAGES) - 1
+    needs_rate_i = options.stage == "all" or stage_index >= STAGES.index("rate_i")
+    needs_attitude = options.stage == "all" or stage_index >= STAGES.index("attitude_p")
+    needs_loiter = options.stage == "all" or stage_index >= STAGES.index("loiter_xy")
+    needs_moving = options.stage == "all" or stage_index >= STAGES.index("moving_mass_gain")
     started = time.perf_counter()
 
     _rb, _ui, controller_cfg = load_interactive_config(options.vane_param_source)
@@ -1665,13 +1927,7 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
 
     pd_rows = top_candidates(aggregates.get("rate_pd", []), 2 if options.quick else options.top_pd_count)
     if not pd_rows:
-        pd_rows = [
-            {
-                "atc_rat_pit_p": defaults["atc_rat_pit_p"],
-                "atc_rat_pit_i": 0.0,
-                "atc_rat_pit_d": defaults["atc_rat_pit_d"],
-            }
-        ]
+        require_best_aggregate_row("rate_pd", aggregates.get("rate_pd", []))
     if "rate_i" in selected_stages:
         scenarios = rate_i_scenarios(options.quick)
         candidates = rate_i_candidates(pd_rows, options.quick)
@@ -1683,6 +1939,8 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         aggregates["rate_i"] = aggregate_candidates("rate_i", rows, scenarios)
 
     best_rate_i = best_aggregate_row(aggregates.get("rate_i", []))
+    if best_rate_i is None and needs_rate_i:
+        best_rate_i = require_best_aggregate_row("rate_i", aggregates.get("rate_i", []))
     if best_rate_i is None:
         best_rate_i = pd_rows[0]
     rate_parameters = _parameters_from_row(
@@ -1701,6 +1959,8 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         aggregates["attitude_p"] = aggregate_candidates("attitude_p", rows, scenarios)
 
     best_attitude = best_aggregate_row(aggregates.get("attitude_p", []))
+    if best_attitude is None and needs_attitude:
+        best_attitude = require_best_aggregate_row("attitude_p", aggregates.get("attitude_p", []))
     attitude_parameters = {
         **rate_parameters,
         "atc_ang_pit_p": _as_float(
@@ -1719,6 +1979,8 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         aggregates["loiter_xy"] = aggregate_candidates("loiter_xy", rows, scenarios)
 
     best_loiter = best_aggregate_row(aggregates.get("loiter_xy", []))
+    if best_loiter is None and needs_loiter:
+        best_loiter = require_best_aggregate_row("loiter_xy", aggregates.get("loiter_xy", []))
     loiter_parameters = {
         **attitude_parameters,
         "psc_ne_pos_p": _as_float(
@@ -1749,6 +2011,8 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
             quick=options.quick,
         )
         aggregates["moving_mass_gain"] = aggregate_candidates("moving_mass_gain", rows, scenarios)
+    if needs_moving:
+        require_best_aggregate_row("moving_mass_gain", aggregates.get("moving_mass_gain", []))
 
     report_runtime_s = time.perf_counter() - started
     new_scenario_row_count = len(store.rows) - initial_scenario_row_count
@@ -1757,14 +2021,26 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
     else:
         runtime_s = report_runtime_s
     _write_stage_exports(output_dir, aggregates)
-    vane_profile, moving_profile = write_profiles(
-        aggregates,
-        vane_source=Path(options.vane_param_source),
-        moving_mass_source=Path(options.moving_mass_param_source),
-        output_directory=Path(options.profile_output_dir),
-    )
+    profiles_ready = all(best_aggregate_row(aggregates.get(stage, [])) is not None for stage in STAGES)
+    if profiles_ready:
+        vane_profile, moving_profile = write_profiles(
+            aggregates,
+            vane_source=Path(options.vane_param_source),
+            moving_mass_source=Path(options.moving_mass_param_source),
+            output_directory=Path(options.profile_output_dir),
+        )
+    else:
+        vane_profile = None
+        moving_profile = None
     metadata: dict[str, Any] = {
         "git_sha": _git_sha(),
+        "cache_schema_version": CACHE_SCHEMA_VERSION,
+        "stage_grid_definition_version": STAGE_GRID_DEFINITION_VERSION,
+        "tail_policy_version": TAIL_POLICY_VERSION,
+        "workflow_fingerprint": fingerprint.digest,
+        "workflow_fingerprint_payload": fingerprint.payload,
+        "implementation_hashes": fingerprint.payload["implementation_hashes"],
+        "parameter_source_hashes": fingerprint.payload["parameter_source_hashes"],
         "quick_mode": options.quick,
         "selected_stage": options.stage,
         "vane_param_source": str(options.vane_param_source),
@@ -1773,6 +2049,7 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         "runtime_s": round(runtime_s, 6),
         "report_generation_runtime_s": round(report_runtime_s, 6),
         "resume_skipped_scenario_count": initial_scenario_row_count if new_scenario_row_count == 0 else 0,
+        "stale_fingerprint_row_count": 0,
         "candidate_count": sum(len(rows) for rows in aggregates.values()),
         "scenario_run_count": len(store.rows),
         "stage_scenarios": {
@@ -1795,7 +2072,21 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         },
         "inactive_parameters": "psc_ne_vel_i, psc_ne_vel_d",
         "moving_mass_gain": "moving_mass_assist_gain_m_per_Nm * desired_pitch_moment",
-        "tail_window_policy": "LOITER and moving-mass metrics use the final 2 seconds by default; shorter scenarios use all available rows.",
+        "tail_window_policy": _tail_policy_metadata(options.quick, options.tail_window_s),
+        "settling_validity_policy": {
+            "rate_pd": "signed 10 deg/s primary recoveries must settle; 120 deg/s and low-authority cases are robustness-only",
+            "rate_i_recovery": "signed 10 deg/s primary recoveries must settle",
+            "rate_i_bias": (
+                f"signed {RATE_BIAS_DISTURBANCE_MOMENT_NM:g} Nm bias; tail mean <= "
+                f"{RATE_BIAS_MAX_TAIL_MEAN_ERROR_DEG_S:g} deg/s and terminal <= "
+                f"{RATE_BIAS_MAX_TERMINAL_ERROR_DEG_S:g} deg/s"
+            ),
+            "attitude": (
+                "settle or finish within "
+                f"{ATTITUDE_MAX_TERMINAL_THETA_DEG:g} deg and "
+                f"{ATTITUDE_MAX_TERMINAL_OMEGA_DEG_S:g} deg/s"
+            ),
+        },
         "stage_commands": {
             stage: f".venv\\Scripts\\python.exe sweep_controller_gains.py --stage {stage} --output-dir results/analysis/controller_grid_search"
             for stage in STAGES
@@ -1815,8 +2106,8 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
             stage: sum(int(_as_float(row.get("scenario_count"))) for row in rows)
             for stage, rows in aggregates.items()
         },
-        "vane_profile": str(vane_profile),
-        "moving_mass_profile": str(moving_profile),
+        "vane_profile": str(vane_profile or ""),
+        "moving_mass_profile": str(moving_profile or ""),
     }
     metadata_rows = _metadata_rows(metadata)
     write_csv_rows(output_dir / "10_metadata.csv", metadata_rows, ("key", "value", "unit", "notes"))

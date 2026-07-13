@@ -1,28 +1,41 @@
 import json
+import math
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from openpyxl import load_workbook
 
 from analysis.controller_grid_search import (
+    CACHE_SCHEMA_VERSION,
     SCORE_SPECS,
     SHEET_NAMES,
     Candidate,
+    SearchScenario,
     ScenarioResultStore,
     WorkflowOptions,
     attitude_p_candidates,
+    attitude_p_scenarios,
     best_parameter_rows,
+    build_workflow_fingerprint,
     compute_scenario_metrics,
     direction_reversal_count,
     loiter_xy_candidates,
+    loiter_xy_scenarios,
     moving_mass_gain_candidates,
     normalized_score,
     path_length,
     rate_i_candidates,
+    rate_i_scenarios,
     rate_pd_coarse_candidates,
+    rate_pd_scenarios,
+    require_best_aggregate_row,
     run_workflow,
+    stage_validity_reasons,
     top_candidates,
+    validate_previous_stage_metadata,
+    write_profiles,
     zero_crossing_count,
 )
 from analysis.headless_loiter import LoiterRunResult, LoiterScenarioConfig
@@ -99,8 +112,10 @@ class ControllerGridDefinitionTests(unittest.TestCase):
 
     def test_resume_store_rejects_duplicate_run_keys(self):
         with tempfile.TemporaryDirectory() as tmp:
-            store = ScenarioResultStore(Path(tmp) / "rows.csv")
-            row = {"run_key": "same"}
+            store = ScenarioResultStore(
+                Path(tmp) / "rows.csv", cache_fingerprint="fingerprint"
+            )
+            row = {"run_key": "same", "cache_fingerprint": "fingerprint"}
             store.add(row)
             with self.assertRaisesRegex(ValueError, "duplicate run key"):
                 store.add(row)
@@ -127,6 +142,179 @@ class ControllerGridDefinitionTests(unittest.TestCase):
         self.assertIn("ground contact", metrics["rejection_reasons"])
 
 
+class ControllerGridCacheAndValidityTests(unittest.TestCase):
+    def _fingerprint_options(self, root: Path, *, quick: bool = False, tail: float = 2.0) -> WorkflowOptions:
+        vane = root / "vane.json"
+        moving = root / "moving.json"
+        if not vane.exists():
+            vane.write_text('{"source":"vane"}\n', encoding="utf-8")
+        if not moving.exists():
+            moving.write_text('{"source":"moving"}\n', encoding="utf-8")
+        return WorkflowOptions(
+            output_dir=root / "output",
+            profile_output_dir=root / "profiles",
+            vane_param_source=vane,
+            moving_mass_param_source=moving,
+            quick=quick,
+            tail_window_s=tail,
+        )
+
+    def test_workflow_fingerprint_tracks_schema_sources_mode_and_tail_policy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            options = self._fingerprint_options(root)
+            first = build_workflow_fingerprint(options)
+            self.assertEqual(first.digest, build_workflow_fingerprint(options).digest)
+            self.assertNotEqual(
+                first.digest,
+                build_workflow_fingerprint(
+                    options, cache_schema_version=CACHE_SCHEMA_VERSION + 1
+                ).digest,
+            )
+            self.assertNotEqual(
+                first.digest,
+                build_workflow_fingerprint(replace(options, quick=True)).digest,
+            )
+            self.assertNotEqual(
+                first.digest,
+                build_workflow_fingerprint(replace(options, tail_window_s=1.5)).digest,
+            )
+            Path(options.vane_param_source).write_text(
+                '{"source":"changed"}\n', encoding="utf-8"
+            )
+            self.assertNotEqual(first.digest, build_workflow_fingerprint(options).digest)
+
+    def test_identical_fingerprint_reuses_rows_and_changed_schema_invalidates(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            options = self._fingerprint_options(root)
+            current = build_workflow_fingerprint(options)
+            changed = build_workflow_fingerprint(
+                options, cache_schema_version=CACHE_SCHEMA_VERSION + 1
+            )
+            path = root / "scenario_results.csv"
+            store = ScenarioResultStore(path, cache_fingerprint=current.digest)
+            row = {"run_key": "same", "cache_fingerprint": current.digest}
+            store.add(row)
+            resumed = ScenarioResultStore(path, cache_fingerprint=current.digest)
+            self.assertEqual(resumed.get("same")["run_key"], "same")
+            with self.assertRaisesRegex(ValueError, "stale scenario cache fingerprint"):
+                ScenarioResultStore(path, cache_fingerprint=changed.digest)
+
+    def test_stale_previous_stage_metadata_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            options = self._fingerprint_options(root)
+            output = Path(options.output_dir)
+            output.mkdir(parents=True)
+            (output / "01_rate_pd_all.csv").write_text("stage\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "stale workflow fingerprint"):
+                validate_previous_stage_metadata(
+                    output,
+                    {"workflow_fingerprint": "outdated"},
+                    build_workflow_fingerprint(options),
+                )
+
+    def test_stage_specific_tail_windows(self):
+        rate_scenarios = rate_pd_scenarios(False)
+        self.assertEqual(rate_scenarios[0].tail_window_s, 0.75)
+        self.assertEqual(rate_scenarios[0].config.duration_s, 3.0)
+        self.assertTrue(rate_scenarios[0].primary_score)
+        self.assertEqual(rate_scenarios[2].config.duration_s, 1.5)
+        self.assertFalse(rate_scenarios[2].primary_score)
+        self.assertEqual(rate_i_scenarios(False)[2].tail_window_s, 1.0)
+        attitude = attitude_p_scenarios(False)[0]
+        self.assertEqual(attitude.tail_window_s, 1.0)
+        self.assertEqual(attitude.config.duration_s, 5.0)
+        self.assertIsNone(loiter_xy_scenarios(False)[0].tail_window_s)
+
+    def test_oversized_tail_window_cannot_cover_the_complete_run(self):
+        rows = [
+            {
+                "time": float(index),
+                "rate_error": math.radians(value),
+                "min_body_z": 1.0,
+            }
+            for index, value in enumerate((12.0, 0.0, 0.0))
+        ]
+        scenario = LoiterScenarioConfig(name="short_rate", mode="RATE", duration_s=2.0)
+        result = LoiterRunResult("<synthetic>", scenario, rows, {"pass": True}, False, "")
+        metrics = compute_scenario_metrics("rate_pd", result, tail_window_s=10.0)
+        self.assertGreater(metrics["rms_rate_error_deg_s"], 0.0)
+        self.assertEqual(metrics["tail_rms_rate_error_deg_s"], 0.0)
+
+    def test_required_rate_and_attitude_validity_gates(self):
+        rate = SearchScenario(
+            LoiterScenarioConfig(name="rate_required"), validity_gate="settled"
+        )
+        self.assertIn(
+            "did not settle",
+            stage_validity_reasons("rate_pd", rate, {"settled": False})[0],
+        )
+        attitude = SearchScenario(
+            LoiterScenarioConfig(name="attitude_required"),
+            validity_gate="attitude_terminal",
+        )
+        reasons = stage_validity_reasons(
+            "attitude_p",
+            attitude,
+            {
+                "settled": False,
+                "terminal_abs_theta_deg": 8.0,
+                "terminal_abs_omega_deg_s": 13.0,
+            },
+        )
+        self.assertIn("neither settled", reasons[0])
+
+        bias = SearchScenario(
+            LoiterScenarioConfig(name="rate_bias"), validity_gate="rate_bias"
+        )
+        self.assertEqual(
+            stage_validity_reasons(
+                "rate_i",
+                bias,
+                {
+                    "tail_mean_abs_rate_error_deg_s": 40.0,
+                    "terminal_abs_rate_error_deg_s": 30.0,
+                },
+            ),
+            [],
+        )
+        self.assertTrue(
+            stage_validity_reasons(
+                "rate_i",
+                bias,
+                {
+                    "tail_mean_abs_rate_error_deg_s": 40.1,
+                    "terminal_abs_rate_error_deg_s": 30.1,
+                },
+            )
+        )
+
+    def test_robustness_only_unsettled_case_does_not_invalidate(self):
+        robustness = SearchScenario(
+            LoiterScenarioConfig(name="robustness"),
+            primary_score=False,
+            validity_gate="",
+        )
+        self.assertEqual(
+            stage_validity_reasons("rate_pd", robustness, {"settled": False}), []
+        )
+
+    def test_no_valid_candidate_blocks_selection_and_profile_publication(self):
+        rejected = [{"candidate_key": "bad", "rejected": True}]
+        with self.assertRaisesRegex(RuntimeError, "no valid candidate"):
+            require_best_aggregate_row("rate_pd", rejected)
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(RuntimeError, "no valid candidate"):
+                write_profiles(
+                    {stage: rejected for stage in ("rate_pd", "rate_i", "attitude_p", "loiter_xy", "moving_mass_gain")},
+                    vane_source=Path("params/loiter_example.json"),
+                    moving_mass_source=Path("params/moving_mass_prototype_2kg.json"),
+                    output_directory=Path(tmp),
+                )
+
+
 class ControllerGridQuickEndToEndTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -134,15 +322,15 @@ class ControllerGridQuickEndToEndTests(unittest.TestCase):
         root = Path(cls._tmp.name)
         cls.output_dir = root / "output"
         cls.profile_dir = root / "profiles"
-        cls.result = run_workflow(
-            WorkflowOptions(
+        cls.options = WorkflowOptions(
                 stage="all",
                 output_dir=cls.output_dir,
                 quick=True,
                 resume=False,
                 profile_output_dir=cls.profile_dir,
             )
-        )
+        cls.result = run_workflow(cls.options)
+        cls.resumed_result = run_workflow(replace(cls.options, resume=True))
 
     @classmethod
     def tearDownClass(cls):
@@ -157,6 +345,14 @@ class ControllerGridQuickEndToEndTests(unittest.TestCase):
         )
         for stage in ("rate_pd", "rate_i", "attitude_p", "loiter_xy", "moving_mass_gain"):
             self.assertGreater(len(self.result["stage_aggregates"][stage]), 0)
+        self.assertEqual(
+            self.resumed_result["metadata"]["resume_skipped_scenario_count"],
+            len(self.result["scenario_rows"]),
+        )
+        self.assertEqual(
+            self.result["metadata"]["workflow_fingerprint"],
+            self.resumed_result["metadata"]["workflow_fingerprint"],
+        )
 
     def test_workbook_sheet_names_and_row_counts(self):
         workbook = load_workbook(self.result["workbook_path"], read_only=False, data_only=False)

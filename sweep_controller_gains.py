@@ -13,8 +13,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--stage", choices=("all", *STAGES), default="all")
     parser.add_argument("--output-dir", default="results/analysis/controller_grid_search")
     parser.add_argument("--quick", action="store_true", help="Use small deterministic smoke grids and 0.30 s scenarios.")
-    parser.add_argument("--no-resume", action="store_true", help="Discard the output directory's scenario resume CSV.")
-    parser.add_argument("--tail-window", type=float, default=2.0, help="Tail metric window in seconds.")
+    parser.add_argument("--no-resume", action="store_true", help="Discard scenario rows and recompute every selected stage.")
+    parser.add_argument(
+        "--tail-window",
+        type=float,
+        default=2.0,
+        help="LOITER and moving-mass tail window in seconds; RATE and attitude use stage-specific windows.",
+    )
     parser.add_argument("--vane-params", default="params/loiter_example.json")
     parser.add_argument("--moving-mass-params", default="params/moving_mass_prototype_2kg.json")
     parser.add_argument("--profile-output-dir", default="params")
@@ -43,8 +48,10 @@ def main() -> int:
     metadata = result["metadata"]
     print(f"Wrote {result['workbook_path']}")
     print(f"Wrote {result['markdown_path']}")
-    print(f"Wrote {result['vane_profile_path']}")
-    print(f"Wrote {result['moving_mass_profile_path']}")
+    if result["vane_profile_path"] is not None:
+        print(f"Wrote {result['vane_profile_path']}")
+    if result["moving_mass_profile_path"] is not None:
+        print(f"Wrote {result['moving_mass_profile_path']}")
     print(
         f"Completed {metadata['candidate_count']} candidates and "
         f"{metadata['scenario_run_count']} unique scenario rows in {result['runtime_s']:.3f}s"
@@ -55,4 +62,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

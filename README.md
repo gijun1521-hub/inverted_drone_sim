@@ -293,7 +293,7 @@ python sweep_loiter_authority.py --scenario all --no-plots
 python sweep_controller_gains.py --stage all --quick
 ```
 
-`sweep_controller_gains.py` runs staged RATE P-D, RATE I, Angle P, active LOITER P/P, and total-COM moving-mass assist searches. It writes reproducible raw CSVs, a formatted ten-sheet XLSX workbook, a Markdown summary, and separate tuned profiles without changing global defaults. See [docs/controller_gain_grid_search.md](docs/controller_gain_grid_search.md). `psc_ne_vel_i` and `psc_ne_vel_d` remain inactive and are not swept.
+`sweep_controller_gains.py` runs staged RATE P-D, RATE I, Angle P, active LOITER P/P, and total-COM moving-mass assist searches. It writes reproducible raw CSVs, a formatted ten-sheet XLSX workbook, a Markdown summary, and separate tuned profiles without changing global defaults. Cached scenario rows and prerequisite-stage CSVs carry a workflow fingerprint over the implementation, parameter sources, quick/full mode, grid version, and stage-specific tail policy; incompatible results fail clearly instead of being reused. Use `--no-resume` for a clean full search after any such change. See [docs/controller_gain_grid_search.md](docs/controller_gain_grid_search.md). `psc_ne_vel_i` and `psc_ne_vel_d` remain inactive and are not swept.
 
 `compare_loiter_params.py`는 sluggish / nominal / aggressive LOITER parameter example을 반복 가능한 scenario에서 비교합니다.
 
