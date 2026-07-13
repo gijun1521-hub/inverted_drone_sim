@@ -189,6 +189,25 @@ class ActuatorLabTests(unittest.TestCase):
         self.assertEqual(app.commands.moving_mass_target_m, 0.0)
         self.assertEqual(app.state.shape, (11,))
 
+    def test_manual_modes_to_rate_seed_current_angular_velocity(self):
+        app = self.make_app()
+
+        for source_mode in (
+            ControlMode.ACTUATOR_LAB,
+            ControlMode.DIRECT,
+            ControlMode.STABILIZE,
+        ):
+            with self.subTest(source_mode=source_mode):
+                app.reset()
+                self.assertTrue(app.set_mode(source_mode))
+                app.state[5] = 1.25
+                app.commands.omega_target = -3.0
+
+                self.assertTrue(app.set_mode(ControlMode.RATE))
+
+                self.assertEqual(app.commands.omega_target, app.state[5])
+                self.assertEqual(app.control.rate._last_error, 0.0)
+
     def test_positive_manual_target_moves_actual_mass_with_limits_without_teleporting(self):
         app = self.make_app()
         target = 0.005

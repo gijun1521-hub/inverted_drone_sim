@@ -482,8 +482,6 @@ class InteractiveApp:
         if mode == ControlMode.ACTUATOR_LAB:
             self.commands.direct_vane = 0.0
             self.commands.moving_mass_target_m = 0.0
-        if previous == ControlMode.DIRECT and mode == ControlMode.RATE:
-            self.commands.omega_target = float(self.state[5])
         if mode == ControlMode.STABILIZE:
             self.commands.theta_target = float(wrap_pi(self.state[2]))
             self.commands.omega_target = float(self.state[5])
@@ -500,7 +498,11 @@ class InteractiveApp:
             self.targets.loiter_active = True
             self.loiter_shaper.reset(0.0)
             self.control.attitude.reset_to_current(float(self.state[2]), float(self.state[5]))
-        if previous == ControlMode.STABILIZE and mode == ControlMode.RATE:
+        if mode == ControlMode.RATE and previous in {
+            ControlMode.DIRECT,
+            ControlMode.STABILIZE,
+            ControlMode.ACTUATOR_LAB,
+        }:
             self.commands.omega_target = float(self.state[5])
         self.control.reset_pid_for_mode_change(self.commands.omega_target, float(self.state[5]))
         self.mode = mode
