@@ -96,9 +96,11 @@ class RigidBodySingleFan2D:
             return bounded_offset, 0.0, target, command_clipped or rail_clipped
 
         error = target - bounded_offset
-        if error == 0.0:
+        position_tolerance = 1e-12
+        velocity_tolerance = 1e-12
+        if abs(error) <= position_tolerance and abs(velocity) <= velocity_tolerance:
             saturated = command_clipped or rail_clipped or abs(bounded_offset) >= limit - 1e-12
-            return bounded_offset, 0.0, target, bool(saturated)
+            return target, 0.0, target, bool(saturated)
 
         accel_step = max_accel * dt
         # Include the next semi-implicit position step in the stopping bound so

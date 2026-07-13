@@ -74,6 +74,63 @@ class MovingMassTrajectoryTests(unittest.TestCase):
             plant.cfg.moving_mass.max_accel_m_s2 + 1e-10,
         )
 
+    def assert_same_position_motion_brakes_and_returns(
+        self,
+        *,
+        offset: float,
+        velocity: float,
+    ) -> None:
+        plant = self.make_plant()
+        target = offset
+        plant.reset(
+            np.array(
+                [
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    plant.cfg.hover_thrust,
+                    0.0,
+                    offset,
+                    velocity,
+                    target,
+                ]
+            )
+        )
+
+        state = plant.step(0.0, 0.0, moving_mass_target_m=target)
+        expected_velocity = velocity - np.sign(velocity) * plant.cfg.moving_mass.max_accel_m_s2 * plant.cfg.dt
+        expected_offset = offset + expected_velocity * plant.cfg.dt
+        self.assertAlmostEqual(state[9], expected_velocity)
+        self.assertAlmostEqual(state[8], expected_offset)
+        self.assertNotEqual(state[9], 0.0)
+
+        offsets, velocities, accelerations, _saturated = self.run_until_settled(
+            plant, target
+        )
+        all_velocities = np.r_[velocity, state[9], velocities[1:]]
+        all_accelerations = np.diff(all_velocities) / plant.cfg.dt
+
+        self.assertLessEqual(float(np.max(np.abs(offsets))), 0.05 + 1e-12)
+        self.assertEqual(offsets[-1], target)
+        self.assertEqual(velocities[-1], 0.0)
+        self.assert_motion_is_bounded(plant, all_velocities, all_accelerations)
+
+    def test_same_position_positive_velocity_brakes_and_returns(self):
+        self.assert_same_position_motion_brakes_and_returns(offset=0.010, velocity=0.100)
+
+    def test_same_position_negative_velocity_brakes_and_returns(self):
+        self.assert_same_position_motion_brakes_and_returns(offset=-0.010, velocity=-0.100)
+
+    def test_same_position_settled_state_remains_stationary(self):
+        plant = self.make_plant()
+        offset, velocity, target, _saturated = plant._moving_mass_update(
+            0.010, 0.0, 0.010, plant.cfg.dt
+        )
+        self.assertEqual((offset, velocity, target), (0.010, 0.0, 0.010))
+
     def test_fixed_targets_are_monotonic_bounded_and_settle(self):
         for target in (0.001, 0.005, 0.010, -0.001, -0.005, -0.010):
             with self.subTest(target=target):
@@ -198,7 +255,7 @@ class MovingMassTrajectoryTests(unittest.TestCase):
             (0.02, 0.0),
         )
         self.assertEqual(
-            plant._moving_mass_update(0.01, 0.1, 0.01, plant.cfg.dt)[:2],
+            plant._moving_mass_update(0.01, 0.0, 0.01, plant.cfg.dt)[:2],
             (0.01, 0.0),
         )
 
