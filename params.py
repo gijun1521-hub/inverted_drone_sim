@@ -14,6 +14,7 @@ T = TypeVar("T")
 
 
 STRUCTURED_SECTIONS = {"rigid_body", "interactive", "controller"}
+METADATA_SECTIONS = {"analysis"}
 
 
 def load_json_overrides(path: str | Path) -> dict:
@@ -43,14 +44,17 @@ def apply_dataclass_overrides(instance: T, overrides: dict, section: str = "para
 
 
 def _split_overrides(data: dict) -> tuple[dict, dict, dict]:
-    structured_keys = set(data) & STRUCTURED_SECTIONS
+    structured_keys = set(data) & (STRUCTURED_SECTIONS | METADATA_SECTIONS)
     if structured_keys:
-        unknown = sorted(set(data) - STRUCTURED_SECTIONS)
+        unknown = sorted(set(data) - STRUCTURED_SECTIONS - METADATA_SECTIONS)
         if unknown:
             raise ValueError(
-                "structured parameter files may only contain rigid_body, interactive, and controller sections; "
+                "structured parameter files may only contain rigid_body, interactive, controller, and analysis sections; "
                 f"unknown section(s): {', '.join(unknown)}"
             )
+        analysis = data.get("analysis", {})
+        if not isinstance(analysis, dict):
+            raise ValueError("analysis section must be a JSON object")
         sections = {}
         for key in STRUCTURED_SECTIONS:
             section = data.get(key, {})
