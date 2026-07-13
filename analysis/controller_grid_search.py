@@ -1374,6 +1374,22 @@ def _ribbon_assessment(loiter_rows: Sequence[dict[str, Any]]) -> str:
     return "not eliminated and not measurably reduced versus the mode-matched 0.8/1.1 baseline"
 
 
+def _loiter_baseline_row(loiter_rows: Sequence[dict[str, Any]]) -> dict[str, Any] | None:
+    return next(
+        (
+            dict(row)
+            for row in loiter_rows
+            if math.isclose(_as_float(row.get("psc_ne_pos_p")), 0.8, abs_tol=1e-12)
+            and math.isclose(_as_float(row.get("psc_ne_vel_p")), 1.1, abs_tol=1e-12)
+        ),
+        None,
+    )
+
+
+def _relative_change(new_value: float, old_value: float) -> float:
+    return 100.0 * (new_value - old_value) / max(abs(old_value), 1e-12)
+
+
 def write_markdown_summary(
     path: Path,
     stage_aggregates: dict[str, list[dict[str, Any]]],
@@ -1416,6 +1432,78 @@ def write_markdown_summary(
         )
         lines.append(
             f"| {stage} | {row['candidate_id']} | {_as_float(row['normalized_score']):.6f} | {params} | {row['rejected']} |"
+        )
+    lines += [
+        "",
+        "## Selected Metrics",
+        "",
+        "| stage | selected evidence |",
+        "| --- | --- |",
+    ]
+    metric_descriptions = {
+        "rate_pd": lambda row: (
+            f"RMS/tail rate error {_as_float(row['rms_rate_error_deg_s']):.3f}/"
+            f"{_as_float(row['tail_rms_rate_error_deg_s']):.3f} deg/s; overshoot "
+            f"{_as_float(row['rate_overshoot_deg_s']):.3f} deg/s; settling "
+            f"{_as_float(row['settling_time_s']):.3f} s; vane RMS "
+            f"{_as_float(row['vane_command_rms_deg']):.3f} deg"
+        ),
+        "rate_i": lambda row: (
+            f"I={_as_float(row['atc_rat_pit_i']):.3f}; tail mean absolute rate error "
+            f"{_as_float(row['tail_mean_abs_rate_error_deg_s']):.3f} deg/s; integrator RMS "
+            f"{_as_float(row['integrator_rms_Nm']):.5f} Nm; inhibition "
+            f"{_as_float(row['integrator_inhibition_percent']):.2f}%"
+        ),
+        "attitude_p": lambda row: (
+            f"RMS/tail theta {_as_float(row['rms_theta_deg']):.3f}/"
+            f"{_as_float(row['tail_rms_theta_deg']):.3f} deg; tail peak-to-peak "
+            f"{_as_float(row['tail_peak_to_peak_theta_deg']):.3f} deg; max omega "
+            f"{_as_float(row['max_omega_deg_s']):.3f} deg/s"
+        ),
+        "loiter_xy": lambda row: (
+            f"tail RMS x {_as_float(row['tail_rms_x_m']):.4f} m; tail RMS vx "
+            f"{_as_float(row['tail_rms_vx_m_s']):.4f} m/s; tail peak-to-peak x "
+            f"{_as_float(row['tail_peak_to_peak_x_m']):.4f} m; tail path "
+            f"{_as_float(row['tail_path_length_m']):.4f} m"
+        ),
+        "moving_mass_gain": lambda row: (
+            f"gain {_as_float(row['moving_mass_assist_gain_m_per_Nm']):.4f} m/Nm; "
+            f"theta/x/path ratios {_as_float(row['rms_theta_ratio']):.4f}/"
+            f"{_as_float(row['rms_x_ratio']):.4f}/{_as_float(row['tail_path_ratio']):.4f}; "
+            f"mass max {_as_float(row['moving_mass_max_offset_m']):.5f} m"
+        ),
+    }
+    for stage in STAGES:
+        row = best_aggregate_row(stage_aggregates.get(stage, []))
+        if row is not None:
+            lines.append(f"| {stage} | {metric_descriptions[stage](row)} |")
+
+    loiter_best = best_aggregate_row(stage_aggregates.get("loiter_xy", []))
+    loiter_baseline = _loiter_baseline_row(stage_aggregates.get("loiter_xy", []))
+    if loiter_best is not None and loiter_baseline is not None:
+        lines += [
+            "",
+            "## Ribbon Tail Comparison",
+            "",
+            "Selected LOITER P/P versus the mode-matched `psc_ne_pos_p=0.8`, `psc_ne_vel_p=1.1` candidate:",
+            "",
+            "| metric | 0.8/1.1 | selected | change |",
+            "| --- | ---: | ---: | ---: |",
+        ]
+        for label, field, unit in (
+            ("tail RMS x", "tail_rms_x_m", "m"),
+            ("tail RMS vx", "tail_rms_vx_m_s", "m/s"),
+            ("tail peak-to-peak x", "tail_peak_to_peak_x_m", "m"),
+            ("tail x-z path length", "tail_path_length_m", "m"),
+        ):
+            old = _as_float(loiter_baseline[field])
+            new = _as_float(loiter_best[field])
+            lines.append(f"| {label} | {old:.6f} {unit} | {new:.6f} {unit} | {_relative_change(new, old):+.2f}% |")
+
+    lines += ["", "## Stage Commands", ""]
+    for stage in STAGES:
+        lines.append(
+            f"- `{stage}`: `.venv\\Scripts\\python.exe sweep_controller_gains.py --stage {stage} --output-dir results/analysis/controller_grid_search`"
         )
     lines += ["", "## Grid And Run Counts", "", "| stage | candidates | scenario rows |", "| --- | ---: | ---: |"]
     for stage in STAGES:
@@ -1683,6 +1771,26 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         },
         "inactive_parameters": "psc_ne_vel_i, psc_ne_vel_d",
         "moving_mass_gain": "moving_mass_assist_gain_m_per_Nm * desired_pitch_moment",
+        "tail_window_policy": "LOITER and moving-mass metrics use the final 2 seconds by default; shorter scenarios use all available rows.",
+        "stage_commands": {
+            stage: f".venv\\Scripts\\python.exe sweep_controller_gains.py --stage {stage} --output-dir results/analysis/controller_grid_search"
+            for stage in STAGES
+        },
+        "metric_units": {
+            "angular_rate": "deg/s",
+            "angle": "deg",
+            "position_and_path": "m",
+            "velocity": "m/s",
+            "moment_and_control_effort": "Nm",
+            "saturation_and_inhibition": "percent",
+            "normalized_score": "dimensionless",
+            "moving_mass_assist_gain_m_per_Nm": "m/Nm",
+        },
+        "candidate_counts": {stage: len(rows) for stage, rows in aggregates.items()},
+        "candidate_scenario_row_counts": {
+            stage: sum(int(_as_float(row.get("scenario_count"))) for row in rows)
+            for stage, rows in aggregates.items()
+        },
         "vane_profile": str(vane_profile),
         "moving_mass_profile": str(moving_profile),
     }
