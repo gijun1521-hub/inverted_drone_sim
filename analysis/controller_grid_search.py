@@ -1279,6 +1279,11 @@ def write_workbook(
             if field in {"candidate_key", "run_key", "rejection_reasons", "notes", "value"}:
                 width = min(48, max(width, 24))
             sheet.column_dimensions[get_column_letter(col_index)].width = width
+        if sheet_name == "10_metadata":
+            sheet.column_dimensions["A"].width = 34
+            sheet.column_dimensions["B"].width = 72
+            sheet.column_dimensions["C"].width = 18
+            sheet.column_dimensions["D"].width = 64
         if rows:
             field_index = {field: index + 1 for index, field in enumerate(fields)}
             if "normalized_score" in field_index:
