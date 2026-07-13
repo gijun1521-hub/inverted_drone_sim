@@ -1,0 +1,21 @@
+row_key,stage,role,candidate_id,rank,normalized_score,atc_rat_pit_p,atc_rat_pit_i,atc_rat_pit_d,atc_ang_pit_p,psc_ne_pos_p,psc_ne_vel_p,moving_mass_assist_gain_m_per_Nm,rejected
+rate_pd|best aggregate,rate_pd,best aggregate,rate_pd-ceff8eb68b,1,1.580739768588254,0.0425,0.0,0.00725,,,,,False
+rate_pd|most stable,rate_pd,most stable,rate_pd-84347c9b6d,218,1.6471518727084598,0.08,0.0,0.0,,,,,False
+rate_pd|fastest settling,rate_pd,fastest settling,rate_pd-71bb0ba38f,52,1.5921097584782482,0.0475,0.0,0.007,,,,,False
+rate_pd|lowest saturation,rate_pd,lowest saturation,rate_pd-9a854d8e3f,106,1.6150706764969585,0.02,0.0,0.0,,,,,False
+rate_i|best aggregate,rate_i,best aggregate,rate_i-8913059c5e,1,2.130663844990847,0.0425,0.0,0.00775,,,,,False
+rate_i|most stable,rate_i,most stable,rate_i-8913059c5e,1,2.130663844990847,0.0425,0.0,0.00775,,,,,False
+rate_i|fastest settling,rate_i,fastest settling,rate_i-188956f9d2,2,2.1308331476817846,0.0425,0.0,0.00725,,,,,False
+rate_i|lowest saturation,rate_i,lowest saturation,rate_i-188956f9d2,2,2.1308331476817846,0.0425,0.0,0.00725,,,,,False
+attitude_p|best aggregate,attitude_p,best aggregate,attitude_p-7c6b5f7621,1,1.6592946142469966,0.0425,0.0,0.00775,9.5,,,,False
+attitude_p|most stable,attitude_p,most stable,attitude_p-5cb770ed99,13,2.4115380324256193,0.0425,0.0,0.00775,4.5,,,,False
+attitude_p|fastest settling,attitude_p,fastest settling,attitude_p-83e4b439c3,2,1.6614310323643313,0.0425,0.0,0.00775,10.0,,,,False
+attitude_p|lowest saturation,attitude_p,lowest saturation,attitude_p-83e4b439c3,2,1.6614310323643313,0.0425,0.0,0.00775,10.0,,,,False
+loiter_xy|best aggregate,loiter_xy,best aggregate,loiter_xy-2bf8648b07,1,1.897191254486646,0.0425,0.0,0.00775,9.5,0.4,0.6,,False
+loiter_xy|most stable,loiter_xy,most stable,loiter_xy-504d386b1b,77,2.465845079344712,0.0425,0.0,0.00775,9.5,1.1,0.3,,False
+loiter_xy|fastest settling,loiter_xy,fastest settling,loiter_xy-b553b83d82,109,2.6060283736962324,0.0425,0.0,0.00775,9.5,0.4,0.4,,False
+loiter_xy|lowest saturation,loiter_xy,lowest saturation,loiter_xy-32dfb2f3a1,73,2.4571301300797392,0.0425,0.0,0.00775,9.5,0.1,1.1,,False
+moving_mass_gain|best aggregate,moving_mass_gain,best aggregate,moving_mass_gain-a950f78c88,1,0.7999999999999999,0.0425,0.0,0.00775,9.5,0.4,0.6,0.0,False
+moving_mass_gain|most stable,moving_mass_gain,most stable,moving_mass_gain-a950f78c88,1,0.7999999999999999,0.0425,0.0,0.00775,9.5,0.4,0.6,0.0,False
+moving_mass_gain|fastest settling,moving_mass_gain,fastest settling,moving_mass_gain-a950f78c88,1,0.7999999999999999,0.0425,0.0,0.00775,9.5,0.4,0.6,0.0,False
+moving_mass_gain|lowest saturation,moving_mass_gain,lowest saturation,moving_mass_gain-a950f78c88,1,0.7999999999999999,0.0425,0.0,0.00775,9.5,0.4,0.6,0.0,False
