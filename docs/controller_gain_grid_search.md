@@ -30,7 +30,7 @@ Decimal grids are constructed from decimal arithmetic so endpoints and counts ar
 
 ## Scenarios and scoring scope
 
-RATE P-D uses positive and negative 60 deg/s and 120 deg/s initial-rate cases plus mirrored low-authority cases. RATE I adds mirrored persistent ±0.025 Nm disturbances. Angle P uses the six required signed initial attitudes. RATE and STABILIZE tests start with 6 m of analytical altitude margin because those modes intentionally do not run the altitude controller; this prevents a pitch-loop experiment from being rejected merely because hover thrust at a temporary tilt has less vertical component.
+RATE P-D uses 1.5-second positive and negative 60 deg/s and 120 deg/s initial-rate recovery cases plus mirrored low-authority cases. RATE I keeps the recovery cases and adds mirrored persistent ±0.005 Nm disturbances in LOITER so the non-rate axes remain bounded while steady-state error, integrator output, inhibition, and anti-windup are measured. Angle P uses the six required signed initial attitudes. RATE and STABILIZE tests start with 6 m of analytical altitude margin because those modes intentionally do not run the altitude controller; this prevents a pitch-loop experiment from being rejected merely because hover thrust at a temporary tilt has less vertical component.
 
 LOITER uses upright hold, mirrored initial-offset recovery, mirrored horizontal impulses, mirrored stick move/release, and mirrored authority-stress cases. Authority stress participates in crash and hard-rejection checks, but its metrics do not enter the primary aggregate score.
 
@@ -72,6 +72,7 @@ Candidates are rejected for:
 - more than 85% sustained tail actuator/mixer saturation
 - missing scenario rows or duplicate run keys
 - requested/effective parameter mismatches
+- in a full LOITER search, failure of a primary scenario's documented analytical recovery threshold
 - for moving mass, materially worse RMS x, final x, or tail path than the centered baseline
 
 Ranking first uses the normalized score in `1e-6` equivalence buckets. Tie-breakers then prefer lower tail oscillation, saturation, effort, and smaller total gain magnitude. The report separately marks best aggregate, most stable, fastest settling, and lowest-saturation candidates, and exports the top 50 where requested.

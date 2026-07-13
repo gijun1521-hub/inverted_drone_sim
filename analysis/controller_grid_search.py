@@ -63,6 +63,7 @@ EFFECTIVE_FIELDS = {name: f"effective_{name}" for name in CONTROLLER_PARAMETER_F
 
 SCENARIO_METRIC_FIELDS = (
     "duration_s",
+    "analytical_pass",
     "rms_rate_error_deg_s",
     "tail_rms_rate_error_deg_s",
     "tail_mean_abs_rate_error_deg_s",
@@ -142,6 +143,7 @@ AGGREGATE_METRIC_FIELDS = tuple(
     if name
     not in {
         "settled",
+        "analytical_pass",
         "ground_contact",
         "attitude_limit_exceeded",
         "unbounded_growth",
@@ -371,7 +373,7 @@ def _duration(value: float, quick: bool) -> float:
 
 
 def rate_pd_scenarios(quick: bool = False) -> list[SearchScenario]:
-    duration = _duration(3.0, quick)
+    duration = _duration(1.5, quick)
     scenarios = []
     for label, omega in (("pos_moderate", 60.0), ("neg_moderate", -60.0), ("pos_strong", 120.0), ("neg_strong", -120.0)):
         scenarios.append(
@@ -402,11 +404,12 @@ def rate_pd_scenarios(quick: bool = False) -> list[SearchScenario]:
 
 
 def rate_i_scenarios(quick: bool = False) -> list[SearchScenario]:
-    duration = _duration(4.0, quick)
+    recovery_duration = _duration(1.5, quick)
+    bias_duration = _duration(4.0, quick)
     scenarios = [
         SearchScenario(
             LoiterScenarioConfig(
-                name=f"rate_i_{label}", mode="RATE", duration_s=duration,
+                name=f"rate_i_{label}", mode="RATE", duration_s=recovery_duration,
                 initial_z=6.0,
                 initial_omega_deg_s=omega, capture_current_target=True,
                 max_theta_deg_limit=90.0, max_saturation_percent=100.0,
@@ -415,13 +418,13 @@ def rate_i_scenarios(quick: bool = False) -> list[SearchScenario]:
         )
         for label, omega in (("pos_moderate", 60.0), ("neg_moderate", -60.0))
     ]
-    for label, moment in (("positive_bias", 0.025), ("negative_bias", -0.025)):
+    for label, moment in (("positive_bias", 0.005), ("negative_bias", -0.005)):
         scenarios.append(
             SearchScenario(
                 LoiterScenarioConfig(
-                    name=f"rate_i_{label}", mode="RATE", duration_s=duration,
-                    initial_z=6.0,
-                    disturbance_start_s=0.0, disturbance_duration_s=duration,
+                    name=f"rate_i_{label}", mode="LOITER", duration_s=bias_duration,
+                    initial_z=1.0,
+                    disturbance_start_s=0.0, disturbance_duration_s=bias_duration,
                     disturbance_moment=moment, capture_current_target=True,
                     max_theta_deg_limit=90.0, max_saturation_percent=100.0,
                 ),
@@ -665,6 +668,7 @@ def compute_scenario_metrics(
 
     metrics: dict[str, Any] = {
         "duration_s": float(times[-1]),
+        "analytical_pass": bool(result.metrics.get("pass", False)),
         "rms_rate_error_deg_s": _rms(rate_error_deg_s),
         "tail_rms_rate_error_deg_s": _rms(rate_error_deg_s[tail]),
         "tail_mean_abs_rate_error_deg_s": float(np.mean(np.abs(rate_error_deg_s[tail]))),
@@ -977,6 +981,7 @@ def _scenario_row(
     tail_window_s: float,
     baseline: dict[str, Any] | None = None,
     run_key: str | None = None,
+    enforce_primary_pass: bool = False,
 ) -> dict[str, Any]:
     metrics = compute_scenario_metrics(stage, result, tail_window_s=tail_window_s, baseline=baseline)
     mismatches = _effective_mismatch(candidate, result)
@@ -987,6 +992,18 @@ def _scenario_row(
         reasons = str(metrics.get("rejection_reasons", ""))
         mismatch_reason = "effective parameter mismatch: " + "; ".join(mismatches)
         metrics["rejection_reasons"] = "; ".join(filter(None, (reasons, mismatch_reason)))
+    if (
+        enforce_primary_pass
+        and stage == "loiter_xy"
+        and scenario.primary_score
+        and not _as_bool(metrics.get("analytical_pass"))
+    ):
+        reasons = str(metrics.get("rejection_reasons", ""))
+        metrics["rejected"] = True
+        metrics["pass"] = False
+        metrics["rejection_reasons"] = "; ".join(
+            filter(None, (reasons, "primary scenario analytical recovery threshold failed"))
+        )
     row: dict[str, Any] = {
         "run_key": run_key or _scenario_run_key(candidate, scenario, param_path, tail_window_s),
         "stage": stage,
@@ -1061,6 +1078,7 @@ def _run_candidate_scenarios(
                     tail_window_s=tail_window_s,
                     baseline=baseline,
                     run_key=run_key,
+                    enforce_primary_pass=not quick,
                 )
                 store.add(row)
             stage_rows.append(row)
