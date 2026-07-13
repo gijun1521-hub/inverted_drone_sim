@@ -40,7 +40,7 @@ ACTUATOR LAB starts in the 11-state moving-mass representation with centered act
 | `Space` | pause / resume |
 | `N` | advance one physics step while paused |
 
-The A/D/F/H controls are deterministic `KEYDOWN` increments, including while paused. The command target passes through a braking-aware moving-mass trajectory that preserves the configured rail, rate, and acceleration limits. It reduces commanded speed according to the remaining stopping distance and clamps a discrete target crossing exactly to the target with zero velocity, so short moves settle without sustained oscillation. The actual state is not teleported during normal travel. The vane and thrust still pass through the existing servo and motor dynamics.
+The A/D/F/H controls are deterministic `KEYDOWN` increments, including while paused. The command target passes through a braking-aware moving-mass trajectory that always preserves the configured rail, rate, and acceleration limits. Planned fixed-target motion from rest reduces speed according to the remaining stopping distance and settles exactly without overshoot. An arbitrary target change while the mass is already moving quickly can produce physically unavoidable temporary overshoot; in that case the tracker continues acceleration-limited braking instead of teleporting the offset or resetting velocity. A target crossing is clamped exactly only when stopping to zero is possible within the current acceleration step. The vane and thrust still pass through the existing servo and motor dynamics.
 
 ## Manual limits and physical limits
 

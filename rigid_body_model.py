@@ -103,16 +103,24 @@ class RigidBodySingleFan2D:
         accel_step = max_accel * dt
         # Include the next semi-implicit position step in the stopping bound so
         # the terminal target clamp does not require an over-limit velocity jump.
-        braking_speed = float(
-            np.sqrt(accel_step**2 + 2.0 * max_accel * abs(error)) - accel_step
-        )
-        desired_velocity = float(np.copysign(min(max_rate, braking_speed), error))
+        if abs(error) <= accel_step * dt:
+            desired_velocity = error / dt
+        else:
+            braking_speed = float(
+                np.sqrt(accel_step**2 + 2.0 * max_accel * abs(error)) - accel_step
+            )
+            desired_velocity = float(np.copysign(min(max_rate, braking_speed), error))
         raw_delta_v = desired_velocity - velocity
         delta_v = float(np.clip(raw_delta_v, -accel_step, accel_step))
         new_velocity = float(np.clip(velocity + delta_v, -max_rate, max_rate))
         new_offset = float(bounded_offset + new_velocity * dt)
 
-        if error * (target - new_offset) <= 0.0:
+        crossed_target = error * (target - new_offset) <= 0.0
+        can_stop_this_step = (
+            abs(velocity) <= accel_step + 1e-12
+            and abs(new_velocity) <= accel_step + 1e-12
+        )
+        if crossed_target and can_stop_this_step:
             new_offset = target
             new_velocity = 0.0
         if abs(new_offset) > limit:

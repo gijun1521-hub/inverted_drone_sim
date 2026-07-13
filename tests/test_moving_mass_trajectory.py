@@ -92,6 +92,11 @@ class MovingMassTrajectoryTests(unittest.TestCase):
                 held_state = plant.step(0.0, 0.0, moving_mass_target_m=target)
                 self.assertEqual((held_state[8], held_state[9]), (target, 0.0))
 
+                if target == 0.005:
+                    settling_time = (len(offsets) - 1) * plant.cfg.dt
+                    self.assertAlmostEqual(settling_time, 0.165, delta=0.020)
+                    self.assertEqual(float(np.max(offsets)), target)
+
                 remaining = np.abs(target - offsets[:-1])
                 moving_speed = np.abs(velocities[:-1])
                 self.assertTrue(
@@ -125,6 +130,50 @@ class MovingMassTrajectoryTests(unittest.TestCase):
         self.assert_motion_is_bounded(plant, velocity_array, accelerations)
         held_state = plant.step(0.0, 0.0, moving_mass_target_m=-0.010)
         self.assertEqual((held_state[8], held_state[9]), (-0.010, 0.0))
+
+    def test_close_target_change_while_moving_preserves_every_step_bounds(self):
+        plant = self.make_plant()
+        velocities = [float(plant.state[9])]
+        for _ in range(20):
+            state = plant.step(0.0, 0.0, moving_mass_target_m=0.010)
+            velocities.append(float(state[9]))
+        close_target = float(state[8] + 0.001)
+        self.assertGreater(state[9], 0.0)
+
+        offsets, changed_velocities, _accelerations, _saturated = self.run_until_settled(
+            plant, close_target
+        )
+        velocities.extend(changed_velocities[1:])
+        velocity_array = np.asarray(velocities)
+        accelerations = np.diff(velocity_array) / plant.cfg.dt
+
+        self.assertGreater(float(np.max(offsets)), close_target)
+        self.assertLessEqual(float(np.max(np.abs(offsets))), 0.05 + 1e-12)
+        self.assertEqual(offsets[-1], close_target)
+        self.assertEqual(changed_velocities[-1], 0.0)
+        self.assert_motion_is_bounded(plant, velocity_array, accelerations)
+
+    def test_manual_style_centering_while_moving_preserves_bounds(self):
+        plant = self.make_plant()
+        velocities = [float(plant.state[9])]
+        for _ in range(20):
+            state = plant.step(0.0, 0.0, moving_mass_target_m=0.010)
+            velocities.append(float(state[9]))
+        offset_at_center_command = float(state[8])
+        self.assertGreater(state[9], 0.0)
+
+        offsets, centered_velocities, _accelerations, _saturated = self.run_until_settled(
+            plant, 0.0
+        )
+        velocities.extend(centered_velocities[1:])
+        velocity_array = np.asarray(velocities)
+        accelerations = np.diff(velocity_array) / plant.cfg.dt
+
+        self.assertGreater(float(np.max(offsets)), offset_at_center_command)
+        self.assertLessEqual(float(np.max(np.abs(offsets))), 0.05 + 1e-12)
+        self.assertEqual(offsets[-1], 0.0)
+        self.assertEqual(centered_velocities[-1], 0.0)
+        self.assert_motion_is_bounded(plant, velocity_array, accelerations)
 
     def test_physical_rail_clips_target_and_offset(self):
         for command in (-1.0, 1.0):
