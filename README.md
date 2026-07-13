@@ -79,6 +79,12 @@ python interactive_sim.py --params params/default_rigid_body.json
 python interactive_sim.py --params params/loiter_example.json
 ```
 
+ACTUATOR LAB with the 2 kg prototype profile:
+
+```bash
+python interactive_sim.py --params params/moving_mass_prototype_2kg.json --actuator-lab
+```
+
 ### 6. Headless 분석 실행
 
 ```bash
@@ -206,6 +212,7 @@ python interactive_sim.py --params params/loiter_example.json
 - `3`: STABILIZE-like
 - `4`: ALT_HOLD-like
 - `5`: LOITER-like
+- `6`: ACTUATOR_LAB (requires startup with `--actuator-lab`)
 
 ### 주요 조작키
 
@@ -225,7 +232,13 @@ python interactive_sim.py --params params/loiter_example.json
 - `C`: camera follow toggle
 - `M`: slow motion toggle
 - `Backspace`: manual command reset
+- ACTUATOR_LAB `A/D`: vane command `-0.5/+0.5 deg`; hold `Shift` for `-2/+2 deg`
+- ACTUATOR_LAB `V`: center vane command
+- ACTUATOR_LAB `F/H`: moving-mass target `-1/+1 mm`; hold `Shift` for `-5/+5 mm`
+- ACTUATOR_LAB `G`: center moving-mass target
 - `Esc`: quit
+
+ACTUATOR LAB changes moving-mass position, not `moving_mass.mass_kg`. Its default manual limits are `+/-10 mm` for the moving-mass target and `+/-5 deg` for the vane command; physical actuator limits remain unchanged. See [docs/actuator_lab.md](docs/actuator_lab.md) for sign conventions, opposing/reinforcing examples, visualization labels, and the pause/single-step workflow.
 
 Interactive log는 다음 위치에 저장됩니다.
 

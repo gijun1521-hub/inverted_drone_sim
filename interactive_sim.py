@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from time import perf_counter
 import argparse
@@ -37,6 +37,7 @@ class ControlMode(str, Enum):
     STABILIZE = "STABILIZE"
     ALT_HOLD = "ALT_HOLD"
     LOITER = "LOITER"
+    ACTUATOR_LAB = "ACTUATOR_LAB"
 
 
 @dataclass
@@ -47,6 +48,7 @@ class ManualCommands:
     omega_target: float = 0.0
     stick_x: float = 0.0
     stick_z: float = 0.0
+    moving_mass_target_m: float = 0.0
 
     def zero(self, hover_throttle: float) -> None:
         self.throttle = hover_throttle
@@ -55,6 +57,7 @@ class ManualCommands:
         self.omega_target = 0.0
         self.stick_x = 0.0
         self.stick_z = 0.0
+        self.moving_mass_target_m = 0.0
 
 
 @dataclass
@@ -254,7 +257,7 @@ class ManualControlSystem:
     ) -> RigidBodyControlOutput:
         dt = controller_dt if controller_dt is not None else self.cfg.dt
         thrust_cmd = self.thrust_curve.thrust(commands.throttle)
-        if mode == ControlMode.DIRECT:
+        if mode in (ControlMode.DIRECT, ControlMode.ACTUATOR_LAB):
             return _control_output(thrust_cmd, commands.direct_vane)
         if mode == ControlMode.RATE:
             return self._attitude_rate_mix(state, thrust_cmd, 0.0, dt, omega_target=commands.omega_target)
@@ -326,11 +329,43 @@ def _move_toward(value: float, target: float, rate: float, dt: float) -> float:
     return float(np.clip(target, value - delta, value + delta))
 
 
+def configure_actuator_lab(rb_cfg: RigidBodyConfig) -> RigidBodyConfig:
+    """Return a validated copy configured for manual total-COM experiments."""
+    moving_mass = replace(
+        rb_cfg.moving_mass,
+        enabled=True,
+        use_total_com_geometry=True,
+        use_legacy_gravity_offset_moment=False,
+    )
+    configured = replace(rb_cfg, moving_mass=moving_mass)
+    configured.validate()
+    return configured
+
+
 class InteractiveApp:
-    def __init__(self, rb_cfg: RigidBodyConfig | None = None, ui_cfg: InteractiveSimConfig | None = None, controller_cfg: ControllerConfig | None = None):
+    def __init__(
+        self,
+        rb_cfg: RigidBodyConfig | None = None,
+        ui_cfg: InteractiveSimConfig | None = None,
+        controller_cfg: ControllerConfig | None = None,
+        *,
+        actuator_lab_enabled: bool = False,
+    ):
         self.rb_cfg = rb_cfg or RigidBodyConfig(dt=0.005)
         self.ui_cfg = ui_cfg or InteractiveSimConfig(physics_dt=self.rb_cfg.dt, controller_dt=0.01)
         self.controller_cfg = controller_cfg or ControllerConfig()
+        self.actuator_lab_enabled = bool(actuator_lab_enabled)
+        if self.actuator_lab_enabled:
+            mm = self.rb_cfg.moving_mass
+            if not (
+                mm.enabled
+                and mm.use_total_com_geometry
+                and not mm.use_legacy_gravity_offset_moment
+            ):
+                raise ValueError(
+                    "ACTUATOR_LAB requires a prevalidated moving-mass total-COM configuration"
+                )
+        self.rb_cfg.validate()
         self.plant = RigidBodySingleFan2D(self.rb_cfg)
         self.motor = FirstOrderMotor(self.rb_cfg.T_max, self.rb_cfg.motor_time_constant)
         self.servo = VaneServo(
@@ -342,7 +377,7 @@ class InteractiveApp:
             command_delay=self.rb_cfg.servo_delay,
         )
         self.control = ManualControlSystem(self.rb_cfg, self.controller_cfg)
-        self.mode = ControlMode.DIRECT
+        self.mode = ControlMode.ACTUATOR_LAB if self.actuator_lab_enabled else ControlMode.DIRECT
         self.thrust_curve = ThrottleToThrustModel(self.rb_cfg)
         self.commands = ManualCommands(throttle=self.thrust_curve.throttle_for_hover())
         self.targets = RuntimeTargets(self.rb_cfg.target_x, self.rb_cfg.target_z)
@@ -350,7 +385,7 @@ class InteractiveApp:
         self.disturbance = Disturbance(force=np.zeros(2), moment=0.0)
         self.logger = InteractiveCSVLogger(self.ui_cfg.log_directory)
 
-        self.state = self.plant.reset(np.array(self.ui_cfg.presets["F1"].state, dtype=float))
+        self.state = self.plant.reset(self._reset_state("F1", startup=True))
         self.targets.capture(self.state)
         self.sim_time = 0.0
         self.speed = self.ui_cfg.initial_speed
@@ -359,7 +394,7 @@ class InteractiveApp:
         self.slow_motion = False
         self.emergency_cut = False
         self.crash_reason = ""
-        self.mode_status = "ready"
+        self.mode_status = "ACTUATOR LAB ready" if self.actuator_lab_enabled else "ready"
         self.camera_center = np.array([0.0, self.rb_cfg.target_z], dtype=float)
         self.camera_follow = True
         self.measured_real_time_factor = 0.0
@@ -370,10 +405,83 @@ class InteractiveApp:
         self.last_servo = ServoOutput(0.0, 0.0, 0.0, False, False)
         self.last_forces = self.plant.force_moment_breakdown(self.state)
 
-    def set_mode(self, mode: ControlMode) -> None:
+    def _reset_state(self, preset_key: str, *, startup: bool = False) -> np.ndarray:
+        preset = self.ui_cfg.presets.get(preset_key, self.ui_cfg.presets["F1"])
+        state = np.array(preset.state, dtype=float)
+        if not self.actuator_lab_enabled:
+            return state
+        state = state[:8].copy()
+        state[6] = (
+            0.45 * self.rb_cfg.hover_thrust
+            if preset_key == "F6"
+            else self.rb_cfg.hover_thrust
+        )
+        state[7] = 0.0
+        initial_offset = 0.0 if startup else float(
+            np.clip(
+                self.rb_cfg.moving_mass.initial_offset_m,
+                -self.rb_cfg.moving_mass.max_offset_m,
+                self.rb_cfg.moving_mass.max_offset_m,
+            )
+        )
+        return np.concatenate([state, np.array([initial_offset, 0.0, 0.0])])
+
+    @property
+    def actuator_lab_mass_limit_m(self) -> float:
+        return min(
+            abs(float(self.ui_cfg.actuator_lab_mass_limit_m)),
+            abs(float(self.rb_cfg.moving_mass.max_offset_m)),
+        )
+
+    @property
+    def actuator_lab_vane_limit_rad(self) -> float:
+        return min(
+            np.deg2rad(abs(float(self.ui_cfg.actuator_lab_vane_limit_deg))),
+            abs(float(self.rb_cfg.vane_angle_max)),
+        )
+
+    def adjust_actuator_lab_mass_target(self, direction: float, *, coarse: bool = False) -> float:
+        step = (
+            self.ui_cfg.actuator_lab_mass_coarse_step_m
+            if coarse
+            else self.ui_cfg.actuator_lab_mass_step_m
+        )
+        self.commands.moving_mass_target_m = float(
+            np.clip(
+                self.commands.moving_mass_target_m + float(direction) * step,
+                -self.actuator_lab_mass_limit_m,
+                self.actuator_lab_mass_limit_m,
+            )
+        )
+        return self.commands.moving_mass_target_m
+
+    def adjust_actuator_lab_vane_command(self, direction: float, *, coarse: bool = False) -> float:
+        step_deg = (
+            self.ui_cfg.actuator_lab_vane_coarse_step_deg
+            if coarse
+            else self.ui_cfg.actuator_lab_vane_step_deg
+        )
+        self.commands.direct_vane = float(
+            np.clip(
+                self.commands.direct_vane + np.deg2rad(float(direction) * step_deg),
+                -self.actuator_lab_vane_limit_rad,
+                self.actuator_lab_vane_limit_rad,
+            )
+        )
+        return self.commands.direct_vane
+
+    def set_mode(self, mode: ControlMode) -> bool:
+        if mode == ControlMode.ACTUATOR_LAB and not self.actuator_lab_enabled:
+            self.mode_status = "restart with --actuator-lab to use mode 6"
+            return False
         if mode == self.mode:
-            return
+            return True
         previous = self.mode
+        if previous == ControlMode.ACTUATOR_LAB:
+            self.commands.moving_mass_target_m = 0.0
+        if mode == ControlMode.ACTUATOR_LAB:
+            self.commands.direct_vane = 0.0
+            self.commands.moving_mass_target_m = 0.0
         if previous == ControlMode.DIRECT and mode == ControlMode.RATE:
             self.commands.omega_target = float(self.state[5])
         if mode == ControlMode.STABILIZE:
@@ -397,9 +505,11 @@ class InteractiveApp:
         self.control.reset_pid_for_mode_change(self.commands.omega_target, float(self.state[5]))
         self.mode = mode
         self.mode_status = f"{previous.value} -> {mode.value}"
+        return True
+
     def reset(self, preset_key: str = "F1") -> None:
         preset = self.ui_cfg.presets.get(preset_key, self.ui_cfg.presets["F1"])
-        self.state = self.plant.reset(np.array(preset.state, dtype=float))
+        self.state = self.plant.reset(self._reset_state(preset_key))
         self.control.reset()
         self.servo.reset()
         self.loiter_shaper.reset()
@@ -412,6 +522,10 @@ class InteractiveApp:
         self.crash_reason = ""
         self.mode_status = f"reset: {preset.name}"
         self.trace.clear()
+        self.last_control = _control_output(self.rb_cfg.hover_thrust, 0.0)
+        self.last_motor = MotorOutput(float(self.state[6]), 0.0, False)
+        self.last_servo = ServoOutput(0.0, 0.0, 0.0, False, False)
+        self.last_forces = self.plant.force_moment_breakdown(self.state)
 
     def handle_events(self, pygame) -> bool:
         for event in pygame.event.get():
@@ -434,6 +548,19 @@ class InteractiveApp:
                 elif event.key == pygame.K_BACKSPACE:
                     self.commands.zero(self.thrust_curve.throttle_for_hover())
                     self.emergency_cut = False
+                    self.mode_status = "manual commands centered"
+                elif self.mode == ControlMode.ACTUATOR_LAB and event.key in (pygame.K_a, pygame.K_d):
+                    coarse = bool(getattr(event, "mod", 0) & pygame.KMOD_SHIFT)
+                    direction = 1.0 if event.key == pygame.K_d else -1.0
+                    self.adjust_actuator_lab_vane_command(direction, coarse=coarse)
+                elif self.mode == ControlMode.ACTUATOR_LAB and event.key == pygame.K_v:
+                    self.commands.direct_vane = 0.0
+                elif self.mode == ControlMode.ACTUATOR_LAB and event.key in (pygame.K_f, pygame.K_h):
+                    coarse = bool(getattr(event, "mod", 0) & pygame.KMOD_SHIFT)
+                    direction = 1.0 if event.key == pygame.K_h else -1.0
+                    self.adjust_actuator_lab_mass_target(direction, coarse=coarse)
+                elif self.mode == ControlMode.ACTUATOR_LAB and event.key == pygame.K_g:
+                    self.commands.moving_mass_target_m = 0.0
                 elif event.key == pygame.K_1:
                     self.set_mode(ControlMode.DIRECT)
                 elif event.key == pygame.K_2:
@@ -444,6 +571,8 @@ class InteractiveApp:
                     self.set_mode(ControlMode.ALT_HOLD)
                 elif event.key == pygame.K_5:
                     self.set_mode(ControlMode.LOITER)
+                elif event.key == pygame.K_6:
+                    self.set_mode(ControlMode.ACTUATOR_LAB)
                 elif event.key == pygame.K_LEFTBRACKET:
                     self.speed = max(self.ui_cfg.min_speed, self.speed - self.ui_cfg.speed_step)
                 elif event.key == pygame.K_RIGHTBRACKET:
@@ -478,7 +607,9 @@ class InteractiveApp:
 
     def update_inputs(self, pygame, dt: float) -> None:
         keys = pygame.key.get_pressed()
-        pitch_axis = float(keys[pygame.K_d]) - float(keys[pygame.K_a])
+        pitch_axis = 0.0 if self.mode == ControlMode.ACTUATOR_LAB else (
+            float(keys[pygame.K_d]) - float(keys[pygame.K_a])
+        )
         climb_axis = float(keys[pygame.K_w]) - float(keys[pygame.K_s])
         self.commands.stick_x = pitch_axis
         self.commands.stick_z = climb_axis
@@ -495,12 +626,13 @@ class InteractiveApp:
         omega_target = np.deg2rad(self.ui_cfg.manual_omega_max_deg_s) * pitch_axis
         return_rate = self.ui_cfg.command_return_rate
 
-        self.commands.direct_vane = _move_toward(
-            self.commands.direct_vane,
-            direct_target,
-            np.deg2rad(self.ui_cfg.vane_slew_deg_s if pitch_axis else self.ui_cfg.direct_vane_max_deg * return_rate),
-            dt,
-        )
+        if self.mode != ControlMode.ACTUATOR_LAB:
+            self.commands.direct_vane = _move_toward(
+                self.commands.direct_vane,
+                direct_target,
+                np.deg2rad(self.ui_cfg.vane_slew_deg_s if pitch_axis else self.ui_cfg.direct_vane_max_deg * return_rate),
+                dt,
+            )
         self.commands.theta_target = _move_toward(
             self.commands.theta_target,
             theta_target,
@@ -536,7 +668,16 @@ class InteractiveApp:
     def physics_step(self, wall_time: float, real_time_factor: float) -> None:
         disturbance_force = self.disturbance.combined_force()
         disturbance_moment = self.disturbance.combined_moment()
-        if self.controller_time_remaining <= 1e-12:
+        if self.mode == ControlMode.ACTUATOR_LAB:
+            self.last_control = self.control.compute(
+                self.mode,
+                self.state,
+                self.commands,
+                self.rb_cfg.dt,
+                self.targets,
+            )
+            self.controller_time_remaining = 0.0
+        elif self.controller_time_remaining <= 1e-12:
             self._update_loiter_targets(self.ui_cfg.controller_dt)
             self.last_control = self.control.compute(
                 self.mode,
@@ -563,6 +704,11 @@ class InteractiveApp:
             self.last_servo.vane_angle_dot,
             disturbance_force,
             disturbance_moment,
+            moving_mass_target_m=(
+                self.commands.moving_mass_target_m
+                if self.actuator_lab_enabled
+                else None
+            ),
         )
         self.disturbance.tick(self.rb_cfg.dt)
         self.sim_time += self.rb_cfg.dt
@@ -628,6 +774,81 @@ class InteractiveApp:
             "length": float(self.ui_cfg.vane_visual_length_m),
         }
 
+    def actuator_lab_visual_geometry(
+        self,
+        body_up: np.ndarray,
+        body_right: np.ndarray,
+    ) -> dict[str, np.ndarray]:
+        total_com = np.asarray(self.state[:2], dtype=float)
+        total_com_body = np.array(
+            [
+                self.last_forces.total_com_body_right_m,
+                self.last_forces.total_com_body_up_m,
+            ],
+            dtype=float,
+        )
+        fixed_body_origin = (
+            total_com
+            - total_com_body[0] * body_right
+            - total_com_body[1] * body_up
+        )
+        rail_center = (
+            fixed_body_origin
+            + self.rb_cfg.moving_mass.moving_mass_body_up_offset_m * body_up
+        )
+        physical_limit = abs(float(self.rb_cfg.moving_mass.max_offset_m))
+        actual_offset = float(self.state[8]) if self.state.shape == (11,) else 0.0
+        target_offset = float(self.commands.moving_mass_target_m)
+        return {
+            "total_com": total_com,
+            "fixed_body_origin": fixed_body_origin,
+            "rail_start": rail_center - physical_limit * body_right,
+            "rail_end": rail_center + physical_limit * body_right,
+            "moving_mass_actual": rail_center + actual_offset * body_right,
+            "moving_mass_target": rail_center + target_offset * body_right,
+        }
+
+    def expected_pitch_direction(self, total_moment: float | None = None) -> str:
+        moment = self.last_forces.total_moment if total_moment is None else float(total_moment)
+        deadband = abs(float(self.ui_cfg.actuator_lab_moment_deadband_Nm))
+        if moment > deadband:
+            return "RIGHT / POSITIVE"
+        if moment < -deadband:
+            return "LEFT / NEGATIVE"
+        return "NEAR ZERO"
+
+    def vane_side_force_direction(self, body_right: np.ndarray) -> str:
+        component = float(np.dot(self.last_forces.vane_force, body_right))
+        if component > 1e-9:
+            return "BODY-RIGHT (+)"
+        if component < -1e-9:
+            return "BODY-LEFT (-)"
+        return "NEAR ZERO"
+
+    def actuator_lab_panel_lines(
+        self,
+        body_right: np.ndarray | None = None,
+    ) -> list[str]:
+        if body_right is None:
+            _body_up, body_right = self.plant.body_axes(float(self.state[2]))
+        return [
+            "ACTUATOR LAB",
+            f"vane command: {np.rad2deg(self.commands.direct_vane):+.2f} deg",
+            f"actual vane angle: {np.rad2deg(self.state[7]):+.2f} deg",
+            f"vane side-force: {self.vane_side_force_direction(body_right)}",
+            f"vane moment: {self.last_forces.vane_moment:+.4f} N m",
+            f"moving-mass target: {1000.0 * self.commands.moving_mass_target_m:+.1f} mm",
+            f"actual moving-mass offset: {1000.0 * self.last_forces.moving_mass_offset_m:+.1f} mm",
+            f"moving-mass velocity: {1000.0 * self.last_forces.moving_mass_velocity_m_s:+.1f} mm/s",
+            f"total COM body-right: {1000.0 * self.last_forces.total_com_body_right_m:+.2f} mm",
+            f"total COM body-up: {1000.0 * self.last_forces.total_com_body_up_m:+.2f} mm",
+            f"thrust-offset moment: {self.last_forces.thrust_moment_from_com_offset:+.4f} N m",
+            f"damping moment: {self.last_forces.damping_moment:+.4f} N m",
+            f"total pitch moment: {self.last_forces.total_moment:+.4f} N m",
+            f"expected pitch: {self.expected_pitch_direction()}",
+            "theta + = RIGHT; mass offset + = BODY-RIGHT",
+        ]
+
     def render(self, pygame, screen, font, small_font) -> None:
         w, h = screen.get_size()
         screen.fill((18, 20, 24))
@@ -663,8 +884,13 @@ class InteractiveApp:
         total_energy = translational_energy + rotational_energy + potential_energy
         body_up, body_right = self.plant.body_axes(float(theta))
         cg = np.array([x, z])
-        top = cg + self.rb_cfg.l * body_up
-        bottom = cg - self.rb_cfg.l * body_up
+        fixed_body_origin = cg
+        lab_geometry = None
+        if self.rb_cfg.moving_mass.use_total_com_geometry:
+            lab_geometry = self.actuator_lab_visual_geometry(body_up, body_right)
+            fixed_body_origin = lab_geometry["fixed_body_origin"]
+        top = fixed_body_origin + self.rb_cfg.l * body_up
+        bottom = fixed_body_origin - self.rb_cfg.l * body_up
         half_w = 0.5 * self.rb_cfg.W
         corners = [bottom - half_w * body_right, bottom + half_w * body_right, top + half_w * body_right, top - half_w * body_right]
         if self.ui_cfg.show_target_marker and self.mode in (ControlMode.ALT_HOLD, ControlMode.LOITER):
@@ -676,12 +902,53 @@ class InteractiveApp:
             if self.ui_cfg.show_desired_accel_arrow:
                 draw_arrow(cg, np.array([self.targets.desired_ax, self.targets.desired_az]) / max(self.rb_cfg.g, 1e-6), (255, 220, 80), 0.25, 2)
         pygame.draw.polygon(screen, (60, 145, 220), [world_to_screen(c) for c in corners])
-        pygame.draw.circle(screen, (255, 80, 80), world_to_screen(cg), 5)
+        if self.mode == ControlMode.ACTUATOR_LAB and lab_geometry is not None:
+            rail_start = world_to_screen(lab_geometry["rail_start"])
+            rail_end = world_to_screen(lab_geometry["rail_end"])
+            actual_pos = world_to_screen(lab_geometry["moving_mass_actual"])
+            target_pos = world_to_screen(lab_geometry["moving_mass_target"])
+            fixed_origin_px = world_to_screen(lab_geometry["fixed_body_origin"])
+            total_com_px = world_to_screen(lab_geometry["total_com"])
+            pygame.draw.line(screen, (210, 210, 210), rail_start, rail_end, 4)
+            pygame.draw.circle(screen, (255, 150, 55), actual_pos, 7)
+            pygame.draw.circle(screen, (245, 245, 245), actual_pos, 7, 2)
+            pygame.draw.line(screen, (120, 235, 255), (target_pos[0] - 6, target_pos[1] - 6), (target_pos[0] + 6, target_pos[1] + 6), 3)
+            pygame.draw.line(screen, (120, 235, 255), (target_pos[0] - 6, target_pos[1] + 6), (target_pos[0] + 6, target_pos[1] - 6), 3)
+            pygame.draw.rect(screen, (250, 250, 250), (fixed_origin_px[0] - 4, fixed_origin_px[1] - 4, 8, 8), 2)
+            pygame.draw.polygon(
+                screen,
+                (255, 80, 80),
+                [
+                    (total_com_px[0], total_com_px[1] - 7),
+                    (total_com_px[0] + 7, total_com_px[1]),
+                    (total_com_px[0], total_com_px[1] + 7),
+                    (total_com_px[0] - 7, total_com_px[1]),
+                ],
+                2,
+            )
+            marker_labels = [
+                ("MM actual", actual_pos, (18, -48), (255, 230, 205)),
+                ("MM target", target_pos, (18, -14), (190, 245, 255)),
+                ("total COM", total_com_px, (18, 24), (255, 185, 185)),
+            ]
+            for label, marker, offset_px, color in marker_labels:
+                label_pos = (marker[0] + offset_px[0], marker[1] + offset_px[1])
+                pygame.draw.line(
+                    screen,
+                    color,
+                    marker,
+                    (label_pos[0] - 3, label_pos[1] + 8),
+                    1,
+                )
+                screen.blit(small_font.render(label, True, color), label_pos)
+        else:
+            pygame.draw.circle(screen, (255, 80, 80), world_to_screen(cg), 5)
         pygame.draw.circle(screen, (20, 20, 20), world_to_screen(bottom), 5)
 
-
-        draw_arrow(bottom, self.last_forces.thrust_force / max(self.rb_cfg.hover_thrust, 1e-6), (245, 160, 55), 0.35)
-        draw_arrow(bottom, self.last_forces.vane_force / max(self.rb_cfg.hover_thrust, 1e-6), (190, 90, 230), 0.6)
+        thrust_point = self.last_forces.thrust_application_point if lab_geometry is not None else bottom
+        vane_point = self.last_forces.vane_application_point if lab_geometry is not None else bottom
+        draw_arrow(thrust_point, self.last_forces.thrust_force / max(self.rb_cfg.hover_thrust, 1e-6), (245, 160, 55), 0.35)
+        draw_arrow(vane_point, self.last_forces.vane_force / max(self.rb_cfg.hover_thrust, 1e-6), (190, 90, 230), 0.6)
         draw_arrow(cg, self.last_forces.total_force / max(self.rb_cfg.hover_thrust, 1e-6), (80, 220, 130), 0.25)
         draw_arrow(cg, self.last_forces.disturbance_force / max(self.rb_cfg.hover_thrust, 1e-6), (255, 230, 80), 0.5)
 
@@ -690,7 +957,12 @@ class InteractiveApp:
             pygame.draw.line(screen, (255, 255, 255), world_to_screen(cg), world_to_screen(cg + 0.45 * target_up), 1)
 
         if self.ui_cfg.show_vane_overlay:
-            geom = self.vane_visual_geometry(bottom, body_up, body_right, float(vane), self.last_control.vane_angle_cmd)
+            displayed_vane_command = (
+                self.commands.direct_vane
+                if self.mode == ControlMode.ACTUATOR_LAB
+                else self.last_control.vane_angle_cmd
+            )
+            geom = self.vane_visual_geometry(bottom, body_up, body_right, float(vane), displayed_vane_command)
             hinge = geom["hinge"]
             neutral_dir = geom["neutral_dir"]
             actual_dir = geom["actual_dir"]
@@ -715,12 +987,17 @@ class InteractiveApp:
             if self.last_control.mixer.authority_limited:
                 labels.append("AUTH")
             limit_text = " ".join(labels)
-            vane_text = f"VANE actual={np.rad2deg(vane):.1f}deg cmd={np.rad2deg(self.last_control.vane_angle_cmd):.1f}deg {limit_text}".rstrip()
+            vane_text = f"VANE actual={np.rad2deg(vane):.1f}deg cmd={np.rad2deg(displayed_vane_command):.1f}deg {limit_text}".rstrip()
             screen.blit(small_font.render(vane_text, True, (250, 235, 255)), world_to_screen(hinge + 0.28 * body_right - 0.18 * body_up))
 
+        control_help = (
+            "LAB A/D vane  F/H moving-mass target  V/G center  Shift=coarse  W/S throttle"
+            if self.mode == ControlMode.ACTUATOR_LAB
+            else "W/S throttle or climb  A/D mode stick  arrows force  Q/E moment  I/O impulse  X motor cut"
+        )
         lines = [
-            "W/S throttle or climb  A/D mode stick  arrows force  Q/E moment  I/O impulse  X motor cut",
-            "1 direct  2 rate  3 stabilize  4 alt_hold  5 loiter  Space pause  N step  R reset  L log",
+            control_help,
+            "1 direct  2 rate  3 stabilize  4 alt_hold  5 loiter  6 actuator_lab  Space pause  N step  R reset  L log",
             f"t={self.sim_time:6.2f}s  requested={self.speed:.2f}x measured={self.measured_real_time_factor:.2f}x{' slow' if self.slow_motion else ''}  mode={self.mode.value}  paused={self.paused}",
             f"x={x: .2f} z={z: .2f}  vx={self.state[3]: .2f} vz={self.state[4]: .2f}",
             f"target_x={self.targets.target_x: .2f} target_z={self.targets.target_z: .2f}  x_err={x_err: .2f} z_err={z_err: .2f} dist={(x_err*x_err+z_err*z_err)**0.5: .2f}",
@@ -743,6 +1020,18 @@ class InteractiveApp:
             surf = (font if idx < 2 else small_font).render(line, True, (235, 235, 235))
             screen.blit(surf, (12, y))
             y += 24 if idx < 2 else 19
+
+        if self.mode == ControlMode.ACTUATOR_LAB:
+            panel_lines = self.actuator_lab_panel_lines(body_right)
+            panel_x = max(12, w - 505)
+            panel_y = 60
+            panel_height = 18 + len(panel_lines) * 20
+            pygame.draw.rect(screen, (8, 10, 14), (panel_x, panel_y, 493, panel_height))
+            pygame.draw.rect(screen, (120, 235, 255), (panel_x, panel_y, 493, panel_height), 2)
+            for idx, line in enumerate(panel_lines):
+                text_font = font if idx == 0 else small_font
+                color = (120, 235, 255) if idx == 0 else (235, 240, 245)
+                screen.blit(text_font.render(line, True, color), (panel_x + 10, panel_y + 8 + idx * 20))
 
         pygame.display.flip()
 
@@ -792,9 +1081,21 @@ class InteractiveApp:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the interactive single-fan simulator.")
     parser.add_argument("--params", default=None, help="Optional JSON parameter override file.")
+    parser.add_argument(
+        "--actuator-lab",
+        action="store_true",
+        help="Start in ACTUATOR_LAB with validated total-COM moving-mass geometry.",
+    )
     args = parser.parse_args()
     rb_cfg, ui_cfg, controller_cfg = load_interactive_config(args.params)
-    InteractiveApp(rb_cfg, ui_cfg, controller_cfg).run()
+    if args.actuator_lab:
+        rb_cfg = configure_actuator_lab(rb_cfg)
+    InteractiveApp(
+        rb_cfg,
+        ui_cfg,
+        controller_cfg,
+        actuator_lab_enabled=args.actuator_lab,
+    ).run()
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover - supports direct script execution
 
 
 INTERACTIVE_FIELDS = [
-    "sim_time", "wall_time", "mode", "x_cg", "z_cg", "theta", "theta_wrapped", "vx", "vz", "omega",
+    "sim_time", "wall_time", "mode", "actuator_lab_active", "x_cg", "z_cg", "theta", "theta_wrapped", "vx", "vz", "omega",
     "thrust", "vane_angle", "throttle_cmd", "direct_vane_cmd", "theta_target", "omega_target",
     "rate_error", "rate_p", "rate_i", "rate_d", "rate_ff", "desired_moment", "achievable_moment",
     "physically_achievable_moment", "unattainable_moment", "anti_windup_correction", "integrator_inhibited",
@@ -69,6 +69,7 @@ def interactive_row(
     distance = float((x_error * x_error + z_error * z_error) ** 0.5)
     row = {
         "sim_time": float(sim_time), "wall_time": float(wall_time), "mode": mode,
+        "actuator_lab_active": int(mode == "ACTUATOR_LAB"),
         "x_cg": float(state[0]), "z_cg": float(state[1]), "theta": float(state[2]),
         "theta_wrapped": float((state[2] + np.pi) % (2.0 * np.pi) - np.pi),
         "vx": float(state[3]), "vz": float(state[4]), "omega": float(state[5]),
