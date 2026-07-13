@@ -85,21 +85,34 @@ class RigidBodySingleFan2D:
         limit = abs(float(mm.max_offset_m))
         target = float(np.clip(command, -limit, limit))
         command_clipped = abs(float(command) - target) > 1e-12
+        bounded_offset = float(np.clip(offset, -limit, limit))
+        rail_clipped = abs(float(offset) - bounded_offset) > 1e-12
         if dt <= 0.0:
-            return float(np.clip(offset, -limit, limit)), 0.0, target, command_clipped
+            return bounded_offset, 0.0, target, command_clipped or rail_clipped
 
         max_rate = max(0.0, float(mm.max_rate_m_s))
         max_accel = max(0.0, float(mm.max_accel_m_s2))
         if max_rate <= 0.0 or max_accel <= 0.0:
-            return float(np.clip(offset, -limit, limit)), 0.0, target, command_clipped
+            return bounded_offset, 0.0, target, command_clipped or rail_clipped
 
-        desired_velocity = float(np.clip((target - offset) / dt, -max_rate, max_rate))
+        error = target - bounded_offset
+        if error == 0.0:
+            saturated = command_clipped or rail_clipped or abs(bounded_offset) >= limit - 1e-12
+            return bounded_offset, 0.0, target, bool(saturated)
+
+        accel_step = max_accel * dt
+        # Include the next semi-implicit position step in the stopping bound so
+        # the terminal target clamp does not require an over-limit velocity jump.
+        braking_speed = float(
+            np.sqrt(accel_step**2 + 2.0 * max_accel * abs(error)) - accel_step
+        )
+        desired_velocity = float(np.copysign(min(max_rate, braking_speed), error))
         raw_delta_v = desired_velocity - velocity
-        delta_v = float(np.clip(raw_delta_v, -max_accel * dt, max_accel * dt))
+        delta_v = float(np.clip(raw_delta_v, -accel_step, accel_step))
         new_velocity = float(np.clip(velocity + delta_v, -max_rate, max_rate))
-        new_offset = float(offset + new_velocity * dt)
+        new_offset = float(bounded_offset + new_velocity * dt)
 
-        if (target - offset) * (target - new_offset) <= 0.0 and abs(new_velocity) <= max_accel * dt + 1e-12:
+        if error * (target - new_offset) <= 0.0:
             new_offset = target
             new_velocity = 0.0
         if abs(new_offset) > limit:
@@ -108,6 +121,7 @@ class RigidBodySingleFan2D:
 
         saturated = (
             command_clipped
+            or rail_clipped
             or abs(raw_delta_v - delta_v) > 1e-12
             or abs(desired_velocity) >= max_rate - 1e-12
             or abs(new_offset) >= limit - 1e-12

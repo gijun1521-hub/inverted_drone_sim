@@ -493,7 +493,7 @@ class MovingMassAndAllocationTests(unittest.TestCase):
 
         self.assertLessEqual(abs(state[9]), cfg.moving_mass.max_accel_m_s2 * cfg.dt + 1e-12)
 
-    def test_pitch_assist_target_crossing_respects_acceleration_limit(self):
+    def test_pitch_assist_target_crossing_clamps_to_target(self):
         cfg = RigidBodyConfig(
             dt=0.1,
             moving_mass=MovingMassPitchAssistConfig(
@@ -507,8 +507,8 @@ class MovingMassAndAllocationTests(unittest.TestCase):
         plant.reset(np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, cfg.hover_thrust, 0.0, 0.001, -0.2, 0.0]))
         state = plant.step(0.0, 0.0, moving_mass_target_m=0.0)
 
-        delta_v = state[9] - (-0.2)
-        self.assertLessEqual(abs(delta_v), cfg.moving_mass.max_accel_m_s2 * cfg.dt + 1e-12)
+        self.assertEqual(state[8], 0.0)
+        self.assertEqual(state[9], 0.0)
 
     def test_reaction_helper_limits(self):
         self.assertAlmostEqual(moving_mass_reaction_body_delta(1.0, 100.0, 0.2), -0.2, delta=0.003)

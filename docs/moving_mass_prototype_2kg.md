@@ -39,15 +39,17 @@ Consequently, `total_com_geometry_centered` remains 8-state, has zero lateral CO
 
 ## Reproducing the comparison
 
-Run all five native-duration scenarios and all six variants without plots:
+Run all five native-duration scenarios and all six variants with the braking-aware tracker and without plots:
 
 ```powershell
-.venv\Scripts\python.exe compare_moving_mass_assist.py --params params/moving_mass_prototype_2kg.json --scenario all --no-plots --output-dir results/analysis/moving_mass_prototype_2kg
+.venv\Scripts\python.exe compare_moving_mass_assist.py --params params/moving_mass_prototype_2kg.json --scenario all --no-plots --output-dir results/analysis/moving_mass_braking_profile
 ```
 
 The generated files are:
 
-- `results/analysis/moving_mass_prototype_2kg/moving_mass_comparison.csv`
-- `results/analysis/moving_mass_prototype_2kg/moving_mass_comparison.md`
+- `results/analysis/moving_mass_braking_profile/moving_mass_comparison.csv`
+- `results/analysis/moving_mass_braking_profile/moving_mass_comparison.md`
+
+The earlier `results/analysis/moving_mass_prototype_2kg` comparison used the overshooting actuator tracker. Those prototype numbers are provisional and should not be mixed with the braking-profile results.
 
 Generated analysis results are transient and ignored by Git. The current model retains its existing fixed `Iyy` calculation. It does not include position-dependent inertia, reaction kick, moving-mass acceleration reaction, internal momentum coupling, or rail/servo reaction forces.

@@ -819,6 +819,16 @@ class InteractiveApp:
             return "LEFT / NEGATIVE"
         return "NEAR ZERO"
 
+    def actuator_pair_moment(self) -> float:
+        return float(
+            self.last_forces.thrust_moment_from_com_offset
+            + self.last_forces.vane_moment_about_total_com
+        )
+
+    def actuator_pair_direction(self, pair_moment: float | None = None) -> str:
+        moment = self.actuator_pair_moment() if pair_moment is None else float(pair_moment)
+        return f"PAIR {self.expected_pitch_direction(moment)}"
+
     def vane_side_force_direction(self, body_right: np.ndarray) -> str:
         component = float(np.dot(self.last_forces.vane_force, body_right))
         if component > 1e-9:
@@ -845,6 +855,8 @@ class InteractiveApp:
             f"total COM body-right: {1000.0 * self.last_forces.total_com_body_right_m:+.2f} mm",
             f"total COM body-up: {1000.0 * self.last_forces.total_com_body_up_m:+.2f} mm",
             f"thrust-offset moment: {self.last_forces.thrust_moment_from_com_offset:+.4f} N m",
+            f"actuator-pair moment: {self.actuator_pair_moment():+.4f} N m",
+            f"actuator pair: {self.actuator_pair_direction()}",
             f"damping moment: {self.last_forces.damping_moment:+.4f} N m",
             f"total pitch moment: {self.last_forces.total_moment:+.4f} N m",
             f"expected pitch: {self.expected_pitch_direction()}",
