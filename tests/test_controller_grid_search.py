@@ -221,7 +221,8 @@ class ControllerGridCacheAndValidityTests(unittest.TestCase):
         self.assertEqual(rate_scenarios[0].config.duration_s, 3.0)
         self.assertTrue(rate_scenarios[0].primary_score)
         self.assertEqual(rate_scenarios[2].config.duration_s, 1.5)
-        self.assertFalse(rate_scenarios[2].primary_score)
+        self.assertTrue(rate_scenarios[2].primary_score)
+        self.assertFalse(rate_scenarios[4].primary_score)
         self.assertEqual(rate_i_scenarios(False)[2].tail_window_s, 1.0)
         attitude = attitude_p_scenarios(False)[0]
         self.assertEqual(attitude.tail_window_s, 1.0)

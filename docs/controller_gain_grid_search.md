@@ -8,7 +8,7 @@ The workflow addresses persistent ribbon/comet-like LOITER motion with repeatabl
 
 The stages always follow this dependency order when `--stage all` is used:
 
-1. `rate_pd`: moving mass disabled, `atc_rat_pit_i=0`, joint coarse P/D grid, then a half-step local search around the five best accepted coarse candidates. Signed 10 deg/s primary recoveries must settle; 120 deg/s and low-authority cases are robustness-only.
+1. `rate_pd`: moving mass disabled, `atc_rat_pit_i=0`, joint coarse P/D grid, then a half-step local search around the five best accepted coarse candidates. Signed 10 deg/s primary recoveries must settle; signed 60 deg/s cases remain scored without a settling gate; 120 deg/s and low-authority cases are robustness-only.
 2. `rate_i`: fixes the top three P/D candidates and sweeps I, including `I=0` and positive/negative persistent moment-bias cases. Primary recoveries must settle and bias cases must meet the documented tail and terminal limits.
 3. `attitude_p`: fixes the selected rate PID and sweeps Angle P with ±5, ±10, and ±15 degree initial attitudes. Each five-second case must settle or meet the terminal 7 degree / 12 deg/s bounds.
 4. `loiter_xy`: fixes the rate and attitude loops and sweeps only the active horizontal position P and velocity P fields. Moving mass remains disabled.
@@ -30,7 +30,7 @@ Decimal grids are constructed from decimal arithmetic so endpoints and counts ar
 
 ## Scenarios and scoring scope
 
-RATE P-D uses 3-second positive and negative 10 deg/s primary recoveries plus 1.5-second signed 120 deg/s and mirrored low-authority robustness cases. RATE I uses 3-second signed 10 deg/s recoveries and mirrored persistent ±0.001 Nm disturbances in LOITER so the non-rate axes remain bounded while steady-state error, integrator output, inhibition, and anti-windup are measured. The bias gate requires tail mean absolute rate error at or below 40 deg/s and terminal absolute rate error at or below 30 deg/s. Angle P uses the six required signed initial attitudes. RATE and STABILIZE tests start with 6 m of analytical altitude margin and an analysis-only 50 m horizontal safety envelope because those modes intentionally do not run position or altitude control.
+RATE P-D uses 3-second positive and negative 10 deg/s required recoveries, 1.5-second signed 60 deg/s scored cases, and signed 120 deg/s plus mirrored low-authority robustness-only cases. RATE I uses 3-second signed 10 deg/s recoveries and mirrored persistent ±0.001 Nm disturbances in LOITER so the non-rate axes remain bounded while steady-state error, integrator output, inhibition, and anti-windup are measured. The bias gate requires tail mean absolute rate error at or below 40 deg/s and terminal absolute rate error at or below 30 deg/s. Angle P uses the six required signed initial attitudes. RATE and STABILIZE tests start with 6 m of analytical altitude margin and an analysis-only 50 m horizontal safety envelope because those modes intentionally do not run position or altitude control.
 
 Tail windows are stage-specific: RATE P-D and RATE recovery use the final 0.75 seconds, RATE I bias and attitude use the final 1.0 second, and LOITER/moving-mass use the configurable final 2.0 seconds by default. If a requested tail is longer than the sampled run, metrics use only the strict final half rather than silently duplicating whole-run metrics.
 

@@ -37,7 +37,7 @@ except ImportError:  # pragma: no cover - supports top-level script execution
 
 STAGES = ("rate_pd", "rate_i", "attitude_p", "loiter_xy", "moving_mass_gain")
 CACHE_SCHEMA_VERSION = 2
-STAGE_GRID_DEFINITION_VERSION = "2026-07-13.2"
+STAGE_GRID_DEFINITION_VERSION = "2026-07-13.3"
 TAIL_POLICY_VERSION = "2026-07-13.2"
 WORKFLOW_IMPLEMENTATION_FILES = (
     "analysis/controller_grid_search.py",
@@ -408,7 +408,7 @@ def rate_pd_scenarios(quick: bool = False) -> list[SearchScenario]:
     robustness_duration = _duration(1.5, quick)
     tail_window = _stage_tail_window(0.75, quick)
     scenarios = []
-    for label, omega in (("pos_moderate", 10.0), ("neg_moderate", -10.0), ("pos_strong", 120.0), ("neg_strong", -120.0)):
+    for label, omega in (("pos_moderate", 10.0), ("neg_moderate", -10.0), ("pos_strong", 60.0), ("neg_strong", -60.0)):
         scenarios.append(
             SearchScenario(
                 LoiterScenarioConfig(
@@ -418,10 +418,25 @@ def rate_pd_scenarios(quick: bool = False) -> list[SearchScenario]:
                     initial_omega_deg_s=omega, capture_current_target=True,
                     max_theta_deg_limit=90.0, max_saturation_percent=100.0,
                 ),
-                primary_score="moderate" in label,
+                primary_score=True,
                 symmetry_group=label.replace("pos_", "").replace("neg_", ""),
                 tail_window_s=tail_window,
                 validity_gate="" if quick or "moderate" not in label else "settled",
+                analytical_x_limit_abs=50.0,
+            )
+        )
+    for label, omega in (("pos", 120.0), ("neg", -120.0)):
+        scenarios.append(
+            SearchScenario(
+                LoiterScenarioConfig(
+                    name=f"rate_extreme_{label}", mode="RATE", duration_s=robustness_duration,
+                    initial_z=6.0,
+                    initial_omega_deg_s=omega, capture_current_target=True,
+                    max_theta_deg_limit=90.0, max_saturation_percent=100.0,
+                ),
+                primary_score=False,
+                symmetry_group="extreme",
+                tail_window_s=tail_window,
                 analytical_x_limit_abs=50.0,
             )
         )
@@ -1686,7 +1701,7 @@ def write_markdown_summary(
         "## Rejection And Tie-Break Rules",
         "",
         "Candidates are rejected for crashes, ground contact, non-finite data, attitude-limit violations, unbounded growth, excessive sustained saturation, missing scenarios, duplicate run keys, effective-parameter mismatches, or failure of a required stage validity gate. Moving-mass candidates are also rejected when horizontal hold is materially worse than the total-COM centered baseline.",
-        "Signed 10 deg/s RATE recoveries must settle. Strong and low-authority RATE cases are robustness-only. RATE I bias rows and attitude rows use the documented terminal/tail thresholds stored in metadata.",
+        "Signed 10 deg/s RATE recoveries must settle. Signed 60 deg/s cases remain scored without a settling gate; 120 deg/s and low-authority RATE cases are robustness-only. RATE I bias rows and attitude rows use the documented terminal/tail thresholds stored in metadata.",
         "Resume rows and prerequisite aggregate CSVs are accepted only when their workflow fingerprint matches the current implementation, parameter sources, quick/full mode, tail policy, and grid version.",
         "Ties favor lower tail oscillation, then lower saturation, lower control effort, and finally smaller gain magnitude.",
         "Authority-stress LOITER rows participate in hard rejection and robustness reporting but not the primary aggregate score.",
@@ -2074,7 +2089,7 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         "moving_mass_gain": "moving_mass_assist_gain_m_per_Nm * desired_pitch_moment",
         "tail_window_policy": _tail_policy_metadata(options.quick, options.tail_window_s),
         "settling_validity_policy": {
-            "rate_pd": "signed 10 deg/s primary recoveries must settle; 120 deg/s and low-authority cases are robustness-only",
+            "rate_pd": "signed 10 deg/s primary recoveries must settle; signed 60 deg/s cases are scored without a settling gate; 120 deg/s and low-authority cases are robustness-only",
             "rate_i_recovery": "signed 10 deg/s primary recoveries must settle",
             "rate_i_bias": (
                 f"signed {RATE_BIAS_DISTURBANCE_MOMENT_NM:g} Nm bias; tail mean <= "
