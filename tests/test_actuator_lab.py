@@ -270,6 +270,28 @@ class ActuatorLabTests(unittest.TestCase):
         self.assertEqual(app.expected_pitch_direction(0.003), "RIGHT / POSITIVE")
         self.assertEqual(app.expected_pitch_direction(-0.003), "LEFT / NEGATIVE")
 
+    def test_actuator_pair_diagnostic_excludes_damping_and_disturbance(self):
+        app = self.make_app()
+        app.last_forces = replace(
+            app.last_forces,
+            thrust_moment_from_com_offset=0.006,
+            vane_moment_about_total_com=-0.003,
+            damping_moment=-0.5,
+            disturbance_moment=0.4,
+            total_moment=-0.097,
+        )
+
+        self.assertAlmostEqual(app.actuator_pair_moment(), 0.003)
+        self.assertEqual(app.actuator_pair_direction(), "PAIR RIGHT / POSITIVE")
+        panel = "\n".join(app.actuator_lab_panel_lines())
+        self.assertIn("actuator-pair moment: +0.0030 N m", panel)
+        self.assertIn("actuator pair: PAIR RIGHT / POSITIVE", panel)
+        self.assertIn("total pitch moment: -0.0970 N m", panel)
+        self.assertIn("expected pitch: LEFT / NEGATIVE", panel)
+
+        self.assertEqual(app.actuator_pair_direction(-0.003), "PAIR LEFT / NEGATIVE")
+        self.assertEqual(app.actuator_pair_direction(0.001), "PAIR NEAR ZERO")
+
     def test_total_com_visual_geometry_uses_fixed_body_origin(self):
         app = self.make_app()
         app.commands.moving_mass_target_m = 0.010

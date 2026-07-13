@@ -40,7 +40,7 @@ ACTUATOR LAB starts in the 11-state moving-mass representation with centered act
 | `Space` | pause / resume |
 | `N` | advance one physics step while paused |
 
-The A/D/F/H controls are deterministic `KEYDOWN` increments, including while paused. The command target passes through the existing moving-mass rate and acceleration limits; the actual state is never teleported. The vane and thrust still pass through the existing servo and motor dynamics.
+The A/D/F/H controls are deterministic `KEYDOWN` increments, including while paused. The command target passes through a braking-aware moving-mass trajectory that always preserves the configured rail, rate, and acceleration limits. Planned fixed-target motion from rest reduces speed according to the remaining stopping distance and settles exactly without overshoot. An arbitrary target change while the mass is already moving quickly can produce physically unavoidable temporary overshoot; in that case the tracker continues acceleration-limited braking instead of teleporting the offset or resetting velocity. A target crossing is clamped exactly only when stopping to zero is possible within the current acceleration step. The vane and thrust still pass through the existing servo and motor dynamics.
 
 ## Manual limits and physical limits
 
@@ -65,6 +65,8 @@ Therefore:
 
 The information panel displays numeric signs, vane side-force direction, individual moments, total COM coordinates, and the expected total pitch direction. It uses `RIGHT / POSITIVE`, `LEFT / NEGATIVE`, or `NEAR ZERO` with a small moment deadband.
 
+The `actuator-pair moment` is defined exactly as the thrust-offset moment plus the vane moment about the instantaneous total COM. Its `PAIR RIGHT / POSITIVE`, `PAIR LEFT / NEGATIVE`, or `PAIR NEAR ZERO` classification uses the same moment deadband. This actuator-only sum is the diagnostic for mass/vane cancellation; it deliberately excludes damping and disturbance moments. The existing `total pitch moment` includes damping and disturbances as well. Evaluate exact actuator cancellation only when moving-mass velocity and body angular velocity are both near zero.
+
 ## Visualization
 
 The vehicle overlay distinguishes:
@@ -82,7 +84,7 @@ In total-COM geometry mode, state `x/z` is the instantaneous total-system COM. T
 
 1. Press `Space` to pause.
 2. Press `Shift+H` once to set the moving-mass target to `+5 mm`.
-3. Press `N` repeatedly and watch the actual offset follow with actuator dynamics.
+3. Press `N` repeatedly and watch the actual offset brake into `+5 mm` without a large overshoot.
 4. Press `D` in `+0.5 deg` increments.
 5. Continue single-stepping and observe whether the total moment approaches `NEAR ZERO`.
 
