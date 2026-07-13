@@ -1558,8 +1558,10 @@ def _metadata_rows(metadata: dict[str, Any]) -> list[dict[str, Any]]:
     units = {
         "tail_window_s": "s",
         "runtime_s": "s",
+        "report_generation_runtime_s": "s",
         "scenario_run_count": "runs",
         "candidate_count": "candidates",
+        "resume_skipped_scenario_count": "runs",
     }
     notes = {
         "score_specs": "Dimensionless score components use metric/reference_scale before weighting.",
@@ -1607,6 +1609,14 @@ def _load_stage_aggregates(output_dir: Path) -> dict[str, list[dict[str, Any]]]:
     }
 
 
+def _previous_metadata(output_dir: Path) -> dict[str, str]:
+    return {
+        str(row.get("key", "")): str(row.get("value", ""))
+        for row in read_csv_rows(output_dir / "10_metadata.csv")
+        if row.get("key")
+    }
+
+
 def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
     if options.stage != "all" and options.stage not in STAGES:
         raise ValueError(f"unknown stage {options.stage!r}")
@@ -1618,6 +1628,8 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
     output_dir = Path(options.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     store = ScenarioResultStore(output_dir / "scenario_results.csv", resume=options.resume)
+    initial_scenario_row_count = len(store.rows)
+    previous_metadata = _previous_metadata(output_dir)
     aggregates = _load_stage_aggregates(output_dir)
     selected_stages = set(STAGES if options.stage == "all" else (options.stage,))
     started = time.perf_counter()
@@ -1733,7 +1745,12 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         )
         aggregates["moving_mass_gain"] = aggregate_candidates("moving_mass_gain", rows, scenarios)
 
-    runtime_s = time.perf_counter() - started
+    report_runtime_s = time.perf_counter() - started
+    new_scenario_row_count = len(store.rows) - initial_scenario_row_count
+    if new_scenario_row_count == 0 and previous_metadata.get("runtime_s"):
+        runtime_s = float(previous_metadata["runtime_s"])
+    else:
+        runtime_s = report_runtime_s
     _write_stage_exports(output_dir, aggregates)
     vane_profile, moving_profile = write_profiles(
         aggregates,
@@ -1749,6 +1766,8 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         "moving_mass_param_source": str(options.moving_mass_param_source),
         "tail_window_s": options.tail_window_s,
         "runtime_s": round(runtime_s, 6),
+        "report_generation_runtime_s": round(report_runtime_s, 6),
+        "resume_skipped_scenario_count": initial_scenario_row_count if new_scenario_row_count == 0 else 0,
         "candidate_count": sum(len(rows) for rows in aggregates.values()),
         "scenario_run_count": len(store.rows),
         "stage_scenarios": {
