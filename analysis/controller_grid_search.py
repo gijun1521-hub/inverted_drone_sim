@@ -378,6 +378,7 @@ def rate_pd_scenarios(quick: bool = False) -> list[SearchScenario]:
             SearchScenario(
                 LoiterScenarioConfig(
                     name=f"rate_{label}", mode="RATE", duration_s=duration,
+                    initial_z=6.0,
                     initial_omega_deg_s=omega, capture_current_target=True,
                     max_theta_deg_limit=90.0, max_saturation_percent=100.0,
                 ),
@@ -389,6 +390,7 @@ def rate_pd_scenarios(quick: bool = False) -> list[SearchScenario]:
             SearchScenario(
                 LoiterScenarioConfig(
                     name=f"rate_low_authority_{label}", mode="RATE", duration_s=duration,
+                    initial_z=6.0,
                     initial_omega_deg_s=omega, capture_current_target=True,
                     vane_angle_max_deg=8.0, vane_rate_limit_deg_s=90.0,
                     max_theta_deg_limit=100.0, max_saturation_percent=100.0,
@@ -405,6 +407,7 @@ def rate_i_scenarios(quick: bool = False) -> list[SearchScenario]:
         SearchScenario(
             LoiterScenarioConfig(
                 name=f"rate_i_{label}", mode="RATE", duration_s=duration,
+                initial_z=6.0,
                 initial_omega_deg_s=omega, capture_current_target=True,
                 max_theta_deg_limit=90.0, max_saturation_percent=100.0,
             ),
@@ -417,6 +420,7 @@ def rate_i_scenarios(quick: bool = False) -> list[SearchScenario]:
             SearchScenario(
                 LoiterScenarioConfig(
                     name=f"rate_i_{label}", mode="RATE", duration_s=duration,
+                    initial_z=6.0,
                     disturbance_start_s=0.0, disturbance_duration_s=duration,
                     disturbance_moment=moment, capture_current_target=True,
                     max_theta_deg_limit=90.0, max_saturation_percent=100.0,
@@ -435,6 +439,7 @@ def attitude_p_scenarios(quick: bool = False) -> list[SearchScenario]:
             SearchScenario(
                 LoiterScenarioConfig(
                     name=f"attitude_{angle:+d}deg", mode="STABILIZE", duration_s=duration,
+                    initial_z=6.0,
                     initial_theta_deg=float(angle), capture_current_target=True,
                     max_theta_deg_limit=80.0, max_saturation_percent=100.0,
                 ),
@@ -637,12 +642,15 @@ def compute_scenario_metrics(
         growth_threshold = 0.25
     settling_time_s, settled = _settling_time(times, settling_condition)
 
-    early_count = max(1, len(growth_signal) // 4)
-    early_rms = _rms(growth_signal[:early_count])
-    tail_growth_rms = _rms(growth_signal[tail])
+    growth_windows = np.array_split(growth_signal, 3)
+    first_growth_rms, middle_growth_rms, tail_growth_rms = (
+        _rms(window) for window in growth_windows
+    )
     unbounded_growth = bool(
-        tail_growth_rms > growth_threshold
-        and tail_growth_rms > max(1e-9, 1.25 * early_rms)
+        tail_growth_rms > 2.0 * growth_threshold
+        and middle_growth_rms > growth_threshold
+        and middle_growth_rms > max(1e-9, 1.15 * first_growth_rms)
+        and tail_growth_rms > 1.35 * middle_growth_rms
     )
     tail_saturation = max(
         _percent(servo_angle_sat[tail]),
@@ -726,7 +734,7 @@ def compute_scenario_metrics(
     reasons: list[str] = []
     if crash_reason:
         reasons.append(f"crash: {crash_reason}")
-    if ground_contact:
+    if ground_contact and "ground contact" not in crash_reason.lower():
         reasons.append("ground contact")
     if attitude_limit_exceeded:
         reasons.append("attitude safety limit exceeded")

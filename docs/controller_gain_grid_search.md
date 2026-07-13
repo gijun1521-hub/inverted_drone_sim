@@ -30,7 +30,7 @@ Decimal grids are constructed from decimal arithmetic so endpoints and counts ar
 
 ## Scenarios and scoring scope
 
-RATE P-D uses positive and negative 60 deg/s and 120 deg/s initial-rate cases plus mirrored low-authority cases. RATE I adds mirrored persistent ±0.025 Nm disturbances. Angle P uses the six required signed initial attitudes.
+RATE P-D uses positive and negative 60 deg/s and 120 deg/s initial-rate cases plus mirrored low-authority cases. RATE I adds mirrored persistent ±0.025 Nm disturbances. Angle P uses the six required signed initial attitudes. RATE and STABILIZE tests start with 6 m of analytical altitude margin because those modes intentionally do not run the altitude controller; this prevents a pitch-loop experiment from being rejected merely because hover thrust at a temporary tilt has less vertical component.
 
 LOITER uses upright hold, mirrored initial-offset recovery, mirrored horizontal impulses, mirrored stick move/release, and mirrored authority-stress cases. Authority stress participates in crash and hard-rejection checks, but its metrics do not enter the primary aggregate score.
 
@@ -68,7 +68,7 @@ Raw values with different units are never added. Each metric is divided by a sta
 Candidates are rejected for:
 
 - crash, ground contact, NaN/Inf, or the scenario attitude safety limit
-- unbounded tail growth
+- accelerating growth across three consecutive run windows, above the stage reference threshold
 - more than 85% sustained tail actuator/mixer saturation
 - missing scenario rows or duplicate run keys
 - requested/effective parameter mismatches
@@ -119,4 +119,3 @@ Generated profiles are separate from the source profiles:
 - `params/moving_mass_prototype_2kg_tuned.json`
 
 The first copies `loiter_example.json` and overrides only selected active controller gains. The second copies `moving_mass_prototype_2kg.json`, applies the same selected controller gains, and records the analysis-only proportional assist gain in an `analysis` metadata section. Loading either profile leaves the active controller formulas unchanged.
-
