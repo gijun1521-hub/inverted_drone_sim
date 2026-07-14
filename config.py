@@ -57,6 +57,11 @@ class ControllerConfig:
     loit_brk_acc_mss: float = 1.0
     loit_brk_delay_s: float = 0.4
     loit_brk_jerk_msss: float = 2.5
+    loit_capture_vx_threshold_ms: float = 0.08
+    loit_capture_desired_vx_threshold_ms: float = 0.02
+    loit_capture_persistent: bool = False
+    loit_shaper_clamp_target: bool = False
+    loit_capture_without_jump: bool = False
     loit_angle_max_deg: float = 15.0
     psc_ne_pos_p: float = 0.8
     psc_ne_vel_p: float = 1.1

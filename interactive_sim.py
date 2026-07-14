@@ -90,6 +90,9 @@ class RuntimeTargets:
     target_x: float = 0.0
     target_z: float = 1.0
     desired_vx: float = 0.0
+    shaped_desired_vx: float = 0.0
+    position_velocity_correction: float = 0.0
+    total_desired_vx: float = 0.0
     desired_vz: float = 0.0
     desired_ax: float = 0.0
     desired_az: float = 0.0
@@ -101,11 +104,18 @@ class RuntimeTargets:
     throttle_deadband_active: bool = True
     target_x_rate_cmd: float = 0.0
     target_z_rate_cmd: float = 0.0
+    target_capture_event: bool = False
+    target_capture_count: int = 0
+    target_capture_pending: bool = False
+    target_step_event: bool = False
 
     def capture(self, state: np.ndarray) -> None:
         self.target_x = float(state[0])
         self.target_z = float(state[1])
         self.desired_vx = 0.0
+        self.shaped_desired_vx = 0.0
+        self.position_velocity_correction = 0.0
+        self.total_desired_vx = 0.0
         self.desired_vz = 0.0
         self.desired_ax = 0.0
         self.desired_az = 0.0
@@ -115,6 +125,9 @@ class RuntimeTargets:
         self.throttle_deadband_active = True
         self.target_x_rate_cmd = 0.0
         self.target_z_rate_cmd = 0.0
+        self.target_capture_event = False
+        self.target_capture_pending = False
+        self.target_step_event = False
 
 
 class LoiterInputShaper:
@@ -124,11 +137,17 @@ class LoiterInputShaper:
         self._last_accel = 0.0
         self._release_time = 0.0
         self.braking_active = False
+        self.capture_pending = False
 
     def reset(self, desired_vx: float = 0.0) -> None:
         self.desired_vx = float(desired_vx)
         self._last_accel = 0.0
         self._release_time = 0.0
+        self.braking_active = False
+        self.capture_pending = False
+
+    def mark_target_captured(self) -> None:
+        self.capture_pending = False
         self.braking_active = False
 
     @staticmethod
@@ -139,19 +158,37 @@ class LoiterInputShaper:
         if abs(stick_x) > 1e-3:
             self._release_time = 0.0
             self.braking_active = False
+            self.capture_pending = False
             target = float(np.clip(stick_x, -1.0, 1.0) * self.cfg.loit_speed_ms)
             accel_limit = self.cfg.loit_acc_max_mss
             jerk_limit = self.cfg.psc_jerk_xy_max_msss
         else:
             self._release_time += dt
-            self.braking_active = self._release_time >= self.cfg.loit_brk_delay_s and abs(self.desired_vx) > 0.02
+            if self.cfg.loit_capture_persistent:
+                if abs(self.desired_vx) > self.cfg.loit_capture_desired_vx_threshold_ms:
+                    self.capture_pending = True
+                self.braking_active = self._release_time >= self.cfg.loit_brk_delay_s and self.capture_pending
+            else:
+                self.capture_pending = (
+                    self._release_time >= self.cfg.loit_brk_delay_s
+                    and abs(self.desired_vx) > self.cfg.loit_capture_desired_vx_threshold_ms
+                )
+                self.braking_active = self.capture_pending
             target = 0.0
             accel_limit = self.cfg.loit_brk_acc_mss if self.braking_active else self.cfg.loit_acc_max_mss
             jerk_limit = self.cfg.loit_brk_jerk_msss
+        previous_desired_vx = self.desired_vx
         raw_accel = (target - self.desired_vx) / max(dt, 1e-6)
         accel = self._rate_limit(self._last_accel, raw_accel, max(jerk_limit, 1e-6) * dt)
         accel = float(np.clip(accel, -accel_limit, accel_limit))
         self.desired_vx += accel * dt
+        if (
+            self.cfg.loit_shaper_clamp_target
+            and previous_desired_vx != target
+            and (previous_desired_vx - target) * (self.desired_vx - target) <= 0.0
+        ):
+            self.desired_vx = target
+            accel = 0.0
         if target == 0.0 and abs(self.desired_vx) < 0.015 and self.braking_active:
             self.desired_vx = 0.0
         self._last_accel = accel
@@ -305,11 +342,15 @@ class ManualControlSystem:
             targets.theta_target = theta_target
             targets.theta_target_limited = theta_target
             ax_target = 0.0
+            targets.position_velocity_correction = 0.0
+            targets.total_desired_vx = 0.0
         else:
             targets.loiter_active = True
             x_error = targets.target_x - x
             pos_vel = cfg.psc_ne_pos_p * x_error
             desired_vx_total = float(np.clip(targets.desired_vx + pos_vel, -cfg.loit_speed_ms, cfg.loit_speed_ms))
+            targets.position_velocity_correction = pos_vel
+            targets.total_desired_vx = desired_vx_total
             raw_ax = cfg.psc_ne_vel_p * (desired_vx_total - vx)
             ax_target = float(np.clip(raw_ax, -cfg.psc_accel_xy_max_mss, cfg.psc_accel_xy_max_mss))
             targets.desired_ax = ax_target
@@ -655,6 +696,7 @@ class InteractiveApp:
         self.disturbance.moment = float(moment)
 
     def _update_loiter_targets(self, dt: float) -> None:
+        self.targets.target_capture_event = False
         if self.mode != ControlMode.LOITER:
             self.targets.loiter_active = False
             self.targets.loiter_braking_active = False
@@ -662,11 +704,27 @@ class InteractiveApp:
             return
         desired_vx = self.loiter_shaper.update(self.commands.stick_x, dt)
         self.targets.desired_vx = desired_vx
+        self.targets.shaped_desired_vx = desired_vx
         self.targets.loiter_braking_active = self.loiter_shaper.braking_active
+        self.targets.target_capture_pending = self.loiter_shaper.capture_pending
         self.targets.target_x_rate_cmd = desired_vx
         self.targets.target_x += desired_vx * dt
-        if self.loiter_shaper.braking_active and abs(desired_vx) <= 0.02 and abs(float(self.state[3])) <= 0.08:
-            self.targets.target_x = float(self.state[0])
+        capture_ready = (
+            self.loiter_shaper.capture_pending
+            and abs(desired_vx) <= self.controller_cfg.loit_capture_desired_vx_threshold_ms
+            and (
+                self.controller_cfg.loit_capture_without_jump
+                or abs(float(self.state[3])) <= self.controller_cfg.loit_capture_vx_threshold_ms
+            )
+        )
+        if capture_ready:
+            if not self.controller_cfg.loit_capture_without_jump:
+                self.targets.target_x = float(self.state[0])
+            self.targets.target_capture_event = True
+            self.targets.target_capture_count += 1
+            self.loiter_shaper.mark_target_captured()
+            self.targets.loiter_braking_active = False
+            self.targets.target_capture_pending = False
     def physics_step(self, wall_time: float, real_time_factor: float) -> None:
         disturbance_force = self.disturbance.combined_force()
         disturbance_moment = self.disturbance.combined_moment()
