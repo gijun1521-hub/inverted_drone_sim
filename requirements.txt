@@ -5,3 +5,8 @@ pygame
 gymnasium
 stable-baselines3
 openpyxl
+pandas
+nbformat
+nbclient
+ipykernel
+imageio-ffmpeg

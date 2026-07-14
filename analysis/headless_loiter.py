@@ -57,6 +57,9 @@ class LoiterScenarioConfig:
     initial_omega_deg_s: float = 0.0
     target_x: float = 0.0
     target_z: float = 1.0
+    target_step_time_s: float | None = None
+    target_step_x: float | None = None
+    target_step_z: float | None = None
     capture_current_target: bool = False
     max_final_x_error: float = 0.45
     max_final_z_error: float = 0.35
@@ -242,6 +245,22 @@ def _update_loiter_targets(
         targets.target_x = float(state[0])
 
 
+def _apply_deterministic_target_step(
+    targets: RuntimeTargets,
+    scenario: LoiterScenarioConfig,
+    sim_time: float,
+) -> None:
+    """Apply an optional absolute target step at its configured simulation time."""
+    if scenario.target_step_time_s is None:
+        return
+    if sim_time + 1e-12 < scenario.target_step_time_s:
+        return
+    if scenario.target_step_x is not None:
+        targets.target_x = float(scenario.target_step_x)
+    if scenario.target_step_z is not None:
+        targets.target_z = float(scenario.target_step_z)
+
+
 def run_headless_loiter(
     param_path: str | Path | None = "params/loiter_example.json",
     scenario: LoiterScenarioConfig | str | None = None,
@@ -295,6 +314,7 @@ def run_headless_loiter(
         targets.target_z = scenario_cfg.target_z
     targets.altitude_hold_active = scenario_cfg.mode in {"ALT_HOLD", "LOITER"}
     targets.loiter_active = scenario_cfg.mode == "LOITER"
+    _apply_deterministic_target_step(targets, scenario_cfg, 0.0)
     mode = ControlMode(scenario_cfg.mode)
     if mode in (ControlMode.ALT_HOLD, ControlMode.LOITER):
         control.attitude.reset_to_current(float(state[2]), float(state[5]))
@@ -323,6 +343,7 @@ def run_headless_loiter(
 
         if controller_time_remaining <= 1e-12:
             _update_loiter_targets(mode, state, commands, targets, loiter_shaper, ui_cfg.controller_dt)
+            _apply_deterministic_target_step(targets, scenario_cfg, sim_time)
             last_control = control.compute(mode, state, commands, ui_cfg.controller_dt, targets)
             if rb_cfg.moving_mass.enabled:
                 if scenario_cfg.moving_mass_assist_gain_m_per_Nm:

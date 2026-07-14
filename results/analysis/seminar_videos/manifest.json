@@ -1,0 +1,362 @@
+{
+  "schema_version": 1,
+  "generator": "generate_seminar_videos.py",
+  "parameter_files": [
+    {
+      "path": "params/loiter_tuned_vane_only.json",
+      "sha256": "61d785ef16cace0a7b28afde714871bc714c2ef1c17fdced1a9673ee13d50d96"
+    },
+    {
+      "path": "params/moving_mass_prototype_2kg_tuned.json",
+      "sha256": "9ed4ce45a45fefe700d46720a8087fe46b0544de91a7bd2b4dafdb19dc563d58"
+    }
+  ],
+  "selected_controller_values": {
+    "atc_rat_pit_p": 0.07,
+    "atc_rat_pit_i": 0.0,
+    "atc_rat_pit_d": 0.008,
+    "atc_ang_pit_p": 10.0,
+    "psc_ne_pos_p": 0.5,
+    "psc_ne_vel_p": 0.9
+  },
+  "shared_vehicle_configuration": {
+    "total_mass_kg": 2.0,
+    "moving_mass_kg": 0.5,
+    "moving_mass_body_up_offset_m": 0.12,
+    "physical_rail_limit_m": 0.05,
+    "total_com_geometry_active": true,
+    "legacy_gravity_offset_moment": false
+  },
+  "scenarios": [
+    {
+      "key": "loiter",
+      "display_name": "LOITER disturbance recovery",
+      "config": {
+        "name": "seminar_loiter_horizontal_disturbance",
+        "mode": "LOITER",
+        "duration_s": 8.0,
+        "settle_time_s": 2.0,
+        "stick_start_s": 0.5,
+        "stick_end_s": 2.0,
+        "stick_x": 0.0,
+        "stick_z": 0.0,
+        "disturbance_start_s": 1.5,
+        "disturbance_duration_s": 0.2,
+        "disturbance_force_x": 8.0,
+        "disturbance_force_z": 0.0,
+        "disturbance_moment": 0.0,
+        "initial_x": 0.0,
+        "initial_z": 1.0,
+        "initial_theta_deg": 0.0,
+        "initial_vx": 0.0,
+        "initial_vz": 0.0,
+        "initial_omega_deg_s": 0.0,
+        "target_x": 0.0,
+        "target_z": 1.0,
+        "target_step_time_s": null,
+        "target_step_x": null,
+        "target_step_z": null,
+        "capture_current_target": false,
+        "max_final_x_error": 0.45,
+        "max_final_z_error": 0.35,
+        "max_rms_x_error": 1.0,
+        "max_rms_z_error": 0.8,
+        "max_theta_deg_limit": 55.0,
+        "max_saturation_percent": 85.0,
+        "vane_angle_max_deg": null,
+        "vane_rate_limit_deg_s": null,
+        "T_max_factor": null,
+        "moving_mass_enabled": false,
+        "moving_mass_target_m": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "notes": "Stable LOITER hold followed by the existing validated 8 N world-frame horizontal disturbance magnitude from 1.5 to 1.7 s."
+      },
+      "settling_reference_time_s": 1.7
+    },
+    {
+      "key": "forward_1m",
+      "display_name": "+1 m position command and hold",
+      "config": {
+        "name": "seminar_forward_1m_step",
+        "mode": "LOITER",
+        "duration_s": 8.0,
+        "settle_time_s": 2.0,
+        "stick_start_s": 0.5,
+        "stick_end_s": 2.0,
+        "stick_x": 0.0,
+        "stick_z": 0.0,
+        "disturbance_start_s": 0.0,
+        "disturbance_duration_s": 0.0,
+        "disturbance_force_x": 0.0,
+        "disturbance_force_z": 0.0,
+        "disturbance_moment": 0.0,
+        "initial_x": 0.0,
+        "initial_z": 1.0,
+        "initial_theta_deg": 0.0,
+        "initial_vx": 0.0,
+        "initial_vz": 0.0,
+        "initial_omega_deg_s": 0.0,
+        "target_x": 0.0,
+        "target_z": 1.0,
+        "target_step_time_s": 1.0,
+        "target_step_x": 1.0,
+        "target_step_z": null,
+        "capture_current_target": false,
+        "max_final_x_error": 0.45,
+        "max_final_z_error": 0.35,
+        "max_rms_x_error": 1.0,
+        "max_rms_z_error": 0.8,
+        "max_theta_deg_limit": 55.0,
+        "max_saturation_percent": 85.0,
+        "vane_angle_max_deg": null,
+        "vane_rate_limit_deg_s": null,
+        "T_max_factor": null,
+        "moving_mass_enabled": false,
+        "moving_mass_target_m": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "notes": "Absolute LOITER x target steps from 0 to +1.0 m at exactly t=1.0 s and is held."
+      },
+      "settling_reference_time_s": 1.0
+    }
+  ],
+  "variants": [
+    {
+      "key": "locked",
+      "display_name": "Mass locked at center",
+      "assist_gain_m_per_Nm": 0.0
+    },
+    {
+      "key": "assist",
+      "display_name": "Active moving-mass assist",
+      "assist_gain_m_per_Nm": 0.055
+    }
+  ],
+  "tail_window_s": 2.0,
+  "render": {
+    "fps": 30,
+    "gif_fps": 10,
+    "duration_s": 8.0,
+    "frame_count": 240,
+    "panel_count": 4,
+    "panel_order": [
+      "loiter/locked",
+      "loiter/assist",
+      "forward_1m/locked",
+      "forward_1m/assist"
+    ],
+    "world_bounds_m": {
+      "x": [
+        -1.5,
+        2.0
+      ],
+      "z": [
+        0.0,
+        2.5
+      ]
+    },
+    "individual_size_px": [
+      960,
+      540
+    ],
+    "composite_size_px": [
+      1920,
+      1080
+    ],
+    "encoder": {
+      "available": true,
+      "source": "imageio-ffmpeg",
+      "executable": "ffmpeg-win-x86_64-v7.1.exe",
+      "version": "ffmpeg version 7.1-essentials_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers"
+    },
+    "mp4_created": true,
+    "frame_timestamps": {
+      "first_s": 0.0,
+      "last_s": 7.966666666666667,
+      "count": 240
+    },
+    "video_frame_counts": {
+      "loiter_locked.mp4": 240,
+      "loiter_assist.mp4": 240,
+      "forward_1m_locked.mp4": 240,
+      "forward_1m_assist.mp4": 240,
+      "seminar_scenario_comparison.mp4": 240
+    },
+    "warnings": [],
+    "artifacts": [
+      "forward_1m_assist.mp4",
+      "forward_1m_locked.mp4",
+      "loiter_assist.mp4",
+      "loiter_locked.mp4",
+      "scenario_metrics.csv",
+      "scenario_summary.md",
+      "seminar_scenario_comparison.gif",
+      "seminar_scenario_comparison.mp4",
+      "seminar_video_thumbnail.png"
+    ],
+    "simulation_validation": {
+      "result_count": 4,
+      "unique_key_count": 4,
+      "simulation_sample_count": 1600,
+      "effective_parameter_mismatches": 0,
+      "missing_metrics": 0,
+      "non_finite_metrics": 0
+    }
+  },
+  "metrics": [
+    {
+      "scenario": "loiter",
+      "variant": "locked",
+      "assist_gain_m_per_Nm": 0.0,
+      "tail_rms_x_m": 0.11754587537857031,
+      "tail_rms_vx_m_s": 0.2810224096015448,
+      "tail_peak_to_peak_x_m": 0.31754934067893026,
+      "tail_path_length_m": 0.5000181148665384,
+      "final_abs_x_error_m": 0.13076824569354376,
+      "position_overshoot_m": 0.5930852176102166,
+      "settling_time_s": 6.3,
+      "peak_abs_theta_deg": 7.834770500231557,
+      "tail_rms_theta_deg": 4.588382002396515,
+      "vane_command_rms_deg": 0.7719435033904041,
+      "vane_command_max_deg": 1.221863290987117,
+      "moving_mass_max_offset_m": 0.0,
+      "moving_mass_tracking_rms_m": 0.0,
+      "ground_contact": false,
+      "rejected": false,
+      "rejection_reasons": "",
+      "settled": false,
+      "tail_window_s": 2.0,
+      "duration_s": 8.0,
+      "physics_dt_s": 0.005,
+      "controller_dt_s": 0.01,
+      "simulation_sample_count": 1600
+    },
+    {
+      "scenario": "loiter",
+      "variant": "assist",
+      "assist_gain_m_per_Nm": 0.055,
+      "tail_rms_x_m": 0.09771917156708643,
+      "tail_rms_vx_m_s": 0.16946650811307348,
+      "tail_peak_to_peak_x_m": 0.23545780313588308,
+      "tail_path_length_m": 0.2876418313648571,
+      "final_abs_x_error_m": 0.09349480227594832,
+      "position_overshoot_m": 0.5682392077507644,
+      "settling_time_s": 6.3,
+      "peak_abs_theta_deg": 6.871435903585558,
+      "tail_rms_theta_deg": 2.5513303620227443,
+      "vane_command_rms_deg": 0.4778108838876567,
+      "vane_command_max_deg": 0.9459823312523215,
+      "moving_mass_max_offset_m": 0.003340621792690469,
+      "moving_mass_tracking_rms_m": 0.0001545309861235967,
+      "ground_contact": false,
+      "rejected": false,
+      "rejection_reasons": "",
+      "settled": false,
+      "tail_window_s": 2.0,
+      "duration_s": 8.0,
+      "physics_dt_s": 0.005,
+      "controller_dt_s": 0.01,
+      "simulation_sample_count": 1600
+    },
+    {
+      "scenario": "forward_1m",
+      "variant": "locked",
+      "assist_gain_m_per_Nm": 0.0,
+      "tail_rms_x_m": 0.10946582204286458,
+      "tail_rms_vx_m_s": 0.29344591431859657,
+      "tail_peak_to_peak_x_m": 0.26546041407759646,
+      "tail_path_length_m": 0.5233965496032675,
+      "final_abs_x_error_m": 0.0563793829201914,
+      "position_overshoot_m": 0.1859778886418364,
+      "settling_time_s": 7.0,
+      "peak_abs_theta_deg": 6.790757705687143,
+      "tail_rms_theta_deg": 4.590493413343458,
+      "vane_command_rms_deg": 0.7795136832960439,
+      "vane_command_max_deg": 4.06502166575997,
+      "moving_mass_max_offset_m": 0.0,
+      "moving_mass_tracking_rms_m": 0.0,
+      "ground_contact": false,
+      "rejected": false,
+      "rejection_reasons": "",
+      "settled": false,
+      "tail_window_s": 2.0,
+      "duration_s": 8.0,
+      "physics_dt_s": 0.005,
+      "controller_dt_s": 0.01,
+      "simulation_sample_count": 1600
+    },
+    {
+      "scenario": "forward_1m",
+      "variant": "assist",
+      "assist_gain_m_per_Nm": 0.055,
+      "tail_rms_x_m": 0.07758379232987349,
+      "tail_rms_vx_m_s": 0.16192721467415644,
+      "tail_peak_to_peak_x_m": 0.1608277866246408,
+      "tail_path_length_m": 0.2868387017648926,
+      "final_abs_x_error_m": 0.010763285410245071,
+      "position_overshoot_m": 0.12790975416389783,
+      "settling_time_s": 7.0,
+      "peak_abs_theta_deg": 4.514323044618198,
+      "tail_rms_theta_deg": 2.5341804275788964,
+      "vane_command_rms_deg": 0.48173401234106844,
+      "vane_command_max_deg": 4.06502166575997,
+      "moving_mass_max_offset_m": 0.00252389698670344,
+      "moving_mass_tracking_rms_m": 0.0005936453596729702,
+      "ground_contact": false,
+      "rejected": false,
+      "rejection_reasons": "",
+      "settled": false,
+      "tail_window_s": 2.0,
+      "duration_s": 8.0,
+      "physics_dt_s": 0.005,
+      "controller_dt_s": 0.01,
+      "simulation_sample_count": 1600
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "forward_1m_assist.mp4",
+      "size_bytes": 136593,
+      "sha256": "3fc10f9e564a8485897bcaf4bd0a5a317a42d3bbdeafa5ed4a9d6581e516ac3e"
+    },
+    {
+      "name": "forward_1m_locked.mp4",
+      "size_bytes": 140879,
+      "sha256": "a888735421df0095a51151d0db0017afa1f29ea4f3935d26446fe940083862ac"
+    },
+    {
+      "name": "loiter_assist.mp4",
+      "size_bytes": 129634,
+      "sha256": "1cdad508fa7b7c5d21a59cf3156334e8442033390bba75e4f1204f0b73b19212"
+    },
+    {
+      "name": "loiter_locked.mp4",
+      "size_bytes": 136309,
+      "sha256": "99d1213b2dcc50338cc4719723357ad629f64668b2d31e9ae59247f4580665c2"
+    },
+    {
+      "name": "scenario_metrics.csv",
+      "size_bytes": 1568,
+      "sha256": "239dd230385f34625892f31112f16df0d083e12dfd9296ce8d4576b960535c33"
+    },
+    {
+      "name": "scenario_summary.md",
+      "size_bytes": 1807,
+      "sha256": "4b772d5bfa99c3bf9b0ad2ad37b6d1a0bc1b88972a0214ef46aaefa33bbbbbad"
+    },
+    {
+      "name": "seminar_scenario_comparison.gif",
+      "size_bytes": 4840453,
+      "sha256": "afe55ebb6b366870c0c8ab1312669680d6e5239048969f2527995670230512f5"
+    },
+    {
+      "name": "seminar_scenario_comparison.mp4",
+      "size_bytes": 484563,
+      "sha256": "393b2b1bc34f958ee8a09e641d2e212e5ea43c2cee0a789f38145493fcf9ccf3"
+    },
+    {
+      "name": "seminar_video_thumbnail.png",
+      "size_bytes": 61964,
+      "sha256": "408a72a4bb9b370e2a9e51956bdccc2f20355d4b614edbdae968d069f8acb241"
+    }
+  ]
+}
