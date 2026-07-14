@@ -350,8 +350,12 @@ def render_panel(
     actuator = (
         f"actual vane={math.degrees(vane):+6.2f} deg    moving-mass offset={offset_mm:+6.1f} mm"
     )
-    draw.text((left, 33 * scale), status, fill=(45, 54, 68), font=normal)
-    draw.text((left, 55 * scale), actuator, fill=(45, 54, 68), font=normal)
+    subtitle = result.variant.subtitle
+    if result.variant.key == "assist":
+        subtitle += f" ({result.variant.assist_gain_m_per_Nm:.4f} m/Nm)"
+    draw.text((left, 31 * scale), subtitle, fill=(82, 91, 105), font=small)
+    draw.text((left, 48 * scale), status, fill=(45, 54, 68), font=normal)
+    draw.text((left, 70 * scale), actuator, fill=(45, 54, 68), font=normal)
 
     legend = [
         ((255, 220, 55), "target"),

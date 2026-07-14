@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import csv
+import json
 import math
+import random
 import tempfile
 import unittest
 from pathlib import Path
@@ -19,12 +21,15 @@ from analysis.seminar_video_renderer import (
 from analysis.seminar_video_scenarios import (
     ASSIST_GAIN_M_PER_NM,
     METRIC_COLUMNS,
+    SELECTED_CONTROLLER_VALUES,
     run_all_scenarios,
     run_seminar_variant,
     seminar_scenarios,
     seminar_variants,
     write_metrics_csv,
 )
+from analysis.seminar_moving_mass_gain_sweep import select_gain
+from generate_seminar_videos import REQUIRED_MP4, REQUIRED_NON_MP4
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,11 +71,29 @@ class SeminarScenarioTests(unittest.TestCase):
             self.assertTrue(all(float(row["moving_mass_offset_m"]) == 0.0 for row in result.run.rows))
             self.assertTrue(all(float(row["moving_mass_target_m"]) == 0.0 for row in result.run.rows))
 
+    def test_locked_and_assist_share_the_same_physical_vehicle(self):
+        for scenario_key in ("loiter", "forward_1m"):
+            self.assertEqual(
+                self.by_key[(scenario_key, "locked")].rb_config,
+                self.by_key[(scenario_key, "assist")].rb_config,
+            )
+
     def test_active_variant_uses_selected_gain(self):
         for scenario_key in ("loiter", "forward_1m"):
             result = self.by_key[(scenario_key, "assist")]
             self.assertEqual(result.variant.assist_gain_m_per_Nm, ASSIST_GAIN_M_PER_NM)
-            self.assertEqual(result.metrics["assist_gain_m_per_Nm"], 0.055)
+            self.assertEqual(result.metrics["assist_gain_m_per_Nm"], ASSIST_GAIN_M_PER_NM)
+
+    def test_pr19_controller_and_capture_bundle_is_active(self):
+        self.assertEqual(SELECTED_CONTROLLER_VALUES["psc_ne_pos_p"], 0.55)
+        self.assertEqual(SELECTED_CONTROLLER_VALUES["psc_ne_vel_p"], 0.70)
+        self.assertNotEqual(
+            (SELECTED_CONTROLLER_VALUES["psc_ne_pos_p"], SELECTED_CONTROLLER_VALUES["psc_ne_vel_p"]),
+            (0.50, 0.90),
+        )
+        for result in self.short_results:
+            for key, expected in SELECTED_CONTROLLER_VALUES.items():
+                self.assertEqual(getattr(result.controller_config, key), expected)
 
     def test_total_com_geometry_and_legacy_moment_policy_match(self):
         for result in self.short_results:
@@ -93,6 +116,18 @@ class SeminarScenarioTests(unittest.TestCase):
         first_commanded_row = after[0]
         integration_start = float(first_commanded_row["sim_time"]) - float(first_commanded_row["physics_dt"])
         self.assertAlmostEqual(integration_start, scenario.config.target_step_time_s, places=12)
+        transitions = sum(
+            float(left["target_x"]) != float(right["target_x"])
+            for left, right in zip(result.run.rows, result.run.rows[1:])
+        )
+        self.assertEqual(transitions, 1)
+
+    def test_full_forward_runs_have_no_defined_pause_or_second_lobe(self):
+        forward = seminar_scenarios(duration_s=8.0)[1]
+        for variant in seminar_variants():
+            metrics = run_seminar_variant(forward, variant).metrics
+            self.assertFalse(metrics["premature_pause"])
+            self.assertFalse(metrics["second_acceleration_lobe_after_full_pause"])
 
     def test_repeated_runs_produce_identical_metric_rows(self):
         repeated = run_all_scenarios(duration_s=0.05)
@@ -106,6 +141,13 @@ class SeminarScenarioTests(unittest.TestCase):
         self.assertEqual(len(self.short_results), 4)
         self.assertEqual(timestamps.tolist(), [0.0])
         self.assertEqual({len(result.run.rows) for result in self.short_results}, {10})
+        for scenario_key in ("loiter", "forward_1m"):
+            locked = self.by_key[(scenario_key, "locked")].run.rows
+            assist = self.by_key[(scenario_key, "assist")].run.rows
+            self.assertEqual(
+                [float(row["sim_time"]) for row in locked],
+                [float(row["sim_time"]) for row in assist],
+            )
 
     def test_metric_csv_schema(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -171,6 +213,36 @@ class SeminarScenarioTests(unittest.TestCase):
             for key, value in result.metrics.items():
                 if isinstance(value, float):
                     self.assertTrue(math.isfinite(value), f"{result.key} {key}")
+
+    def test_gain_sweep_selection_is_order_independent(self):
+        aggregate = [
+            {"gain_m_per_Nm": 0.13, "aggregate_score": 1.0, "accepted_all_scenarios": True, "max_mass_travel_m": 0.006},
+            {"gain_m_per_Nm": 0.1325, "aggregate_score": 0.995, "accepted_all_scenarios": True, "max_mass_travel_m": 0.005},
+            {"gain_m_per_Nm": 0.055, "aggregate_score": 0.5, "accepted_all_scenarios": False, "max_mass_travel_m": 0.002},
+        ]
+        expected = select_gain(aggregate)
+        random.Random(19).shuffle(aggregate)
+        self.assertEqual(select_gain(aggregate), expected)
+
+    def test_generated_manifest_and_required_artifacts_match_selected_run(self):
+        output = ROOT / "results" / "analysis" / "seminar_videos"
+        missing = sorted(name for name in REQUIRED_NON_MP4 | REQUIRED_MP4 if not (output / name).is_file())
+        self.assertEqual(missing, [])
+        manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["selected_controller_values"], SELECTED_CONTROLLER_VALUES)
+        self.assertEqual(manifest["selected_assist_gain_m_per_Nm"], ASSIST_GAIN_M_PER_NM)
+        self.assertEqual(manifest["gain_selection"]["selected_gain_m_per_Nm"], ASSIST_GAIN_M_PER_NM)
+        assist_metrics = [row for row in manifest["metrics"] if row["variant"] == "assist"]
+        self.assertTrue(assist_metrics)
+        self.assertTrue(all(row["assist_gain_m_per_Nm"] == ASSIST_GAIN_M_PER_NM for row in assist_metrics))
+        with (output / "moving_mass_gain_sweep.csv").open(newline="", encoding="utf-8") as stream:
+            sweep_rows = list(csv.DictReader(stream))
+        selected = [row for row in sweep_rows if row["selected"] == "True"]
+        self.assertEqual(len(sweep_rows), 31 * 4)
+        self.assertEqual({row["scenario"] for row in selected}, {
+            "disturbance_pos8n", "disturbance_neg8n", "target_pos1m", "target_neg1m"
+        })
+        self.assertTrue(all(float(row["gain_m_per_Nm"]) == ASSIST_GAIN_M_PER_NM for row in selected))
 
 
 class SeminarNotebookTests(unittest.TestCase):

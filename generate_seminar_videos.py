@@ -4,6 +4,12 @@ import argparse
 from pathlib import Path
 
 from analysis.seminar_video_renderer import RenderConfig, render_seminar_comparison
+from analysis.seminar_moving_mass_gain_sweep import (
+    assert_selected_gain,
+    run_staged_gain_sweep,
+    write_gain_selection_markdown,
+    write_gain_sweep_csv,
+)
 from analysis.seminar_video_scenarios import (
     DEFAULT_OUTPUT_DIR,
     run_all_scenarios,
@@ -19,6 +25,8 @@ REQUIRED_NON_MP4 = {
     "seminar_video_thumbnail.png",
     "scenario_metrics.csv",
     "scenario_summary.md",
+    "moving_mass_gain_sweep.csv",
+    "moving_mass_gain_selection.md",
     "manifest.json",
 }
 REQUIRED_MP4 = {
@@ -39,6 +47,14 @@ def generate(
 ) -> tuple[list, dict]:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    gain_sweep = run_staged_gain_sweep(duration_s=8.0)
+    assert_selected_gain(gain_sweep)
+    sweep_path = write_gain_sweep_csv(
+        gain_sweep, output_dir / "moving_mass_gain_sweep.csv"
+    )
+    selection_path = write_gain_selection_markdown(
+        gain_sweep, output_dir / "moving_mass_gain_selection.md"
+    )
     results = run_all_scenarios(duration_s=duration_s)
     validation = validate_result_set(results)
     metrics_path = write_metrics_csv(results, output_dir / "scenario_metrics.csv")
@@ -50,10 +66,13 @@ def generate(
         write_mp4=write_mp4,
     )
     render_report["artifacts"] = sorted(
-        set(render_report["artifacts"] + [metrics_path.name, summary_path.name])
+        set(
+            render_report["artifacts"]
+            + [metrics_path.name, summary_path.name, sweep_path.name, selection_path.name]
+        )
     )
     render_report["simulation_validation"] = validation
-    manifest_path = write_manifest(results, output_dir, render_report)
+    manifest_path = write_manifest(results, output_dir, render_report, gain_sweep.metadata())
     render_report["artifacts"] = sorted(set(render_report["artifacts"] + [manifest_path.name]))
     verify_required_outputs(output_dir, mp4_expected=bool(write_mp4 and render_report["encoder"]["available"]))
     return results, render_report
