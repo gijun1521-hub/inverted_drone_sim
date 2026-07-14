@@ -464,18 +464,18 @@
     "psc_ne_vel_p": 0.7
   },
   "source": {
-    "commit": "6bc1be7887dfdd339c7ac61be01e8794695f808f",
+    "commit": "7a808a51ff685766d953bbb4e02caf918fd2eb12",
     "files": {
       "analysis/headless_loiter.py": "92ccb3794a238660ccc252583283abb087f893dee48f570037b68fa1c4747bb0",
       "analysis/loiter_transient_diagnosis.py": "60196cc7af3dcbd02f946a318c380681fef03b0ae2c2c8e8ab136b733781c9ca",
       "config.py": "e325571e52c72ed8a28b01b7b8680bb8a647f5f9c5fa737f4f1b124ad7b92b0a",
       "interactive_logging.py": "6d6f6e77312eabd2461ad4362b9676b173e6c0b09270230138ec5ca06f3ea075",
-      "interactive_sim.py": "69ab8adaa374856cb85e905b3c3a8f7a1842e2b070d2a7ab5ac78ebc9fb139cd",
+      "interactive_sim.py": "babb067edfb2a617a178d5e179135e90f8b34ec80bfa200c7a3c09eca7a365c2",
       "params/loiter_transient_provisional.json": "c661d75e942485abbbec4ad895463374c44ab980f4cc298a5dbc9679cbdd41b9",
       "params/loiter_tuned_vane_only.json": "61d785ef16cace0a7b28afde714871bc714c2ef1c17fdced1a9673ee13d50d96"
     },
-    "fingerprint_sha256": "265d5d2fb61019a33185d5524f42117d31f364a0d19d77b28c92af0792872820",
-    "tree": "c795b0c507924fd828a781782d705cb1661aa2f7"
+    "fingerprint_sha256": "1e28332f90cc9ea407fe4fab9dbe3d48539220f5ddee71aea8267d0726bda2b7",
+    "tree": "700303ca445cbe0689725c27abe96a7979850c21"
   },
   "stick_scenario": {
     "T_max_factor": null,
