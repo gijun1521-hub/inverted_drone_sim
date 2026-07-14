@@ -6,14 +6,16 @@ Raw metrics are normalized by the documented reference scales before weighting; 
 ## Reproduction
 
 ```powershell
-.venv\Scripts\python.exe sweep_controller_gains.py --stage all --output-dir results/analysis/controller_grid_search
+.venv\Scripts\python.exe sweep_controller_gains.py --stage all --no-resume --output-dir results/analysis/controller_grid_search
 .venv\Scripts\python.exe sweep_controller_gains.py --stage all --quick --output-dir results/analysis/controller_grid_search_quick
 ```
 
-- Git SHA: `c498f873df1e2e93cef0aee6aa8b78c05569b5bd`
+- Git SHA: `f63e198bd218f15563b49a5e1f2eb8018441b33b`
+- Workflow fingerprint: `4838fec56b6c651498695b4a628bba83a42e1ca052762edc6b708b5fedf86c95`
+- Cache schema: `2`; grid definition: `2026-07-13.3`
 - Parameter source: `params\loiter_example.json`
-- Tail window: `2.0` s
-- Runtime: `1026.282` s
+- Tail windows: RATE P/D and recovery 0.75 s; RATE I bias and attitude 1.0 s; LOITER and moving mass 2.0 s by default.
+- Runtime: `67151.7563` s
 - Ribbon/comet assessment: **reduced but not eliminated under the documented tail thresholds**.
 - `psc_ne_vel_i` and `psc_ne_vel_d` remain inactive and were not swept or optimized.
 
@@ -21,21 +23,21 @@ Raw metrics are normalized by the documented reference scales before weighting; 
 
 | stage | candidate | score | selected parameters | rejected |
 | --- | --- | ---: | --- | --- |
-| rate_pd | rate_pd-ceff8eb68b | 1.580740 | atc_rat_pit_p=0.0425, atc_rat_pit_i=0, atc_rat_pit_d=0.00725 | False |
-| rate_i | rate_i-8913059c5e | 2.130664 | atc_rat_pit_p=0.0425, atc_rat_pit_i=0, atc_rat_pit_d=0.00775 | False |
-| attitude_p | attitude_p-7c6b5f7621 | 1.659295 | atc_rat_pit_p=0.0425, atc_rat_pit_i=0, atc_rat_pit_d=0.00775, atc_ang_pit_p=9.5 | False |
-| loiter_xy | loiter_xy-2bf8648b07 | 1.897191 | atc_rat_pit_p=0.0425, atc_rat_pit_i=0, atc_rat_pit_d=0.00775, atc_ang_pit_p=9.5, psc_ne_pos_p=0.4, psc_ne_vel_p=0.6 | False |
-| moving_mass_gain | moving_mass_gain-a950f78c88 | 0.800000 | atc_rat_pit_p=0.0425, atc_rat_pit_i=0, atc_rat_pit_d=0.00775, atc_ang_pit_p=9.5, psc_ne_pos_p=0.4, psc_ne_vel_p=0.6, moving_mass_assist_gain_m_per_Nm=0 | False |
+| rate_pd | rate_pd-84ed1879d5 | 0.448139 | atc_rat_pit_p=0.0725, atc_rat_pit_i=0, atc_rat_pit_d=0.008 | False |
+| rate_i | rate_i-9c54834c68 | 2.134130 | atc_rat_pit_p=0.07, atc_rat_pit_i=0, atc_rat_pit_d=0.008 | False |
+| attitude_p | attitude_p-0be053ab42 | 1.137475 | atc_rat_pit_p=0.07, atc_rat_pit_i=0, atc_rat_pit_d=0.008, atc_ang_pit_p=10 | False |
+| loiter_xy | loiter_xy-ce3cdef9c3 | 1.004894 | atc_rat_pit_p=0.07, atc_rat_pit_i=0, atc_rat_pit_d=0.008, atc_ang_pit_p=10, psc_ne_pos_p=0.5, psc_ne_vel_p=0.9 | False |
+| moving_mass_gain | moving_mass_gain-f9d7de3672 | 0.644174 | atc_rat_pit_p=0.07, atc_rat_pit_i=0, atc_rat_pit_d=0.008, atc_ang_pit_p=10, psc_ne_pos_p=0.5, psc_ne_vel_p=0.9, moving_mass_assist_gain_m_per_Nm=0.055 | False |
 
 ## Selected Metrics
 
 | stage | selected evidence |
 | --- | --- |
-| rate_pd | RMS/tail rate error 39.877/39.877 deg/s; overshoot 0.006 deg/s; settling 1.478 s; vane RMS 0.477 deg |
-| rate_i | I=0.000; tail mean absolute rate error 31.848 deg/s; integrator RMS 0.00000 Nm; inhibition 0.00% |
-| attitude_p | RMS/tail theta 4.207/3.129 deg; tail peak-to-peak 7.348 deg; max omega 21.992 deg/s |
-| loiter_xy | tail RMS x 0.1622 m; tail RMS vx 0.3132 m/s; tail peak-to-peak x 0.3691 m; tail path 0.5641 m |
-| moving_mass_gain | gain 0.0000 m/Nm; theta/x/path ratios 1.0000/1.0000/1.0000; mass max 0.00000 m |
+| rate_pd | RMS/tail rate error 15.115/3.240 deg/s; overshoot 4.123 deg/s; settling 1.800 s; vane RMS 0.329 deg |
+| rate_i | I=0.000; tail mean absolute rate error 12.768 deg/s; integrator RMS 0.00000 Nm; inhibition 0.00% |
+| attitude_p | RMS/tail theta 3.148/1.884 deg; tail peak-to-peak 3.567 deg; max omega 28.378 deg/s |
+| loiter_xy | tail RMS x 0.0595 m; tail RMS vx 0.1547 m/s; tail peak-to-peak x 0.1565 m; tail path 0.2780 m |
+| moving_mass_gain | gain 0.0550 m/Nm; theta/x/path ratios 0.7005/0.9887/0.6893; mass max 0.00340 m |
 
 ## Ribbon Tail Comparison
 
@@ -43,10 +45,10 @@ Selected LOITER P/P versus the mode-matched `psc_ne_pos_p=0.8`, `psc_ne_vel_p=1.
 
 | metric | 0.8/1.1 | selected | change |
 | --- | ---: | ---: | ---: |
-| tail RMS x | 0.201214 m | 0.162207 m | -19.39% |
-| tail RMS vx | 0.416832 m/s | 0.313233 m/s | -24.85% |
-| tail peak-to-peak x | 0.541461 m | 0.369072 m | -31.84% |
-| tail x-z path length | 0.732531 m | 0.564113 m | -22.99% |
+| tail RMS x | 0.075540 m | 0.059454 m | -21.29% |
+| tail RMS vx | 0.187147 m/s | 0.154705 m/s | -17.34% |
+| tail peak-to-peak x | 0.175438 m | 0.156523 m | -10.78% |
+| tail x-z path length | 0.333777 m | 0.278014 m | -16.71% |
 
 ## Stage Commands
 
@@ -60,7 +62,7 @@ Selected LOITER P/P versus the mode-matched `psc_ne_pos_p=0.8`, `psc_ne_vel_p=1.
 
 | stage | candidates | scenario rows |
 | --- | ---: | ---: |
-| rate_pd | 299 | 1794 |
+| rate_pd | 289 | 2312 |
 | rate_i | 48 | 192 |
 | attitude_p | 17 | 102 |
 | loiter_xy | 360 | 3240 |
@@ -68,6 +70,8 @@ Selected LOITER P/P versus the mode-matched `psc_ne_pos_p=0.8`, `psc_ne_vel_p=1.
 
 ## Rejection And Tie-Break Rules
 
-Candidates are rejected for crashes, ground contact, non-finite data, attitude-limit violations, unbounded growth, excessive sustained saturation, missing scenarios, duplicate run keys, or effective-parameter mismatches. Moving-mass candidates are also rejected when horizontal hold is materially worse than the total-COM centered baseline.
+Candidates are rejected for crashes, ground contact, non-finite data, attitude-limit violations, unbounded growth, excessive sustained saturation, missing scenarios, duplicate run keys, effective-parameter mismatches, or failure of a required stage validity gate. Moving-mass candidates are also rejected when horizontal hold is materially worse than the total-COM centered baseline.
+Signed 10 deg/s RATE recoveries must settle. Signed 60 deg/s cases remain scored without a settling gate; 120 deg/s and low-authority RATE cases are robustness-only. RATE I bias rows and attitude rows use the documented terminal/tail thresholds stored in metadata.
+Resume rows and prerequisite aggregate CSVs are accepted only when their workflow fingerprint matches the current implementation, parameter sources, quick/full mode, tail policy, and grid version.
 Ties favor lower tail oscillation, then lower saturation, lower control effort, and finally smaller gain magnitude.
 Authority-stress LOITER rows participate in hard rejection and robustness reporting but not the primary aggregate score.
