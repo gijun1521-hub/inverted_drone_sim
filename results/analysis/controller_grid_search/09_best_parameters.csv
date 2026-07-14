@@ -1,0 +1,28 @@
+row_key,stage,role,candidate_id,rank,normalized_score,atc_rat_pit_p,atc_rat_pit_i,atc_rat_pit_d,atc_ang_pit_p,psc_ne_pos_p,psc_ne_vel_p,moving_mass_assist_gain_m_per_Nm,rejected,parameter,selected_value,parameter_search_min,parameter_search_max,selected_at_lower_boundary,selected_at_upper_boundary,boundary_warning
+rate_pd|best aggregate,rate_pd,best aggregate,rate_pd-84ed1879d5,1,0.44813933063872224,0.0725,0.0,0.008,,,,,False,,,,,,,
+rate_pd|most stable,rate_pd,most stable,rate_pd-84347c9b6d,115,0.5078120049142064,0.08,0.0,0.0,,,,,False,,,,,,,
+rate_pd|fastest settling,rate_pd,fastest settling,rate_pd-543b1c2674,147,0.5992193654038764,0.04,0.0,0.0,,,,,False,,,,,,,
+rate_pd|lowest saturation,rate_pd,lowest saturation,rate_pd-9a854d8e3f,218,1.0865623371692443,0.02,0.0,0.0,,,,,False,,,,,,,
+rate_i|best aggregate,rate_i,best aggregate,rate_i-9c54834c68,1,2.134130170697223,0.07,0.0,0.008,,,,,False,,,,,,,
+rate_i|most stable,rate_i,most stable,rate_i-547152cfca,3,2.134185912364546,0.075,0.0,0.008,,,,,False,,,,,,,
+rate_i|fastest settling,rate_i,fastest settling,rate_i-9c54834c68,1,2.134130170697223,0.07,0.0,0.008,,,,,False,,,,,,,
+rate_i|lowest saturation,rate_i,lowest saturation,rate_i-9c54834c68,1,2.134130170697223,0.07,0.0,0.008,,,,,False,,,,,,,
+attitude_p|best aggregate,attitude_p,best aggregate,attitude_p-0be053ab42,1,1.1374753210794706,0.07,0.0,0.008,10.0,,,,False,,,,,,,
+attitude_p|most stable,attitude_p,most stable,attitude_p-21fe324bc4,13,1.677966286997383,0.07,0.0,0.008,4.0,,,,False,,,,,,,
+attitude_p|fastest settling,attitude_p,fastest settling,attitude_p-0be053ab42,1,1.1374753210794706,0.07,0.0,0.008,10.0,,,,False,,,,,,,
+attitude_p|lowest saturation,attitude_p,lowest saturation,attitude_p-0be053ab42,1,1.1374753210794706,0.07,0.0,0.008,10.0,,,,False,,,,,,,
+loiter_xy|best aggregate,loiter_xy,best aggregate,loiter_xy-ce3cdef9c3,1,1.0048941999891883,0.07,0.0,0.008,10.0,0.5,0.9,,False,,,,,,,
+loiter_xy|most stable,loiter_xy,most stable,loiter_xy-69c636f304,207,2.0156361855412,0.07,0.0,0.008,10.0,0.8,0.3,,False,,,,,,,
+loiter_xy|fastest settling,loiter_xy,fastest settling,loiter_xy-40a531106b,125,1.3294063969503966,0.07,0.0,0.008,10.0,0.5,0.5,,False,,,,,,,
+loiter_xy|lowest saturation,loiter_xy,lowest saturation,loiter_xy-a657de31ee,181,1.6593447675902138,0.07,0.0,0.008,10.0,0.1,1.3,,False,,,,,,,
+moving_mass_gain|best aggregate,moving_mass_gain,best aggregate,moving_mass_gain-f9d7de3672,1,0.644174177170905,0.07,0.0,0.008,10.0,0.5,0.9,0.055,False,,,,,,,
+moving_mass_gain|most stable,moving_mass_gain,most stable,moving_mass_gain-08a49737f1,3,0.6476945062261075,0.07,0.0,0.008,10.0,0.5,0.9,0.06,False,,,,,,,
+moving_mass_gain|fastest settling,moving_mass_gain,fastest settling,moving_mass_gain-47985e3c58,18,0.7999999999999999,0.07,0.0,0.008,10.0,0.5,0.9,0.0,False,,,,,,,
+moving_mass_gain|lowest saturation,moving_mass_gain,lowest saturation,moving_mass_gain-47985e3c58,18,0.7999999999999999,0.07,0.0,0.008,10.0,0.5,0.9,0.0,False,,,,,,,
+boundary|atc_rat_pit_p,rate_pd,boundary diagnostic,,,,0.07,,,,,,,False,atc_rat_pit_p,0.07,0.005,0.08,False,False,
+boundary|atc_rat_pit_i,rate_i,boundary diagnostic,,,,,0.0,,,,,,False,atc_rat_pit_i,0.0,0.0,0.03,True,False,"atc_rat_pit_i selected at the lower search boundary; this is the best value within the tested grid, not evidence of an interior or global optimum."
+boundary|atc_rat_pit_d,rate_pd,boundary diagnostic,,,,,,0.008,,,,,False,atc_rat_pit_d,0.008,0.0,0.008,False,True,"atc_rat_pit_d selected at the upper search boundary; this is the best value within the tested grid, not evidence of an interior or global optimum."
+boundary|atc_ang_pit_p,attitude_p,boundary diagnostic,,,,,,,10.0,,,,False,atc_ang_pit_p,10.0,2.0,10.0,False,True,"atc_ang_pit_p selected at the upper search boundary; this is the best value within the tested grid, not evidence of an interior or global optimum."
+boundary|psc_ne_pos_p,loiter_xy,boundary diagnostic,,,,,,,,0.5,,,False,psc_ne_pos_p,0.5,0.1,1.5,False,False,
+boundary|psc_ne_vel_p,loiter_xy,boundary diagnostic,,,,,,,,,0.9,,False,psc_ne_vel_p,0.9,0.2,2.5,False,False,
+boundary|moving_mass_assist_gain_m_per_Nm,moving_mass_gain,boundary diagnostic,,,,,,,,,,0.055,False,moving_mass_assist_gain_m_per_Nm,0.055,0.0,0.08,False,False,

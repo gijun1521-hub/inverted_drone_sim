@@ -1,0 +1,58 @@
+{
+  "rigid_body": {
+    "H": 0.5,
+    "m": 2.0,
+    "vane_model": "nonlinear_with_axial_loss",
+    "T_max_factor": 1.8,
+    "vane_angle_max_deg": 18.0,
+    "vane_rate_limit_deg_s": 180.0,
+    "servo_time_constant": 0.08,
+    "servo_deadband_deg": 0.5,
+    "servo_delay": 0.02,
+    "motor_time_constant": 0.12,
+    "k_vane_side": 0.55,
+    "k_vane_axial_loss": 1.8,
+    "angular_damping": 0.025,
+    "translational_drag": 0.06,
+    "moving_mass": {
+      "enabled": false,
+      "mass_kg": 0.5,
+      "max_offset_m": 0.05,
+      "max_rate_m_s": 0.2,
+      "max_accel_m_s2": 1.0,
+      "initial_offset_m": 0.0,
+      "use_total_com_geometry": false,
+      "use_legacy_gravity_offset_moment": true,
+      "moving_mass_body_up_offset_m": 0.12
+    }
+  },
+  "interactive": {
+    "vane_visual_scale": 2.5,
+    "vane_visual_length_m": 0.45,
+    "vane_visual_offset_m": 0.08,
+    "show_vane_command_ghost": true,
+    "show_target_marker": true,
+    "show_loiter_error_vector": true
+  },
+  "controller": {
+    "loit_speed_ms": 1.2,
+    "loit_acc_max_mss": 0.8,
+    "loit_brk_acc_mss": 0.8,
+    "loit_brk_delay_s": 0.4,
+    "loit_brk_jerk_msss": 2.0,
+    "loit_angle_max_deg": 15.0,
+    "pilot_speed_up_ms": 0.8,
+    "pilot_speed_dn_ms": 0.6,
+    "thr_dz": 0.1,
+    "atc_rat_pit_p": 0.07,
+    "atc_rat_pit_i": 0.0,
+    "atc_rat_pit_d": 0.008,
+    "atc_ang_pit_p": 10.0,
+    "psc_ne_pos_p": 0.5,
+    "psc_ne_vel_p": 0.9
+  },
+  "analysis": {
+    "moving_mass_assist_gain_m_per_Nm": 0.055,
+    "note": "Analysis-only proportional assist gain; not a PID field."
+  }
+}

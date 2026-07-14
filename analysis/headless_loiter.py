@@ -412,6 +412,14 @@ def run_headless_loiter(
                 rb_cfg.moving_mass.enabled
                 and rb_cfg.moving_mass.use_legacy_gravity_offset_moment
             ),
+            "effective_atc_rat_pit_p": float(controller_cfg.atc_rat_pit_p),
+            "effective_atc_rat_pit_i": float(controller_cfg.atc_rat_pit_i),
+            "effective_atc_rat_pit_d": float(controller_cfg.atc_rat_pit_d),
+            "effective_atc_ang_pit_p": float(controller_cfg.atc_ang_pit_p),
+            "effective_psc_ne_pos_p": float(controller_cfg.psc_ne_pos_p),
+            "effective_psc_ne_vel_p": float(controller_cfg.psc_ne_vel_p),
+            "effective_psc_ne_vel_i": float(controller_cfg.psc_ne_vel_i),
+            "effective_psc_ne_vel_d": float(controller_cfg.psc_ne_vel_d),
         }
     )
     return LoiterRunResult(str(param_path or "<default>"), scenario_cfg, rows, metrics, bool(crash_reason), crash_reason)
