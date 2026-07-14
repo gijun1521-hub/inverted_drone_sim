@@ -126,6 +126,7 @@ class RuntimeTargets:
         self.target_x_rate_cmd = 0.0
         self.target_z_rate_cmd = 0.0
         self.target_capture_event = False
+        self.target_capture_count = 0
         self.target_capture_pending = False
         self.target_step_event = False
 

@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from actuators import FirstOrderMotor, VaneServo
 from cascaded_controller import AttitudeController, RatePIDController
 from config import MovingMassPitchAssistConfig, RigidBodyConfig
-from interactive_sim import ControlMode, InteractiveApp, ManualCommands, ManualControlSystem
+from interactive_sim import ControlMode, InteractiveApp, ManualCommands, ManualControlSystem, RuntimeTargets
 from math_utils import shortest_angle_error, wrap_pi
 from moment_allocator import MomentAllocator
 from moving_mass_analysis import (
@@ -285,6 +285,21 @@ class ActuatorAndMixerTests(unittest.TestCase):
 
 
 class ControllerArchitectureTests(unittest.TestCase):
+    def test_runtime_target_capture_resets_session_capture_state(self):
+        state = np.array([2.5, 1.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        targets = RuntimeTargets()
+        targets.target_capture_count = 3
+        targets.target_capture_event = True
+        targets.target_capture_pending = True
+        targets.target_step_event = True
+
+        targets.capture(state)
+
+        self.assertEqual(targets.target_capture_count, 0)
+        self.assertFalse(targets.target_capture_event)
+        self.assertFalse(targets.target_capture_pending)
+        self.assertFalse(targets.target_step_event)
+
     def test_wrap_pi_shortest_error_across_boundary(self):
         self.assertAlmostEqual(wrap_pi(np.pi), -np.pi)
         err = shortest_angle_error(np.deg2rad(-179.0), np.deg2rad(179.0))
