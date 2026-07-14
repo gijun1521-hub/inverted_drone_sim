@@ -231,6 +231,7 @@ def _update_loiter_targets(
     shaper: LoiterInputShaper,
     dt: float,
 ) -> None:
+    targets.target_capture_event = False
     if mode != ControlMode.LOITER:
         targets.loiter_active = False
         targets.loiter_braking_active = False
@@ -238,27 +239,48 @@ def _update_loiter_targets(
         return
     desired_vx = shaper.update(commands.stick_x, dt)
     targets.desired_vx = desired_vx
+    targets.shaped_desired_vx = desired_vx
     targets.loiter_braking_active = shaper.braking_active
+    targets.target_capture_pending = shaper.capture_pending
     targets.target_x_rate_cmd = desired_vx
     targets.target_x += desired_vx * dt
-    if shaper.braking_active and abs(desired_vx) <= 0.02 and abs(float(state[3])) <= 0.08:
-        targets.target_x = float(state[0])
+    capture_ready = (
+        shaper.capture_pending
+        and abs(desired_vx) <= shaper.cfg.loit_capture_desired_vx_threshold_ms
+        and (
+            shaper.cfg.loit_capture_without_jump
+            or abs(float(state[3])) <= shaper.cfg.loit_capture_vx_threshold_ms
+        )
+    )
+    if capture_ready:
+        if not shaper.cfg.loit_capture_without_jump:
+            targets.target_x = float(state[0])
+        targets.target_capture_event = True
+        targets.target_capture_count += 1
+        shaper.mark_target_captured()
+        targets.loiter_braking_active = False
+        targets.target_capture_pending = False
 
 
 def _apply_deterministic_target_step(
     targets: RuntimeTargets,
     scenario: LoiterScenarioConfig,
     sim_time: float,
-) -> None:
-    """Apply an optional absolute target step at its configured simulation time."""
+) -> bool:
+    """Apply an optional absolute target step once at its configured time."""
     if scenario.target_step_time_s is None:
-        return
+        return False
     if sim_time + 1e-12 < scenario.target_step_time_s:
-        return
+        return False
+    applied = False
     if scenario.target_step_x is not None:
         targets.target_x = float(scenario.target_step_x)
+        applied = True
     if scenario.target_step_z is not None:
         targets.target_z = float(scenario.target_step_z)
+        applied = True
+    targets.target_step_event = applied
+    return applied
 
 
 def run_headless_loiter(
@@ -314,7 +336,6 @@ def run_headless_loiter(
         targets.target_z = scenario_cfg.target_z
     targets.altitude_hold_active = scenario_cfg.mode in {"ALT_HOLD", "LOITER"}
     targets.loiter_active = scenario_cfg.mode == "LOITER"
-    _apply_deterministic_target_step(targets, scenario_cfg, 0.0)
     mode = ControlMode(scenario_cfg.mode)
     if mode in (ControlMode.ALT_HOLD, ControlMode.LOITER):
         control.attitude.reset_to_current(float(state[2]), float(state[5]))
@@ -329,6 +350,7 @@ def run_headless_loiter(
     moving_mass_target = float(scenario_cfg.moving_mass_target_m)
     crash_reason = ""
     min_body_z = float("nan")
+    target_step_applied = False
     steps = int(math.ceil(scenario_cfg.duration_s / rb_cfg.dt))
 
     for _step in range(steps):
@@ -342,8 +364,12 @@ def run_headless_loiter(
             disturbance_moment = 0.0
 
         if controller_time_remaining <= 1e-12:
+            targets.target_step_event = False
+            if not target_step_applied:
+                target_step_applied = _apply_deterministic_target_step(
+                    targets, scenario_cfg, sim_time
+                )
             _update_loiter_targets(mode, state, commands, targets, loiter_shaper, ui_cfg.controller_dt)
-            _apply_deterministic_target_step(targets, scenario_cfg, sim_time)
             last_control = control.compute(mode, state, commands, ui_cfg.controller_dt, targets)
             if rb_cfg.moving_mass.enabled:
                 if scenario_cfg.moving_mass_assist_gain_m_per_Nm:
