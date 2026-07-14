@@ -5,6 +5,7 @@ import csv
 import hashlib
 import json
 import math
+import subprocess
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -648,6 +649,40 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _sha256_json(value: Any) -> str:
+    payload = json.dumps(
+        _jsonable(value), ensure_ascii=False, separators=(",", ":"), sort_keys=True
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _git_revision(*args: str) -> str:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
+def _source_fingerprint() -> tuple[dict[str, str], str]:
+    source_paths = (
+        ROOT / "analysis" / "headless_loiter.py",
+        Path(__file__),
+        ROOT / "config.py",
+        ROOT / "interactive_logging.py",
+        ROOT / "interactive_sim.py",
+        CURRENT_PROFILE,
+        PROVISIONAL_PROFILE,
+    )
+    source_hashes = {
+        path.relative_to(ROOT).as_posix(): _sha256(path) for path in source_paths
+    }
+    return source_hashes, _sha256_json(source_hashes)
+
+
 def generate_artifacts(output_dir: str | Path = DEFAULT_OUTPUT_DIR) -> dict[str, Any]:
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
@@ -677,9 +712,22 @@ def generate_artifacts(output_dir: str | Path = DEFAULT_OUTPUT_DIR) -> dict[str,
     _write_summary(summary_path, absolute_before, absolute_after, stick_before, stick_after, mass_rows)
 
     artifact_paths = [absolute_csv, stick_csv, absolute_plot, stick_plot, candidate_csv, summary_path]
+    source_hashes, source_fingerprint = _source_fingerprint()
+    metrics = {
+        "absolute_current": compute_transient_metrics(absolute_before),
+        "absolute_selected": compute_transient_metrics(absolute_after),
+        "stick_current": compute_transient_metrics(stick_before),
+        "stick_selected": compute_transient_metrics(stick_after),
+    }
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "deterministic": True,
+        "source": {
+            "commit": _git_revision("rev-parse", "HEAD"),
+            "tree": _git_revision("rev-parse", "HEAD^{tree}"),
+            "files": source_hashes,
+            "fingerprint_sha256": source_fingerprint,
+        },
         "current_profile": str(CURRENT_PROFILE.relative_to(ROOT)),
         "provisional_profile": str(PROVISIONAL_PROFILE.relative_to(ROOT)),
         "absolute_scenario": asdict(absolute),
@@ -692,13 +740,17 @@ def generate_artifacts(output_dir: str | Path = DEFAULT_OUTPUT_DIR) -> dict[str,
             "braking_refinement": {"LOIT_BRK_DELAY": REFINE_BRAKE_DELAY, "LOIT_BRK_ACC": REFINE_BRAKE_ACC, "LOIT_BRK_JERK": REFINE_BRAKE_JERK},
             "moving_mass_gain_m_per_Nm": MOVING_MASS_GAINS,
         },
-        "metrics": {
-            "absolute_current": compute_transient_metrics(absolute_before),
-            "absolute_selected": compute_transient_metrics(absolute_after),
-            "stick_current": compute_transient_metrics(stick_before),
-            "stick_selected": compute_transient_metrics(stick_after),
+        "metrics": metrics,
+        "deterministic_fingerprints": {
+            "absolute_current_rows_sha256": _sha256_json(absolute_before.rows),
+            "absolute_selected_rows_sha256": _sha256_json(absolute_after.rows),
+            "stick_current_rows_sha256": _sha256_json(stick_before.rows),
+            "stick_selected_rows_sha256": _sha256_json(stick_after.rows),
+            "candidate_rows_sha256": _sha256_json(candidate_rows),
+            "metrics_sha256": _sha256_json(metrics),
         },
         "artifacts": {path.name: _sha256(path) for path in artifact_paths},
+        "artifact_sizes_bytes": {path.name: path.stat().st_size for path in artifact_paths},
     }
     manifest_path.write_text(json.dumps(_jsonable(manifest), indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return manifest
