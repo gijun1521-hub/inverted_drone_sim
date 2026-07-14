@@ -33,21 +33,38 @@
     "stick_z": 0.0,
     "target_step_time_s": 0.5,
     "target_step_x": 1.0,
+    "target_step_z": null,
     "target_x": 0.0,
     "target_z": 1.0,
     "vane_angle_max_deg": null,
     "vane_rate_limit_deg_s": null
   },
+  "artifact_sizes_bytes": {
+    "absolute_target_diagnostic.png": 702628,
+    "absolute_target_timeseries.csv": 6472599,
+    "candidate_results.csv": 61116,
+    "selected_candidate_summary.md": 5495,
+    "stick_release_diagnostic.png": 732870,
+    "stick_release_timeseries.csv": 6280708
+  },
   "artifacts": {
     "absolute_target_diagnostic.png": "9fafe8734e314fefa80bd3ea7e08ff3cb01d42d3d8a08570a425ed9e65f87d8d",
     "absolute_target_timeseries.csv": "17cf465bb76be1a06b990c119843cc0a2fe953780b303d2b9b6a50d7e688b720",
     "candidate_results.csv": "168830d96c63504232b5b5f58e87ae7eb9a99b6039603a955c710c2b13ebdc7c",
-    "selected_candidate_summary.md": "86e4d8fcebdd7406ce9e9163c8eb7d0ff85c9aa336510dafdff52b6bb1a25625",
+    "selected_candidate_summary.md": "ceb0583d8997f43559a14d6dc7987e4929fd175f938c177e02383333a2794b11",
     "stick_release_diagnostic.png": "65312ab9d741d14e41a511feb843e47fbb4b8775af74ee788b2d0ebed70e24bc",
     "stick_release_timeseries.csv": "53812110290dd58bf08ca5156574fc7bdac3412de42b013288d779104ce6c4fe"
   },
   "current_profile": "params\\loiter_tuned_vane_only.json",
   "deterministic": true,
+  "deterministic_fingerprints": {
+    "absolute_current_rows_sha256": "98b7d16d3873e65143a6ff908e2660653bb7d8348521130b4d6360bff98b5c40",
+    "absolute_selected_rows_sha256": "95830a2815eadf5d83441e0a4149ddd8b729d062762d90a0dcae526328a79918",
+    "candidate_rows_sha256": "52affec077c3d315ae9b6f905e7d1af80a48221663b37dc019ed65551452242a",
+    "metrics_sha256": "717ce5ac68d5264d39b1936b54225d3f0079a549f7e13444e69fe568d290ef3a",
+    "stick_current_rows_sha256": "e6a8e28b02f2fb14dbf721b426fdca9750b09bb4bebe314b84a27744cf93b9a7",
+    "stick_selected_rows_sha256": "7e5bf721fa21cf5a5b6fff9a06b45ffb983c3943a756c832d26569a3c962e962"
+  },
   "metrics": {
     "absolute_current": {
       "ax_sign_changes_before_pause": [
@@ -355,7 +372,7 @@
     }
   },
   "provisional_profile": "params\\loiter_transient_provisional.json",
-  "schema_version": 1,
+  "schema_version": 2,
   "search_ranges": {
     "braking_coarse": {
       "LOIT_BRK_ACC": [
@@ -446,6 +463,20 @@
     "psc_ne_pos_p": 0.55,
     "psc_ne_vel_p": 0.7
   },
+  "source": {
+    "commit": "6bc1be7887dfdd339c7ac61be01e8794695f808f",
+    "files": {
+      "analysis/headless_loiter.py": "92ccb3794a238660ccc252583283abb087f893dee48f570037b68fa1c4747bb0",
+      "analysis/loiter_transient_diagnosis.py": "60196cc7af3dcbd02f946a318c380681fef03b0ae2c2c8e8ab136b733781c9ca",
+      "config.py": "e325571e52c72ed8a28b01b7b8680bb8a647f5f9c5fa737f4f1b124ad7b92b0a",
+      "interactive_logging.py": "6d6f6e77312eabd2461ad4362b9676b173e6c0b09270230138ec5ca06f3ea075",
+      "interactive_sim.py": "69ab8adaa374856cb85e905b3c3a8f7a1842e2b070d2a7ab5ac78ebc9fb139cd",
+      "params/loiter_transient_provisional.json": "c661d75e942485abbbec4ad895463374c44ab980f4cc298a5dbc9679cbdd41b9",
+      "params/loiter_tuned_vane_only.json": "61d785ef16cace0a7b28afde714871bc714c2ef1c17fdced1a9673ee13d50d96"
+    },
+    "fingerprint_sha256": "265d5d2fb61019a33185d5524f42117d31f364a0d19d77b28c92af0792872820",
+    "tree": "c795b0c507924fd828a781782d705cb1661aa2f7"
+  },
   "stick_scenario": {
     "T_max_factor": null,
     "capture_current_target": true,
@@ -480,6 +511,7 @@
     "stick_z": 0.0,
     "target_step_time_s": null,
     "target_step_x": null,
+    "target_step_z": null,
     "target_x": 0.0,
     "target_z": 1.0,
     "vane_angle_max_deg": null,
