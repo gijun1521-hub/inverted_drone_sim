@@ -36,17 +36,22 @@ except ImportError:  # pragma: no cover - supports top-level script execution
 
 
 STAGES = ("rate_pd", "rate_i", "attitude_p", "loiter_xy", "moving_mass_gain")
-CACHE_SCHEMA_VERSION = 2
+CACHE_SCHEMA_VERSION = 3
 STAGE_GRID_DEFINITION_VERSION = "2026-07-13.3"
 TAIL_POLICY_VERSION = "2026-07-13.2"
 WORKFLOW_IMPLEMENTATION_FILES = (
     "analysis/controller_grid_search.py",
     "analysis/headless_loiter.py",
+    "analysis/moving_mass_comparison.py",
     "interactive_sim.py",
+    "interactive_logging.py",
     "cascaded_controller.py",
     "rigid_body_model.py",
     "actuators.py",
     "singlecopter_mixer.py",
+    "math_utils.py",
+    "safety.py",
+    "thrust_curve.py",
     "config.py",
     "params.py",
 )
@@ -77,6 +82,35 @@ PARAMETER_FIELDS = (
     "psc_ne_pos_p",
     "psc_ne_vel_p",
     "moving_mass_assist_gain_m_per_Nm",
+)
+PARAMETER_OWNER_STAGE = {
+    "atc_rat_pit_p": "rate_pd",
+    "atc_rat_pit_i": "rate_i",
+    "atc_rat_pit_d": "rate_pd",
+    "atc_ang_pit_p": "attitude_p",
+    "psc_ne_pos_p": "loiter_xy",
+    "psc_ne_vel_p": "loiter_xy",
+    "moving_mass_assist_gain_m_per_Nm": "moving_mass_gain",
+}
+BOUNDARY_DIAGNOSTIC_FIELDS = (
+    "parameter",
+    "selected_value",
+    "parameter_search_min",
+    "parameter_search_max",
+    "selected_at_lower_boundary",
+    "selected_at_upper_boundary",
+    "boundary_warning",
+)
+BEST_PARAMETER_FIELDS = (
+    "row_key",
+    "stage",
+    "role",
+    "candidate_id",
+    "rank",
+    "normalized_score",
+    *PARAMETER_FIELDS,
+    "rejected",
+    *BOUNDARY_DIAGNOSTIC_FIELDS,
 )
 CONTROLLER_PARAMETER_FIELDS = PARAMETER_FIELDS[:-1]
 EFFECTIVE_FIELDS = {name: f"effective_{name}" for name in CONTROLLER_PARAMETER_FIELDS}
@@ -1343,6 +1377,62 @@ def require_best_aggregate_row(
     return selected
 
 
+def selected_parameter_boundary_rows(
+    stage_aggregates: dict[str, list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    selected_values: dict[str, float] = {}
+    for stage in STAGES:
+        selected = best_aggregate_row(stage_aggregates.get(stage, []))
+        if selected is None:
+            continue
+        for name in PARAMETER_FIELDS:
+            if selected.get(name, "") not in (None, ""):
+                selected_values[name] = _as_float(selected[name])
+
+    output: list[dict[str, Any]] = []
+    for name in PARAMETER_FIELDS:
+        owner_stage = PARAMETER_OWNER_STAGE[name]
+        searched_values = [
+            _as_float(row[name])
+            for row in stage_aggregates.get(owner_stage, [])
+            if row.get(name, "") not in (None, "")
+        ]
+        if name not in selected_values or not searched_values:
+            continue
+        selected_value = selected_values[name]
+        lower = min(searched_values)
+        upper = max(searched_values)
+        at_lower = math.isclose(selected_value, lower, rel_tol=0.0, abs_tol=1e-12)
+        at_upper = math.isclose(selected_value, upper, rel_tol=0.0, abs_tol=1e-12)
+        boundary = "lower" if at_lower else "upper" if at_upper else ""
+        warning = (
+            f"{name} selected at the {boundary} search boundary; this is the best "
+            "value within the tested grid, not evidence of an interior or global optimum."
+            if boundary
+            else ""
+        )
+        output.append(
+            {
+                "row_key": f"boundary|{name}",
+                "stage": owner_stage,
+                "role": "boundary diagnostic",
+                "candidate_id": "",
+                "rank": "",
+                "normalized_score": "",
+                **{field: selected_value if field == name else "" for field in PARAMETER_FIELDS},
+                "rejected": False,
+                "parameter": name,
+                "selected_value": selected_value,
+                "parameter_search_min": lower,
+                "parameter_search_max": upper,
+                "selected_at_lower_boundary": at_lower,
+                "selected_at_upper_boundary": at_upper,
+                "boundary_warning": warning,
+            }
+        )
+    return output
+
+
 def _parameters_from_row(row: dict[str, Any] | None, names: Sequence[str], defaults: dict[str, float]) -> dict[str, float]:
     return {
         name: _as_float(row.get(name), defaults[name]) if row is not None else defaults[name]
@@ -1374,6 +1464,7 @@ def best_parameter_rows(stage_aggregates: dict[str, list[dict[str, Any]]]) -> li
                     "rejected": selected["rejected"],
                 }
             )
+    output.extend(selected_parameter_boundary_rows(stage_aggregates))
     return output
 
 
@@ -1415,7 +1506,7 @@ def write_workbook(
         (
             "09_best_parameters",
             best_parameter_rows(stage_aggregates),
-            ("row_key", "stage", "role", "candidate_id", "rank", "normalized_score", *PARAMETER_FIELDS, "rejected"),
+            BEST_PARAMETER_FIELDS,
         ),
         ("10_metadata", metadata_rows, ("key", "value", "unit", "notes")),
     ]
@@ -1590,13 +1681,15 @@ def write_markdown_summary(
         "",
         "```powershell",
         ".venv\\Scripts\\python.exe sweep_controller_gains.py --stage all --no-resume --output-dir results/analysis/controller_grid_search",
-        ".venv\\Scripts\\python.exe sweep_controller_gains.py --stage all --quick --output-dir results/analysis/controller_grid_search_quick",
+        ".venv\\Scripts\\python.exe sweep_controller_gains.py --stage all --quick --no-resume --output-dir results/analysis/controller_grid_search_quick_review",
         "```",
         "",
         f"- Git SHA: `{metadata.get('git_sha', '')}`",
         f"- Workflow fingerprint: `{metadata.get('workflow_fingerprint', '')}`",
         f"- Cache schema: `{metadata.get('cache_schema_version', '')}`; grid definition: `{metadata.get('stage_grid_definition_version', '')}`",
         f"- Parameter source: `{metadata.get('vane_param_source', '')}`",
+        f"- Profile output: `{metadata.get('profile_output_dir', '')}` ({metadata.get('profile_output_policy', '')}).",
+        "- Quick mode defaults to `<output-dir>/profiles`; it does not overwrite canonical full-search profiles unless `--profile-output-dir` is explicit.",
         "- Tail windows: RATE P/D and recovery 0.75 s; RATE I bias and attitude 1.0 s; LOITER and moving mass 2.0 s by default.",
         f"- Runtime: `{metadata.get('runtime_s', '')}` s",
         f"- Ribbon/comet assessment: **{_ribbon_assessment(stage_aggregates.get('loiter_xy', []))}**.",
@@ -1665,6 +1758,29 @@ def write_markdown_summary(
         if row is not None:
             lines.append(f"| {stage} | {metric_descriptions[stage](row)} |")
 
+    boundary_rows = selected_parameter_boundary_rows(stage_aggregates)
+    lines += [
+        "",
+        "## Search Boundary Diagnostics",
+        "",
+        "A selected boundary value is only the best value within the tested grid; it is not evidence of an interior or global optimum.",
+        "The parameter grids were not expanded in this review.",
+        "",
+        "| parameter | selected | search min | search max | lower boundary | upper boundary |",
+        "| --- | ---: | ---: | ---: | --- | --- |",
+    ]
+    for row in boundary_rows:
+        lines.append(
+            f"| {row['parameter']} | {_format_number(row['selected_value'])} | "
+            f"{_format_number(row['parameter_search_min'])} | "
+            f"{_format_number(row['parameter_search_max'])} | "
+            f"{row['selected_at_lower_boundary']} | {row['selected_at_upper_boundary']} |"
+        )
+    warnings = [row["boundary_warning"] for row in boundary_rows if row["boundary_warning"]]
+    if warnings:
+        lines += ["", "Warnings:"]
+        lines.extend(f"- {warning}" for warning in warnings)
+
     loiter_best = best_aggregate_row(stage_aggregates.get("loiter_xy", []))
     loiter_baseline = _loiter_baseline_row(stage_aggregates.get("loiter_xy", []))
     if loiter_best is not None and loiter_baseline is not None:
@@ -1730,7 +1846,7 @@ class WorkflowOptions:
     tail_window_s: float = 2.0
     vane_param_source: Path = Path("params/loiter_example.json")
     moving_mass_param_source: Path = Path("params/moving_mass_prototype_2kg.json")
-    profile_output_dir: Path = Path("params")
+    profile_output_dir: Path | None = None
     top_pd_count: int = 3
 
 
@@ -1738,6 +1854,14 @@ class WorkflowOptions:
 class WorkflowFingerprint:
     digest: str
     payload: dict[str, Any]
+
+
+def resolve_profile_output_directory(options: WorkflowOptions) -> Path:
+    if options.profile_output_dir is not None:
+        return Path(options.profile_output_dir)
+    if options.quick:
+        return Path(options.output_dir) / "profiles"
+    return Path("params")
 
 
 def _sha256_file(path: Path) -> str:
@@ -1839,7 +1963,7 @@ def _write_stage_exports(
     write_csv_rows(
         output_dir / "09_best_parameters.csv",
         best_parameter_rows(stage_aggregates),
-        ("row_key", "stage", "role", "candidate_id", "rank", "normalized_score", *PARAMETER_FIELDS, "rejected"),
+        BEST_PARAMETER_FIELDS,
     )
 
 
@@ -2037,16 +2161,19 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         runtime_s = report_runtime_s
     _write_stage_exports(output_dir, aggregates)
     profiles_ready = all(best_aggregate_row(aggregates.get(stage, [])) is not None for stage in STAGES)
+    profile_output_dir = resolve_profile_output_directory(options)
     if profiles_ready:
         vane_profile, moving_profile = write_profiles(
             aggregates,
             vane_source=Path(options.vane_param_source),
             moving_mass_source=Path(options.moving_mass_param_source),
-            output_directory=Path(options.profile_output_dir),
+            output_directory=profile_output_dir,
         )
     else:
         vane_profile = None
         moving_profile = None
+    boundary_rows = selected_parameter_boundary_rows(aggregates)
+    boundary_by_parameter = {row["parameter"]: row for row in boundary_rows}
     metadata: dict[str, Any] = {
         "git_sha": _git_sha(),
         "cache_schema_version": CACHE_SCHEMA_VERSION,
@@ -2060,6 +2187,14 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         "selected_stage": options.stage,
         "vane_param_source": str(options.vane_param_source),
         "moving_mass_param_source": str(options.moving_mass_param_source),
+        "profile_output_dir": str(profile_output_dir),
+        "profile_output_policy": (
+            "explicit destination"
+            if options.profile_output_dir is not None
+            else "quick output directory/profiles"
+            if options.quick
+            else "canonical params directory"
+        ),
         "tail_window_s": options.tail_window_s,
         "runtime_s": round(runtime_s, 6),
         "report_generation_runtime_s": round(report_runtime_s, 6),
@@ -2085,6 +2220,39 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
             "loiter_xy": "position P 0.1..1.5 step 0.1; velocity P 0.2..2.5 step 0.1",
             "moving_mass_gain": "0.000..0.080 step 0.0025",
         },
+        "parameter_search_min": {
+            name: row["parameter_search_min"] for name, row in boundary_by_parameter.items()
+        },
+        "parameter_search_max": {
+            name: row["parameter_search_max"] for name, row in boundary_by_parameter.items()
+        },
+        "selected_at_lower_boundary": [
+            name
+            for name, row in boundary_by_parameter.items()
+            if row["selected_at_lower_boundary"]
+        ],
+        "selected_at_upper_boundary": [
+            name
+            for name, row in boundary_by_parameter.items()
+            if row["selected_at_upper_boundary"]
+        ],
+        "selected_parameter_boundary_diagnostics": {
+            name: {
+                field: row[field]
+                for field in (
+                    "selected_value",
+                    "parameter_search_min",
+                    "parameter_search_max",
+                    "selected_at_lower_boundary",
+                    "selected_at_upper_boundary",
+                    "boundary_warning",
+                )
+            }
+            for name, row in boundary_by_parameter.items()
+        },
+        "boundary_warnings": [
+            row["boundary_warning"] for row in boundary_rows if row["boundary_warning"]
+        ],
         "inactive_parameters": "psc_ne_vel_i, psc_ne_vel_d",
         "moving_mass_gain": "moving_mass_assist_gain_m_per_Nm * desired_pitch_moment",
         "tail_window_policy": _tail_policy_metadata(options.quick, options.tail_window_s),

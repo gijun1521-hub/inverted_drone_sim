@@ -1,16 +1,20 @@
+import hashlib
 import json
 import math
 import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from unittest.mock import patch
 
 from openpyxl import load_workbook
 
+from analysis import controller_grid_search as controller_grid_search_module
 from analysis.controller_grid_search import (
     CACHE_SCHEMA_VERSION,
     SCORE_SPECS,
     SHEET_NAMES,
+    WORKFLOW_IMPLEMENTATION_FILES,
     Candidate,
     SearchScenario,
     ScenarioResultStore,
@@ -31,7 +35,9 @@ from analysis.controller_grid_search import (
     rate_pd_coarse_candidates,
     rate_pd_scenarios,
     require_best_aggregate_row,
+    resolve_profile_output_directory,
     run_workflow,
+    selected_parameter_boundary_rows,
     stage_validity_reasons,
     top_candidates,
     validate_previous_stage_metadata,
@@ -184,6 +190,82 @@ class ControllerGridCacheAndValidityTests(unittest.TestCase):
             )
             self.assertNotEqual(first.digest, build_workflow_fingerprint(options).digest)
 
+    def test_moving_mass_scenario_dependency_changes_workflow_fingerprint(self):
+        self.assertIn("analysis/moving_mass_comparison.py", WORKFLOW_IMPLEMENTATION_FILES)
+        with tempfile.TemporaryDirectory() as tmp:
+            options = self._fingerprint_options(Path(tmp))
+            original = build_workflow_fingerprint(options)
+            real_sha256_file = controller_grid_search_module._sha256_file
+
+            def changed_dependency_hash(path: Path) -> str:
+                if path.as_posix().endswith("analysis/moving_mass_comparison.py"):
+                    return "changed-moving-mass-scenario-dependency"
+                return real_sha256_file(path)
+
+            with patch.object(
+                controller_grid_search_module,
+                "_sha256_file",
+                side_effect=changed_dependency_hash,
+            ):
+                changed = build_workflow_fingerprint(options)
+            self.assertNotEqual(original.digest, changed.digest)
+
+    def test_profile_output_defaults_and_explicit_destinations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            full = WorkflowOptions(output_dir=root / "full")
+            quick = replace(full, output_dir=root / "quick", quick=True)
+            explicit = root / "explicit-profiles"
+            self.assertEqual(resolve_profile_output_directory(full), Path("params"))
+            self.assertEqual(
+                resolve_profile_output_directory(quick),
+                root / "quick" / "profiles",
+            )
+            self.assertEqual(
+                resolve_profile_output_directory(replace(full, profile_output_dir=explicit)),
+                explicit,
+            )
+            self.assertEqual(
+                resolve_profile_output_directory(replace(quick, profile_output_dir=explicit)),
+                explicit,
+            )
+
+    def test_selected_parameter_boundaries_are_machine_readable(self):
+        stage_aggregates = {
+            "rate_pd": [
+                {"rejected": False, "atc_rat_pit_p": 0.07, "atc_rat_pit_d": 0.008},
+                {"rejected": False, "atc_rat_pit_p": 0.005, "atc_rat_pit_d": 0.0},
+                {"rejected": False, "atc_rat_pit_p": 0.08, "atc_rat_pit_d": 0.004},
+            ],
+            "rate_i": [
+                {"rejected": False, "atc_rat_pit_p": 0.07, "atc_rat_pit_i": 0.0, "atc_rat_pit_d": 0.008},
+                {"rejected": False, "atc_rat_pit_i": 0.03},
+            ],
+            "attitude_p": [
+                {"rejected": False, "atc_ang_pit_p": 10.0},
+                {"rejected": False, "atc_ang_pit_p": 2.0},
+            ],
+            "loiter_xy": [
+                {"rejected": False, "psc_ne_pos_p": 0.5, "psc_ne_vel_p": 0.9},
+                {"rejected": False, "psc_ne_pos_p": 0.1, "psc_ne_vel_p": 0.2},
+                {"rejected": False, "psc_ne_pos_p": 1.5, "psc_ne_vel_p": 2.5},
+            ],
+            "moving_mass_gain": [
+                {"rejected": False, "moving_mass_assist_gain_m_per_Nm": 0.055},
+                {"rejected": False, "moving_mass_assist_gain_m_per_Nm": 0.0},
+                {"rejected": False, "moving_mass_assist_gain_m_per_Nm": 0.08},
+            ],
+        }
+        diagnostics = {
+            row["parameter"]: row
+            for row in selected_parameter_boundary_rows(stage_aggregates)
+        }
+        self.assertTrue(diagnostics["atc_rat_pit_d"]["selected_at_upper_boundary"])
+        self.assertTrue(diagnostics["atc_ang_pit_p"]["selected_at_upper_boundary"])
+        self.assertTrue(diagnostics["atc_rat_pit_i"]["selected_at_lower_boundary"])
+        self.assertEqual(diagnostics["atc_rat_pit_d"]["parameter_search_max"], 0.008)
+        self.assertIn("not evidence of an interior or global optimum", diagnostics["atc_rat_pit_d"]["boundary_warning"])
+
     def test_identical_fingerprint_reuses_rows_and_changed_schema_invalidates(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -322,13 +404,20 @@ class ControllerGridQuickEndToEndTests(unittest.TestCase):
         cls._tmp = tempfile.TemporaryDirectory()
         root = Path(cls._tmp.name)
         cls.output_dir = root / "output"
-        cls.profile_dir = root / "profiles"
+        cls.profile_dir = cls.output_dir / "profiles"
+        cls.canonical_profile_paths = (
+            Path("params/loiter_tuned_vane_only.json"),
+            Path("params/moving_mass_prototype_2kg_tuned.json"),
+        )
+        cls.canonical_hashes_before = {
+            path: hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in cls.canonical_profile_paths
+        }
         cls.options = WorkflowOptions(
                 stage="all",
                 output_dir=cls.output_dir,
                 quick=True,
                 resume=False,
-                profile_output_dir=cls.profile_dir,
             )
         cls.result = run_workflow(cls.options)
         cls.resumed_result = run_workflow(replace(cls.options, resume=True))
@@ -388,6 +477,21 @@ class ControllerGridQuickEndToEndTests(unittest.TestCase):
         self.assertNotIn("psc_ne_vel_d", vane["controller"])
         load_interactive_config(vane_path)
         load_interactive_config(moving_path)
+
+    def test_quick_default_uses_output_profiles_and_preserves_canonical_hashes(self):
+        self.assertEqual(
+            self.result["vane_profile_path"],
+            self.profile_dir / "loiter_tuned_vane_only.json",
+        )
+        self.assertEqual(
+            self.result["moving_mass_profile_path"],
+            self.profile_dir / "moving_mass_prototype_2kg_tuned.json",
+        )
+        hashes_after = {
+            path: hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in self.canonical_profile_paths
+        }
+        self.assertEqual(self.canonical_hashes_before, hashes_after)
 
 
 if __name__ == "__main__":

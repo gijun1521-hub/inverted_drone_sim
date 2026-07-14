@@ -22,7 +22,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--vane-params", default="params/loiter_example.json")
     parser.add_argument("--moving-mass-params", default="params/moving_mass_prototype_2kg.json")
-    parser.add_argument("--profile-output-dir", default="params")
+    parser.add_argument(
+        "--profile-output-dir",
+        default=None,
+        help=(
+            "Tuned-profile destination. Defaults to params for full searches and "
+            "<output-dir>/profiles for quick searches."
+        ),
+    )
     parser.add_argument("--top-pd-count", type=int, default=3)
     return parser
 
@@ -37,7 +44,9 @@ def run_from_args(args: argparse.Namespace) -> dict:
             tail_window_s=float(args.tail_window),
             vane_param_source=Path(args.vane_params),
             moving_mass_param_source=Path(args.moving_mass_params),
-            profile_output_dir=Path(args.profile_output_dir),
+            profile_output_dir=(
+                Path(args.profile_output_dir) if args.profile_output_dir is not None else None
+            ),
             top_pd_count=int(args.top_pd_count),
         )
     )
