@@ -85,6 +85,15 @@ ACTUATOR LAB with the 2 kg prototype profile:
 python interactive_sim.py --params params/moving_mass_prototype_2kg.json --actuator-lab
 ```
 
+Interactive LOITER with the seminar moving-mass assist path and the latest
+stick-release capture behavior:
+
+```bash
+python interactive_sim.py --params params/interactive_loiter_assist_2kg.json
+```
+
+See `docs/interactive_loiter_assist.md` for configuration and safety scope.
+
 ### 6. Headless 분석 실행
 
 ```bash
