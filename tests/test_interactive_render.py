@@ -12,6 +12,93 @@ from params import load_interactive_config
 
 
 class InteractiveRenderSmokeTests(unittest.TestCase):
+    def test_interactive_loiter_assist_profile_starts_active(self):
+        rb_cfg, ui_cfg, controller_cfg = load_interactive_config(
+            "params/interactive_loiter_assist_2kg.json"
+        )
+        app = InteractiveApp(rb_cfg, ui_cfg, controller_cfg)
+
+        self.assertEqual(app.mode, ControlMode.LOITER)
+        self.assertTrue(app.moving_mass_assist_active)
+        self.assertEqual(app.state.shape, (11,))
+        self.assertTrue(rb_cfg.moving_mass.use_total_com_geometry)
+        self.assertFalse(rb_cfg.moving_mass.use_legacy_gravity_offset_moment)
+
+    def test_interactive_loiter_assist_commands_mass_from_pitch_moment(self):
+        rb_cfg, ui_cfg, controller_cfg = load_interactive_config(
+            "params/interactive_loiter_assist_2kg.json"
+        )
+        app = InteractiveApp(rb_cfg, ui_cfg, controller_cfg)
+        app.targets.target_x = 1.0
+
+        app.physics_step(0.0, 1.0)
+
+        expected = ui_cfg.moving_mass_assist_gain_m_per_Nm * app.last_control.desired_moment
+        self.assertAlmostEqual(float(app.state[10]), expected)
+        self.assertNotEqual(float(app.state[10]), 0.0)
+
+    def test_interactive_loiter_assist_recenters_outside_loiter(self):
+        rb_cfg, ui_cfg, controller_cfg = load_interactive_config(
+            "params/interactive_loiter_assist_2kg.json"
+        )
+        app = InteractiveApp(rb_cfg, ui_cfg, controller_cfg)
+        app.state[10] = 0.02
+        app.set_mode(ControlMode.STABILIZE)
+
+        app.physics_step(0.0, 1.0)
+
+        self.assertEqual(float(app.state[10]), 0.0)
+
+    def test_interactive_loiter_assist_rejects_disabled_mass(self):
+        rb_cfg, ui_cfg, controller_cfg = load_interactive_config("params/loiter_example.json")
+        ui_cfg.moving_mass_assist_enabled = True
+        ui_cfg.moving_mass_assist_gain_m_per_Nm = 0.055
+
+        with self.assertRaisesRegex(ValueError, "total-COM geometry"):
+            InteractiveApp(rb_cfg, ui_cfg, controller_cfg)
+
+    def test_full_stick_release_captures_once_and_returns(self):
+        rb_cfg, ui_cfg, controller_cfg = load_interactive_config(
+            "params/interactive_loiter_assist_2kg.json"
+        )
+        app = InteractiveApp(rb_cfg, ui_cfg, controller_cfg)
+
+        for index in range(int(10.0 / rb_cfg.dt)):
+            time_s = index * rb_cfg.dt
+            app.commands.stick_x = 1.0 if 0.5 <= time_s < 2.0 else 0.0
+            app.physics_step(time_s, 1.0)
+
+        self.assertEqual(app.targets.target_capture_count, 1)
+        self.assertFalse(app.targets.target_capture_pending)
+        self.assertAlmostEqual(app.targets.desired_vx, 0.0)
+        self.assertLess(abs(app.targets.target_x - float(app.state[0])), 0.10)
+        self.assertEqual(app.crash_reason, "")
+
+    def test_assist_profile_reproduces_seminar_recovery_cases(self):
+        for scenario in ("disturbance", "step"):
+            rb_cfg, ui_cfg, controller_cfg = load_interactive_config(
+                "params/interactive_loiter_assist_2kg.json"
+            )
+            app = InteractiveApp(rb_cfg, ui_cfg, controller_cfg)
+
+            for index in range(int(8.0 / rb_cfg.dt)):
+                time_s = index * rb_cfg.dt
+                if scenario == "disturbance":
+                    app.disturbance.force = (
+                        np.array([8.0, 0.0])
+                        if 1.5 <= time_s < 1.7
+                        else np.zeros(2)
+                    )
+                elif time_s >= 1.0:
+                    app.targets.target_x = 1.0
+                app.physics_step(time_s, 1.0)
+
+            final_error = abs(app.targets.target_x - float(app.state[0]))
+            limit = 0.15 if scenario == "disturbance" else 0.05
+            self.assertLess(final_error, limit, scenario)
+            self.assertGreater(float(np.max(np.abs(app.state[8:11]))), 0.0)
+            self.assertEqual(app.crash_reason, "")
+
     def test_actuator_lab_render_smoke_with_dummy_surface(self):
         os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
         try:

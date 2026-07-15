@@ -139,6 +139,7 @@ class LoiterInputShaper:
         self._release_time = 0.0
         self.braking_active = False
         self.capture_pending = False
+        self._capture_completed = False
 
     def reset(self, desired_vx: float = 0.0) -> None:
         self.desired_vx = float(desired_vx)
@@ -146,10 +147,14 @@ class LoiterInputShaper:
         self._release_time = 0.0
         self.braking_active = False
         self.capture_pending = False
+        self._capture_completed = False
 
     def mark_target_captured(self) -> None:
+        self.desired_vx = 0.0
+        self._last_accel = 0.0
         self.capture_pending = False
         self.braking_active = False
+        self._capture_completed = True
 
     @staticmethod
     def _rate_limit(value: float, target: float, max_delta: float) -> float:
@@ -160,14 +165,20 @@ class LoiterInputShaper:
             self._release_time = 0.0
             self.braking_active = False
             self.capture_pending = False
+            self._capture_completed = False
             target = float(np.clip(stick_x, -1.0, 1.0) * self.cfg.loit_speed_ms)
             accel_limit = self.cfg.loit_acc_max_mss
             jerk_limit = self.cfg.psc_jerk_xy_max_msss
         else:
             self._release_time += dt
             if self.cfg.loit_capture_persistent:
-                if abs(self.desired_vx) > self.cfg.loit_capture_desired_vx_threshold_ms:
+                if (
+                    not self._capture_completed
+                    and abs(self.desired_vx) > self.cfg.loit_capture_desired_vx_threshold_ms
+                ):
                     self.capture_pending = True
+                if self._capture_completed:
+                    self.capture_pending = False
                 self.braking_active = self._release_time >= self.cfg.loit_brk_delay_s and self.capture_pending
             else:
                 self.capture_pending = (
@@ -397,8 +408,8 @@ class InteractiveApp:
         self.ui_cfg = ui_cfg or InteractiveSimConfig(physics_dt=self.rb_cfg.dt, controller_dt=0.01)
         self.controller_cfg = controller_cfg or ControllerConfig()
         self.actuator_lab_enabled = bool(actuator_lab_enabled)
+        mm = self.rb_cfg.moving_mass
         if self.actuator_lab_enabled:
-            mm = self.rb_cfg.moving_mass
             if not (
                 mm.enabled
                 and mm.use_total_com_geometry
@@ -406,6 +417,14 @@ class InteractiveApp:
             ):
                 raise ValueError(
                     "ACTUATOR_LAB requires a prevalidated moving-mass total-COM configuration"
+                )
+        if self.ui_cfg.moving_mass_assist_enabled:
+            gain = self.ui_cfg.moving_mass_assist_gain_m_per_Nm
+            if not np.isfinite(gain) or gain <= 0.0:
+                raise ValueError("moving-mass assist gain must be finite and greater than zero")
+            if not (mm.enabled and mm.use_total_com_geometry and not mm.use_legacy_gravity_offset_moment):
+                raise ValueError(
+                    "moving-mass assist requires an enabled moving mass with total-COM geometry"
                 )
         self.rb_cfg.validate()
         self.plant = RigidBodySingleFan2D(self.rb_cfg)
@@ -446,6 +465,8 @@ class InteractiveApp:
         self.last_motor = MotorOutput(self.rb_cfg.hover_thrust, 0.0, False)
         self.last_servo = ServoOutput(0.0, 0.0, 0.0, False, False)
         self.last_forces = self.plant.force_moment_breakdown(self.state)
+        if self.ui_cfg.start_in_loiter and not self.actuator_lab_enabled:
+            self.set_mode(ControlMode.LOITER)
 
     def _reset_state(self, preset_key: str, *, startup: bool = False) -> np.ndarray:
         preset = self.ui_cfg.presets.get(preset_key, self.ui_cfg.presets["F1"])
@@ -511,6 +532,28 @@ class InteractiveApp:
             )
         )
         return self.commands.direct_vane
+
+    @property
+    def moving_mass_assist_active(self) -> bool:
+        return bool(
+            self.ui_cfg.moving_mass_assist_enabled
+            and self.rb_cfg.moving_mass.enabled
+            and self.mode == ControlMode.LOITER
+        )
+
+    def moving_mass_target_command(self) -> float | None:
+        if self.mode == ControlMode.ACTUATOR_LAB:
+            return self.commands.moving_mass_target_m
+        if self.moving_mass_assist_active:
+            return float(
+                self.ui_cfg.moving_mass_assist_gain_m_per_Nm
+                * self.last_control.desired_moment
+            )
+        if self.actuator_lab_enabled:
+            return self.commands.moving_mass_target_m
+        if self.ui_cfg.moving_mass_assist_enabled and self.rb_cfg.moving_mass.enabled:
+            return 0.0
+        return None
 
     def set_mode(self, mode: ControlMode) -> bool:
         if mode == ControlMode.ACTUATOR_LAB and not self.actuator_lab_enabled:
@@ -765,11 +808,7 @@ class InteractiveApp:
             self.last_servo.vane_angle_dot,
             disturbance_force,
             disturbance_moment,
-            moving_mass_target_m=(
-                self.commands.moving_mass_target_m
-                if self.actuator_lab_enabled
-                else None
-            ),
+            moving_mass_target_m=self.moving_mass_target_command(),
         )
         self.disturbance.tick(self.rb_cfg.dt)
         self.sim_time += self.rb_cfg.dt
@@ -1081,6 +1120,7 @@ class InteractiveApp:
             f"theta_t={np.rad2deg(self.last_control.theta_target): .1f} deg  omega_t={np.rad2deg(self.last_control.omega_target): .1f} deg/s",
             f"moment req={self.last_control.desired_moment:.3f} phys_ach={self.last_control.mixer.physically_achievable_moment:.3f} floor_ach={self.last_control.mixer.achievable_moment:.3f}",
             f"vane cmd={np.rad2deg(self.last_control.vane_angle_cmd): .1f} deg actual={np.rad2deg(vane): .1f} deg",
+            f"MM assist={int(self.moving_mass_assist_active)} gain={self.ui_cfg.moving_mass_assist_gain_m_per_Nm:.3f} m/Nm actual={(float(self.state[8]) if len(self.state) > 8 else 0.0): .4f} m target={(float(self.state[10]) if len(self.state) > 10 else 0.0): .4f} m",
             f"PID P/I/D/FF={self.last_control.rate_p:.3f}/{self.last_control.rate_i:.3f}/{self.last_control.rate_d:.3f}/{self.last_control.rate_ff:.3f} AW={self.last_control.anti_windup_correction:.3f} inhibit={int(self.last_control.integrator_inhibited)}",
             f"dist F=({self.last_forces.disturbance_force[0]:.1f},{self.last_forces.disturbance_force[1]:.1f}) N M={self.last_forces.disturbance_moment:.2f} Nm impulse={self.disturbance.impulse_time_remaining:.2f}s",
             f"energy={total_energy:.2f} J  dt={self.rb_cfg.dt:.4f}s controller_dt={self.ui_cfg.controller_dt:.4f}s",

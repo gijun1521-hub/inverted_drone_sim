@@ -300,6 +300,7 @@ class InteractiveSimConfig:
     controller_dt: float = 0.01
     render_rate: float = 60.0
     initial_speed: float = 1.0
+    start_in_loiter: bool = False
     slow_motion_speed: float = 0.25
     speed_step: float = 0.25
     min_speed: float = 0.05
@@ -322,6 +323,9 @@ class InteractiveSimConfig:
     actuator_lab_vane_step_deg: float = 0.5
     actuator_lab_vane_coarse_step_deg: float = 2.0
     actuator_lab_moment_deadband_Nm: float = 0.002
+
+    moving_mass_assist_enabled: bool = False
+    moving_mass_assist_gain_m_per_Nm: float = 0.0
 
     disturbance_force_x_N: float = 4.0
     disturbance_force_z_N: float = 4.0
