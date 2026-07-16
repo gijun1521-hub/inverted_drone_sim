@@ -1,0 +1,1449 @@
+{
+  "aggregate_metrics": {
+    "final_abs_position_error_m": {
+      "label": "Final absolute error (m)",
+      "raw_score_rank1_mean": 0.012403503697684833,
+      "selected_change_percent": -34.14371331461608,
+      "selected_minus_raw": -0.004235016743505314,
+      "selected_rank15_mean": 0.00816848695417952
+    },
+    "meaningful_vane_sign_change_count": {
+      "label": "Meaningful vane sign changes",
+      "raw_score_rank1_mean": 0.5714285714285714,
+      "selected_change_percent": -50.0,
+      "selected_minus_raw": -0.2857142857142857,
+      "selected_rank15_mean": 0.2857142857142857
+    },
+    "mixer_saturation_percent": {
+      "label": "Mixer saturation (%)",
+      "raw_score_rank1_mean": 0.0,
+      "selected_change_percent": 0.0,
+      "selected_minus_raw": 0.0,
+      "selected_rank15_mean": 0.0
+    },
+    "position_overshoot_m": {
+      "label": "Position overshoot (m)",
+      "raw_score_rank1_mean": 0.33259994535722026,
+      "selected_change_percent": 1.7445403193942706,
+      "selected_minus_raw": 0.0058023401490400195,
+      "selected_rank15_mean": 0.3384022855062603
+    },
+    "recovery_excursion_m": {
+      "label": "Recovery excursion (m)",
+      "raw_score_rank1_mean": 0.5882813730048971,
+      "selected_change_percent": 1.262943532296155,
+      "selected_minus_raw": 0.007429661552068367,
+      "selected_rank15_mean": 0.5957110345569655
+    },
+    "servo_rate_saturation_percent": {
+      "label": "Servo-rate saturation (%)",
+      "raw_score_rank1_mean": 0.0,
+      "selected_change_percent": 0.0,
+      "selected_minus_raw": 0.0,
+      "selected_rank15_mean": 0.0
+    },
+    "strict_settling_time_s": {
+      "label": "Strict settling time (s)",
+      "raw_score_rank1_mean": 5.143571428571363,
+      "selected_change_percent": -3.2078877933616083,
+      "selected_minus_raw": -0.16499999999997605,
+      "selected_rank15_mean": 4.978571428571387
+    },
+    "tail_high_frequency_vane_energy_deg2": {
+      "label": "Tail high-frequency vane energy (deg^2)",
+      "raw_score_rank1_mean": 0.00043243805701802636,
+      "selected_change_percent": -23.633958702207643,
+      "selected_minus_raw": -0.00010220223180826949,
+      "selected_rank15_mean": 0.0003302358252097569
+    },
+    "tail_path_length_m": {
+      "label": "Tail path (m)",
+      "raw_score_rank1_mean": 0.0638841327661518,
+      "selected_change_percent": 18.665498079520965,
+      "selected_minus_raw": 0.011924291574584689,
+      "selected_rank15_mean": 0.0758084243407365
+    },
+    "tail_rms_horizontal_velocity_m_s": {
+      "label": "Tail RMS vx (m/s)",
+      "raw_score_rank1_mean": 0.030709111408352103,
+      "selected_change_percent": 15.918903522044003,
+      "selected_minus_raw": 0.004888553817572579,
+      "selected_rank15_mean": 0.03559766522592468
+    },
+    "tail_rms_pitch_deg": {
+      "label": "Tail RMS pitch (deg)",
+      "raw_score_rank1_mean": 0.5800476163631348,
+      "selected_change_percent": 11.43053677898467,
+      "selected_minus_raw": 0.06630255612401204,
+      "selected_rank15_mean": 0.6463501724871469
+    },
+    "tail_rms_pitch_rate_deg_s": {
+      "label": "Tail RMS pitch rate (deg/s)",
+      "raw_score_rank1_mean": 2.5070620645440584,
+      "selected_change_percent": 3.9270802689478685,
+      "selected_minus_raw": 0.0984543396669868,
+      "selected_rank15_mean": 2.6055164042110452
+    },
+    "vane_command_rate_rms_deg_s": {
+      "label": "Vane command-rate RMS (deg/s)",
+      "raw_score_rank1_mean": 28.4854616390268,
+      "selected_change_percent": -5.371921594136442,
+      "selected_minus_raw": -1.530216664976333,
+      "selected_rank15_mean": 26.955244974050466
+    },
+    "vane_command_rms_deg": {
+      "label": "Vane RMS (deg)",
+      "raw_score_rank1_mean": 0.7123899409223641,
+      "selected_change_percent": -2.554040070423181,
+      "selected_minus_raw": -0.018194724548821206,
+      "selected_rank15_mean": 0.6941952163735429
+    },
+    "vane_command_total_variation_deg": {
+      "label": "Vane total variation (deg)",
+      "raw_score_rank1_mean": 33.536981401396254,
+      "selected_change_percent": -4.277699330990431,
+      "selected_minus_raw": -1.4346112290419128,
+      "selected_rank15_mean": 32.10237017235434
+    },
+    "vane_saturation_percent": {
+      "label": "Vane saturation (%)",
+      "raw_score_rank1_mean": 0.0,
+      "selected_change_percent": 0.0,
+      "selected_minus_raw": 0.0,
+      "selected_rank15_mean": 0.0
+    },
+    "vane_total_variation_per_second_deg_s": {
+      "label": "Vane variation rate (deg/s)",
+      "raw_score_rank1_mean": 3.1565664610943074,
+      "selected_change_percent": -4.306601096167473,
+      "selected_minus_raw": -0.13594072581474226,
+      "selected_rank15_mean": 3.020625735279565
+    },
+    "vane_zero_crossing_frequency_hz": {
+      "label": "Vane zero-crossing frequency (Hz)",
+      "raw_score_rank1_mean": 0.05952380952380925,
+      "selected_change_percent": -60.00000000000141,
+      "selected_minus_raw": -0.035714285714286385,
+      "selected_rank15_mean": 0.023809523809522865
+    }
+  },
+  "audit_passed": true,
+  "control_effort_reduction": {
+    "mean_vane_command_rate_rms_percent": 5.371921594136442,
+    "mean_vane_rms_percent": 2.554040070423181,
+    "mean_vane_total_variation_percent": 4.277699330990431
+  },
+  "deterministic_reruns": {
+    "raw_score_rank1_byte_identical": true,
+    "raw_score_rank1_digests": [
+      "b11df587239e289047b65fb09ef55a0ed16259ed578f5ec66bf0a80c61e149bf",
+      "b11df587239e289047b65fb09ef55a0ed16259ed578f5ec66bf0a80c61e149bf"
+    ],
+    "selected_rank15_byte_identical": true,
+    "selected_rank15_digests": [
+      "f3ce803930fd40e4c583d7cbd5710a8aa224a5ec37908d65ec2d1faa0a85d59c",
+      "f3ce803930fd40e4c583d7cbd5710a8aa224a5ec37908d65ec2d1faa0a85d59c"
+    ],
+    "workflow_fingerprint": "4a12aa12451ea553ed034dcc7f473418c1bfbf72698b4a54dddc587eee7d5159"
+  },
+  "near_equivalence_rule": {
+    "absolute_margin": 0.01,
+    "declared_before_final_ranking": true,
+    "formula": "valid raw aggregate score <= raw-score best + 0.010000",
+    "near_equivalent_candidate_count": 19,
+    "raw_score_best": 0.39690256845961375,
+    "upper_bound_inclusive": 0.40690256845961376,
+    "valid_candidate_count": 120
+  },
+  "per_scenario": {
+    "backward_1m": {
+      "metrics": {
+        "final_abs_position_error_m": {
+          "label": "Final absolute error (m)",
+          "raw_score_rank1": 0.00283800747275198,
+          "selected_change_percent": 27.00127778293495,
+          "selected_minus_raw": 0.000766298281218214,
+          "selected_rank15": 0.003604305753970194
+        },
+        "meaningful_vane_sign_change_count": {
+          "label": "Meaningful vane sign changes",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "mixer_saturation_percent": {
+          "label": "Mixer saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "position_overshoot_m": {
+          "label": "Position overshoot (m)",
+          "raw_score_rank1": 0.10685328815980899,
+          "selected_change_percent": -5.400768117681384,
+          "selected_minus_raw": -0.005770898319629181,
+          "selected_rank15": 0.10108238984017981
+        },
+        "recovery_excursion_m": {
+          "label": "Recovery excursion (m)",
+          "raw_score_rank1": 1.0017382849266778,
+          "selected_change_percent": -0.007514278945143387,
+          "selected_minus_raw": -7.527340902968582e-05,
+          "selected_rank15": 1.0016630115176481
+        },
+        "servo_rate_saturation_percent": {
+          "label": "Servo-rate saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "strict_settling_time_s": {
+          "label": "Strict settling time (s)",
+          "raw_score_rank1": 6.979999999999863,
+          "selected_change_percent": -17.406876790830918,
+          "selected_minus_raw": -1.214999999999974,
+          "selected_rank15": 5.764999999999889
+        },
+        "tail_high_frequency_vane_energy_deg2": {
+          "label": "Tail high-frequency vane energy (deg^2)",
+          "raw_score_rank1": 8.111147393607076e-05,
+          "selected_change_percent": 664.040291876145,
+          "selected_minus_raw": 0.0005386128682701276,
+          "selected_rank15": 0.0006197243422061984
+        },
+        "tail_path_length_m": {
+          "label": "Tail path (m)",
+          "raw_score_rank1": 0.058883901975981125,
+          "selected_change_percent": 22.40460613641039,
+          "selected_minus_raw": 0.013192706315468546,
+          "selected_rank15": 0.07207660829144967
+        },
+        "tail_rms_horizontal_velocity_m_s": {
+          "label": "Tail RMS vx (m/s)",
+          "raw_score_rank1": 0.02934447244654535,
+          "selected_change_percent": 14.440050500926784,
+          "selected_minus_raw": 0.0042373566405116934,
+          "selected_rank15": 0.03358182908705704
+        },
+        "tail_rms_pitch_deg": {
+          "label": "Tail RMS pitch (deg)",
+          "raw_score_rank1": 0.5968408303179902,
+          "selected_change_percent": 8.045654411946972,
+          "selected_minus_raw": 0.04801975059678032,
+          "selected_rank15": 0.6448605809147705
+        },
+        "tail_rms_pitch_rate_deg_s": {
+          "label": "Tail RMS pitch rate (deg/s)",
+          "raw_score_rank1": 2.376287973001618,
+          "selected_change_percent": 10.986167814210194,
+          "selected_minus_raw": 0.2610629844628516,
+          "selected_rank15": 2.6373509574644696
+        },
+        "vane_command_rate_rms_deg_s": {
+          "label": "Vane command-rate RMS (deg/s)",
+          "raw_score_rank1": 49.33363265253423,
+          "selected_change_percent": -5.245534771557342,
+          "selected_minus_raw": -2.587812854861049,
+          "selected_rank15": 46.74581979767318
+        },
+        "vane_command_rms_deg": {
+          "label": "Vane RMS (deg)",
+          "raw_score_rank1": 0.7362899166541742,
+          "selected_change_percent": -2.7683750201545765,
+          "selected_minus_raw": -0.02038326612857111,
+          "selected_rank15": 0.7159066505256031
+        },
+        "vane_command_total_variation_deg": {
+          "label": "Vane total variation (deg)",
+          "raw_score_rank1": 44.68066973404661,
+          "selected_change_percent": -4.291454066226178,
+          "selected_minus_raw": -1.9174504181188325,
+          "selected_rank15": 42.76321931592778
+        },
+        "vane_saturation_percent": {
+          "label": "Vane saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "vane_total_variation_per_second_deg_s": {
+          "label": "Vane variation rate (deg/s)",
+          "raw_score_rank1": 3.7233891445037366,
+          "selected_change_percent": -4.291454066226181,
+          "selected_minus_raw": -0.15978753484322983,
+          "selected_rank15": 3.5636016096605068
+        },
+        "vane_zero_crossing_frequency_hz": {
+          "label": "Vane zero-crossing frequency (Hz)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        }
+      },
+      "raw_score_rank1_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 0,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 8.111147393607076e-05,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 3.7233891445037366
+      },
+      "raw_score_rank1_rejected": false,
+      "selected_rank15_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 0,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 0.0006197243422061984,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 3.5636016096605068
+      },
+      "selected_rank15_rejected": false
+    },
+    "forward_1m": {
+      "metrics": {
+        "final_abs_position_error_m": {
+          "label": "Final absolute error (m)",
+          "raw_score_rank1": 0.00283800747275198,
+          "selected_change_percent": 27.00127778293495,
+          "selected_minus_raw": 0.000766298281218214,
+          "selected_rank15": 0.003604305753970194
+        },
+        "meaningful_vane_sign_change_count": {
+          "label": "Meaningful vane sign changes",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "mixer_saturation_percent": {
+          "label": "Mixer saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "position_overshoot_m": {
+          "label": "Position overshoot (m)",
+          "raw_score_rank1": 0.10685328815980899,
+          "selected_change_percent": -5.400768117681384,
+          "selected_minus_raw": -0.005770898319629181,
+          "selected_rank15": 0.10108238984017981
+        },
+        "recovery_excursion_m": {
+          "label": "Recovery excursion (m)",
+          "raw_score_rank1": 1.0017382849266778,
+          "selected_change_percent": -0.007514278945143387,
+          "selected_minus_raw": -7.527340902968582e-05,
+          "selected_rank15": 1.0016630115176481
+        },
+        "servo_rate_saturation_percent": {
+          "label": "Servo-rate saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "strict_settling_time_s": {
+          "label": "Strict settling time (s)",
+          "raw_score_rank1": 6.979999999999863,
+          "selected_change_percent": -17.406876790830918,
+          "selected_minus_raw": -1.214999999999974,
+          "selected_rank15": 5.764999999999889
+        },
+        "tail_high_frequency_vane_energy_deg2": {
+          "label": "Tail high-frequency vane energy (deg^2)",
+          "raw_score_rank1": 8.111147393607076e-05,
+          "selected_change_percent": 664.040291876145,
+          "selected_minus_raw": 0.0005386128682701276,
+          "selected_rank15": 0.0006197243422061984
+        },
+        "tail_path_length_m": {
+          "label": "Tail path (m)",
+          "raw_score_rank1": 0.058883901975981125,
+          "selected_change_percent": 22.40460613641039,
+          "selected_minus_raw": 0.013192706315468546,
+          "selected_rank15": 0.07207660829144967
+        },
+        "tail_rms_horizontal_velocity_m_s": {
+          "label": "Tail RMS vx (m/s)",
+          "raw_score_rank1": 0.02934447244654535,
+          "selected_change_percent": 14.440050500926784,
+          "selected_minus_raw": 0.0042373566405116934,
+          "selected_rank15": 0.03358182908705704
+        },
+        "tail_rms_pitch_deg": {
+          "label": "Tail RMS pitch (deg)",
+          "raw_score_rank1": 0.5968408303179902,
+          "selected_change_percent": 8.045654411946972,
+          "selected_minus_raw": 0.04801975059678032,
+          "selected_rank15": 0.6448605809147705
+        },
+        "tail_rms_pitch_rate_deg_s": {
+          "label": "Tail RMS pitch rate (deg/s)",
+          "raw_score_rank1": 2.376287973001618,
+          "selected_change_percent": 10.986167814210194,
+          "selected_minus_raw": 0.2610629844628516,
+          "selected_rank15": 2.6373509574644696
+        },
+        "vane_command_rate_rms_deg_s": {
+          "label": "Vane command-rate RMS (deg/s)",
+          "raw_score_rank1": 49.33363265253423,
+          "selected_change_percent": -5.245534771557342,
+          "selected_minus_raw": -2.587812854861049,
+          "selected_rank15": 46.74581979767318
+        },
+        "vane_command_rms_deg": {
+          "label": "Vane RMS (deg)",
+          "raw_score_rank1": 0.7362899166541742,
+          "selected_change_percent": -2.7683750201545765,
+          "selected_minus_raw": -0.02038326612857111,
+          "selected_rank15": 0.7159066505256031
+        },
+        "vane_command_total_variation_deg": {
+          "label": "Vane total variation (deg)",
+          "raw_score_rank1": 44.68066973404661,
+          "selected_change_percent": -4.291454066226178,
+          "selected_minus_raw": -1.9174504181188325,
+          "selected_rank15": 42.76321931592778
+        },
+        "vane_saturation_percent": {
+          "label": "Vane saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "vane_total_variation_per_second_deg_s": {
+          "label": "Vane variation rate (deg/s)",
+          "raw_score_rank1": 3.7233891445037366,
+          "selected_change_percent": -4.291454066226181,
+          "selected_minus_raw": -0.15978753484322983,
+          "selected_rank15": 3.5636016096605068
+        },
+        "vane_zero_crossing_frequency_hz": {
+          "label": "Vane zero-crossing frequency (Hz)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        }
+      },
+      "raw_score_rank1_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 0,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 8.111147393607076e-05,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 3.7233891445037366
+      },
+      "raw_score_rank1_rejected": false,
+      "selected_rank15_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 0,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 0.0006197243422061984,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 3.5636016096605068
+      },
+      "selected_rank15_rejected": false
+    },
+    "loiter_negative_disturbance": {
+      "metrics": {
+        "final_abs_position_error_m": {
+          "label": "Final absolute error (m)",
+          "raw_score_rank1": 0.020484731867885804,
+          "selected_change_percent": -61.688043712497205,
+          "selected_minus_raw": -0.01263663034904924,
+          "selected_rank15": 0.007848101518836564
+        },
+        "meaningful_vane_sign_change_count": {
+          "label": "Meaningful vane sign changes",
+          "raw_score_rank1": 1.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 1.0
+        },
+        "mixer_saturation_percent": {
+          "label": "Mixer saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "position_overshoot_m": {
+          "label": "Position overshoot (m)",
+          "raw_score_rank1": 0.6875366020719439,
+          "selected_change_percent": 1.1579367723798988,
+          "selected_minus_raw": 0.007961239138962295,
+          "selected_rank15": 0.6954978412109062
+        },
+        "recovery_excursion_m": {
+          "label": "Recovery excursion (m)",
+          "raw_score_rank1": 0.6875366020719439,
+          "selected_change_percent": 1.1579367723798988,
+          "selected_minus_raw": 0.007961239138962295,
+          "selected_rank15": 0.6954978412109062
+        },
+        "servo_rate_saturation_percent": {
+          "label": "Servo-rate saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "strict_settling_time_s": {
+          "label": "Strict settling time (s)",
+          "raw_score_rank1": 6.804999999999856,
+          "selected_change_percent": 4.996326230713076,
+          "selected_minus_raw": 0.3400000000000176,
+          "selected_rank15": 7.1449999999998735
+        },
+        "tail_high_frequency_vane_energy_deg2": {
+          "label": "Tail high-frequency vane energy (deg^2)",
+          "raw_score_rank1": 0.0005917889671043546,
+          "selected_change_percent": -85.70914373273853,
+          "selected_minus_raw": -0.00050721725640996,
+          "selected_rank15": 8.457171069439462e-05
+        },
+        "tail_path_length_m": {
+          "label": "Tail path (m)",
+          "raw_score_rank1": 0.06379063778575486,
+          "selected_change_percent": 23.06073227358656,
+          "selected_minus_raw": 0.014710588195386273,
+          "selected_rank15": 0.07850122598114113
+        },
+        "tail_rms_horizontal_velocity_m_s": {
+          "label": "Tail RMS vx (m/s)",
+          "raw_score_rank1": 0.03128726436760379,
+          "selected_change_percent": 18.07295064879169,
+          "selected_minus_raw": 0.00565453184851402,
+          "selected_rank15": 0.03694179621611781
+        },
+        "tail_rms_pitch_deg": {
+          "label": "Tail RMS pitch (deg)",
+          "raw_score_rank1": 0.5585248400863814,
+          "selected_change_percent": 18.159238941637902,
+          "selected_minus_raw": 0.10142386025968697,
+          "selected_rank15": 0.6599487003460683
+        },
+        "tail_rms_pitch_rate_deg_s": {
+          "label": "Tail RMS pitch rate (deg/s)",
+          "raw_score_rank1": 2.565895666846223,
+          "selected_change_percent": -0.9689608279135276,
+          "selected_minus_raw": -0.024862523896870492,
+          "selected_rank15": 2.5410331429493525
+        },
+        "vane_command_rate_rms_deg_s": {
+          "label": "Vane command-rate RMS (deg/s)",
+          "raw_score_rank1": 12.861621468898482,
+          "selected_change_percent": -5.387881777122759,
+          "selected_minus_raw": -0.6929689593652899,
+          "selected_rank15": 12.168652509533192
+        },
+        "vane_command_rms_deg": {
+          "label": "Vane RMS (deg)",
+          "raw_score_rank1": 0.6122199269492242,
+          "selected_change_percent": -1.562959378189799,
+          "selected_minus_raw": -0.009568748763399637,
+          "selected_rank15": 0.6026511781858246
+        },
+        "vane_command_total_variation_deg": {
+          "label": "Vane total variation (deg)",
+          "raw_score_rank1": 29.80388628315622,
+          "selected_change_percent": -5.013947274514615,
+          "selected_minus_raw": -1.4943511439937467,
+          "selected_rank15": 28.309535139162474
+        },
+        "vane_saturation_percent": {
+          "label": "Vane saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "vane_total_variation_per_second_deg_s": {
+          "label": "Vane variation rate (deg/s)",
+          "raw_score_rank1": 2.4836571902629196,
+          "selected_change_percent": -5.0139472745146,
+          "selected_minus_raw": -0.12452926199947356,
+          "selected_rank15": 2.359127928263446
+        },
+        "vane_zero_crossing_frequency_hz": {
+          "label": "Vane zero-crossing frequency (Hz)",
+          "raw_score_rank1": 0.08333333333333003,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.08333333333333003
+        }
+      },
+      "raw_score_rank1_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 1,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 0.0005917889671043546,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 2.4836571902629196
+      },
+      "raw_score_rank1_rejected": false,
+      "selected_rank15_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 1,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 8.457171069439462e-05,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 2.359127928263446
+      },
+      "selected_rank15_rejected": false
+    },
+    "loiter_positive_disturbance": {
+      "metrics": {
+        "final_abs_position_error_m": {
+          "label": "Final absolute error (m)",
+          "raw_score_rank1": 0.020484731867885804,
+          "selected_change_percent": -61.688043712497205,
+          "selected_minus_raw": -0.01263663034904924,
+          "selected_rank15": 0.007848101518836564
+        },
+        "meaningful_vane_sign_change_count": {
+          "label": "Meaningful vane sign changes",
+          "raw_score_rank1": 1.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 1.0
+        },
+        "mixer_saturation_percent": {
+          "label": "Mixer saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "position_overshoot_m": {
+          "label": "Position overshoot (m)",
+          "raw_score_rank1": 0.6875366020719439,
+          "selected_change_percent": 1.1579367723798988,
+          "selected_minus_raw": 0.007961239138962295,
+          "selected_rank15": 0.6954978412109062
+        },
+        "recovery_excursion_m": {
+          "label": "Recovery excursion (m)",
+          "raw_score_rank1": 0.6875366020719439,
+          "selected_change_percent": 1.1579367723798988,
+          "selected_minus_raw": 0.007961239138962295,
+          "selected_rank15": 0.6954978412109062
+        },
+        "servo_rate_saturation_percent": {
+          "label": "Servo-rate saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "strict_settling_time_s": {
+          "label": "Strict settling time (s)",
+          "raw_score_rank1": 6.804999999999856,
+          "selected_change_percent": 4.996326230713076,
+          "selected_minus_raw": 0.3400000000000176,
+          "selected_rank15": 7.1449999999998735
+        },
+        "tail_high_frequency_vane_energy_deg2": {
+          "label": "Tail high-frequency vane energy (deg^2)",
+          "raw_score_rank1": 0.0005917889671043546,
+          "selected_change_percent": -85.70914373273853,
+          "selected_minus_raw": -0.00050721725640996,
+          "selected_rank15": 8.457171069439462e-05
+        },
+        "tail_path_length_m": {
+          "label": "Tail path (m)",
+          "raw_score_rank1": 0.06379063778575486,
+          "selected_change_percent": 23.06073227358656,
+          "selected_minus_raw": 0.014710588195386273,
+          "selected_rank15": 0.07850122598114113
+        },
+        "tail_rms_horizontal_velocity_m_s": {
+          "label": "Tail RMS vx (m/s)",
+          "raw_score_rank1": 0.03128726436760379,
+          "selected_change_percent": 18.07295064879169,
+          "selected_minus_raw": 0.00565453184851402,
+          "selected_rank15": 0.03694179621611781
+        },
+        "tail_rms_pitch_deg": {
+          "label": "Tail RMS pitch (deg)",
+          "raw_score_rank1": 0.5585248400863814,
+          "selected_change_percent": 18.159238941637902,
+          "selected_minus_raw": 0.10142386025968697,
+          "selected_rank15": 0.6599487003460683
+        },
+        "tail_rms_pitch_rate_deg_s": {
+          "label": "Tail RMS pitch rate (deg/s)",
+          "raw_score_rank1": 2.565895666846223,
+          "selected_change_percent": -0.9689608279135276,
+          "selected_minus_raw": -0.024862523896870492,
+          "selected_rank15": 2.5410331429493525
+        },
+        "vane_command_rate_rms_deg_s": {
+          "label": "Vane command-rate RMS (deg/s)",
+          "raw_score_rank1": 12.861621468898482,
+          "selected_change_percent": -5.387881777122759,
+          "selected_minus_raw": -0.6929689593652899,
+          "selected_rank15": 12.168652509533192
+        },
+        "vane_command_rms_deg": {
+          "label": "Vane RMS (deg)",
+          "raw_score_rank1": 0.6122199269492242,
+          "selected_change_percent": -1.562959378189799,
+          "selected_minus_raw": -0.009568748763399637,
+          "selected_rank15": 0.6026511781858246
+        },
+        "vane_command_total_variation_deg": {
+          "label": "Vane total variation (deg)",
+          "raw_score_rank1": 29.80388628315622,
+          "selected_change_percent": -5.013947274514615,
+          "selected_minus_raw": -1.4943511439937467,
+          "selected_rank15": 28.309535139162474
+        },
+        "vane_saturation_percent": {
+          "label": "Vane saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "vane_total_variation_per_second_deg_s": {
+          "label": "Vane variation rate (deg/s)",
+          "raw_score_rank1": 2.4836571902629196,
+          "selected_change_percent": -5.0139472745146,
+          "selected_minus_raw": -0.12452926199947356,
+          "selected_rank15": 2.359127928263446
+        },
+        "vane_zero_crossing_frequency_hz": {
+          "label": "Vane zero-crossing frequency (Hz)",
+          "raw_score_rank1": 0.08333333333333003,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.08333333333333003
+        }
+      },
+      "raw_score_rank1_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 1,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 0.0005917889671043546,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 2.4836571902629196
+      },
+      "raw_score_rank1_rejected": false,
+      "selected_rank15_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 1,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 8.457171069439462e-05,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 2.359127928263446
+      },
+      "selected_rank15_rejected": false
+    },
+    "pitch_negative_recovery": {
+      "metrics": {
+        "final_abs_position_error_m": {
+          "label": "Final absolute error (m)",
+          "raw_score_rank1": 0.007449932703443833,
+          "selected_change_percent": -19.63320458774729,
+          "selected_minus_raw": -0.0014626605293166202,
+          "selected_rank15": 0.005987272174127213
+        },
+        "meaningful_vane_sign_change_count": {
+          "label": "Meaningful vane sign changes",
+          "raw_score_rank1": 1.0,
+          "selected_change_percent": -100.0,
+          "selected_minus_raw": -1.0,
+          "selected_rank15": 0.0
+        },
+        "mixer_saturation_percent": {
+          "label": "Mixer saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "position_overshoot_m": {
+          "label": "Position overshoot (m)",
+          "raw_score_rank1": 0.05439032008017743,
+          "selected_change_percent": 9.90628711936314,
+          "selected_minus_raw": 0.005388061272283001,
+          "selected_rank15": 0.059778381352460434
+        },
+        "recovery_excursion_m": {
+          "label": "Recovery excursion (m)",
+          "raw_score_rank1": 0.05439032008017743,
+          "selected_change_percent": 9.90628711936314,
+          "selected_minus_raw": 0.005388061272283001,
+          "selected_rank15": 0.059778381352460434
+        },
+        "servo_rate_saturation_percent": {
+          "label": "Servo-rate saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "strict_settling_time_s": {
+          "label": "Strict settling time (s)",
+          "raw_score_rank1": 0.5050000000000003,
+          "selected_change_percent": 3.9603960396039612,
+          "selected_minus_raw": 0.020000000000000018,
+          "selected_rank15": 0.5250000000000004
+        },
+        "tail_high_frequency_vane_energy_deg2": {
+          "label": "Tail high-frequency vane energy (deg^2)",
+          "raw_score_rank1": 0.0006447663128552597,
+          "selected_change_percent": -59.70253022787452,
+          "selected_minus_raw": -0.0003849418028315634,
+          "selected_rank15": 0.00025982451002369626
+        },
+        "tail_path_length_m": {
+          "label": "Tail path (m)",
+          "raw_score_rank1": 0.061586006340913435,
+          "selected_change_percent": 5.532701757779677,
+          "selected_minus_raw": 0.003407370055370021,
+          "selected_rank15": 0.06499337639628346
+        },
+        "tail_rms_horizontal_velocity_m_s": {
+          "label": "Tail RMS vx (m/s)",
+          "raw_score_rank1": 0.027279828333407266,
+          "selected_change_percent": 6.492270326497676,
+          "selected_minus_raw": 0.0017710802000093055,
+          "selected_rank15": 0.02905090853341657
+        },
+        "tail_rms_pitch_deg": {
+          "label": "Tail RMS pitch (deg)",
+          "raw_score_rank1": 0.5602141690337197,
+          "selected_change_percent": 11.726065888578432,
+          "selected_minus_raw": 0.06569108257804612,
+          "selected_rank15": 0.6259052516117658
+        },
+        "tail_rms_pitch_rate_deg_s": {
+          "label": "Tail RMS pitch rate (deg/s)",
+          "raw_score_rank1": 2.602448494974429,
+          "selected_change_percent": 0.5488551777202488,
+          "selected_minus_raw": 0.014283673312169842,
+          "selected_rank15": 2.6167321682865987
+        },
+        "vane_command_rate_rms_deg_s": {
+          "label": "Vane command-rate RMS (deg/s)",
+          "raw_score_rank1": 34.67329692832574,
+          "selected_change_percent": -5.695301372359527,
+          "selected_minus_raw": -1.9747487558012295,
+          "selected_rank15": 32.69854817252451
+        },
+        "vane_command_rms_deg": {
+          "label": "Vane RMS (deg)",
+          "raw_score_rank1": 0.8940614112782965,
+          "selected_change_percent": -3.819324850326927,
+          "selected_minus_raw": -0.03414710965813561,
+          "selected_rank15": 0.8599143016201609
+        },
+        "vane_command_total_variation_deg": {
+          "label": "Vane total variation (deg)",
+          "raw_score_rank1": 30.39271292215326,
+          "selected_change_percent": -4.529843613077726,
+          "selected_minus_raw": -1.3767423651452084,
+          "selected_rank15": 29.015970557008053
+        },
+        "vane_saturation_percent": {
+          "label": "Vane saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "vane_total_variation_per_second_deg_s": {
+          "label": "Vane variation rate (deg/s)",
+          "raw_score_rank1": 3.7990891152692283,
+          "selected_change_percent": -4.529843613077736,
+          "selected_minus_raw": -0.1720927956431546,
+          "selected_rank15": 3.6269963196260737
+        },
+        "vane_zero_crossing_frequency_hz": {
+          "label": "Vane zero-crossing frequency (Hz)",
+          "raw_score_rank1": 0.12500000000000233,
+          "selected_change_percent": -100.0,
+          "selected_minus_raw": -0.12500000000000233,
+          "selected_rank15": 0.0
+        }
+      },
+      "raw_score_rank1_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 1,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 0.0006447663128552597,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 3.7990891152692283
+      },
+      "raw_score_rank1_rejected": false,
+      "selected_rank15_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 0,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 0.00025982451002369626,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 3.6269963196260737
+      },
+      "selected_rank15_rejected": false
+    },
+    "pitch_positive_recovery": {
+      "metrics": {
+        "final_abs_position_error_m": {
+          "label": "Final absolute error (m)",
+          "raw_score_rank1": 0.007449932703443833,
+          "selected_change_percent": -19.63320458774729,
+          "selected_minus_raw": -0.0014626605293166202,
+          "selected_rank15": 0.005987272174127213
+        },
+        "meaningful_vane_sign_change_count": {
+          "label": "Meaningful vane sign changes",
+          "raw_score_rank1": 1.0,
+          "selected_change_percent": -100.0,
+          "selected_minus_raw": -1.0,
+          "selected_rank15": 0.0
+        },
+        "mixer_saturation_percent": {
+          "label": "Mixer saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "position_overshoot_m": {
+          "label": "Position overshoot (m)",
+          "raw_score_rank1": 0.05439032008017743,
+          "selected_change_percent": 9.90628711936314,
+          "selected_minus_raw": 0.005388061272283001,
+          "selected_rank15": 0.059778381352460434
+        },
+        "recovery_excursion_m": {
+          "label": "Recovery excursion (m)",
+          "raw_score_rank1": 0.05439032008017743,
+          "selected_change_percent": 9.90628711936314,
+          "selected_minus_raw": 0.005388061272283001,
+          "selected_rank15": 0.059778381352460434
+        },
+        "servo_rate_saturation_percent": {
+          "label": "Servo-rate saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "strict_settling_time_s": {
+          "label": "Strict settling time (s)",
+          "raw_score_rank1": 0.5050000000000003,
+          "selected_change_percent": 3.9603960396039612,
+          "selected_minus_raw": 0.020000000000000018,
+          "selected_rank15": 0.5250000000000004
+        },
+        "tail_high_frequency_vane_energy_deg2": {
+          "label": "Tail high-frequency vane energy (deg^2)",
+          "raw_score_rank1": 0.0006447663128552597,
+          "selected_change_percent": -59.70253022787452,
+          "selected_minus_raw": -0.0003849418028315634,
+          "selected_rank15": 0.00025982451002369626
+        },
+        "tail_path_length_m": {
+          "label": "Tail path (m)",
+          "raw_score_rank1": 0.061586006340913435,
+          "selected_change_percent": 5.532701757779677,
+          "selected_minus_raw": 0.003407370055370021,
+          "selected_rank15": 0.06499337639628346
+        },
+        "tail_rms_horizontal_velocity_m_s": {
+          "label": "Tail RMS vx (m/s)",
+          "raw_score_rank1": 0.027279828333407266,
+          "selected_change_percent": 6.492270326497676,
+          "selected_minus_raw": 0.0017710802000093055,
+          "selected_rank15": 0.02905090853341657
+        },
+        "tail_rms_pitch_deg": {
+          "label": "Tail RMS pitch (deg)",
+          "raw_score_rank1": 0.5602141690337197,
+          "selected_change_percent": 11.726065888578432,
+          "selected_minus_raw": 0.06569108257804612,
+          "selected_rank15": 0.6259052516117658
+        },
+        "tail_rms_pitch_rate_deg_s": {
+          "label": "Tail RMS pitch rate (deg/s)",
+          "raw_score_rank1": 2.602448494974429,
+          "selected_change_percent": 0.5488551777202488,
+          "selected_minus_raw": 0.014283673312169842,
+          "selected_rank15": 2.6167321682865987
+        },
+        "vane_command_rate_rms_deg_s": {
+          "label": "Vane command-rate RMS (deg/s)",
+          "raw_score_rank1": 34.67329692832574,
+          "selected_change_percent": -5.695301372359527,
+          "selected_minus_raw": -1.9747487558012295,
+          "selected_rank15": 32.69854817252451
+        },
+        "vane_command_rms_deg": {
+          "label": "Vane RMS (deg)",
+          "raw_score_rank1": 0.8940614112782965,
+          "selected_change_percent": -3.819324850326927,
+          "selected_minus_raw": -0.03414710965813561,
+          "selected_rank15": 0.8599143016201609
+        },
+        "vane_command_total_variation_deg": {
+          "label": "Vane total variation (deg)",
+          "raw_score_rank1": 30.39271292215326,
+          "selected_change_percent": -4.529843613077726,
+          "selected_minus_raw": -1.3767423651452084,
+          "selected_rank15": 29.015970557008053
+        },
+        "vane_saturation_percent": {
+          "label": "Vane saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "vane_total_variation_per_second_deg_s": {
+          "label": "Vane variation rate (deg/s)",
+          "raw_score_rank1": 3.7990891152692283,
+          "selected_change_percent": -4.529843613077736,
+          "selected_minus_raw": -0.1720927956431546,
+          "selected_rank15": 3.6269963196260737
+        },
+        "vane_zero_crossing_frequency_hz": {
+          "label": "Vane zero-crossing frequency (Hz)",
+          "raw_score_rank1": 0.12500000000000233,
+          "selected_change_percent": -100.0,
+          "selected_minus_raw": -0.12500000000000233,
+          "selected_rank15": 0.0
+        }
+      },
+      "raw_score_rank1_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 1,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 0.0006447663128552597,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 3.7990891152692283
+      },
+      "raw_score_rank1_rejected": false,
+      "selected_rank15_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 0,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 0.00025982451002369626,
+        "target_capture_count": 0,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 3.6269963196260737
+      },
+      "selected_rank15_rejected": false
+    },
+    "stick_release": {
+      "metrics": {
+        "final_abs_position_error_m": {
+          "label": "Final absolute error (m)",
+          "raw_score_rank1": 0.0252791817956306,
+          "selected_change_percent": -11.784922606778531,
+          "selected_minus_raw": -0.002979132010241914,
+          "selected_rank15": 0.022300049785388687
+        },
+        "meaningful_vane_sign_change_count": {
+          "label": "Meaningful vane sign changes",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "mixer_saturation_percent": {
+          "label": "Mixer saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "position_overshoot_m": {
+          "label": "Position overshoot (m)",
+          "raw_score_rank1": 0.6306391968766815,
+          "selected_change_percent": 4.037106635004522,
+          "selected_minus_raw": 0.02545957686004774,
+          "selected_rank15": 0.6560987737367292
+        },
+        "recovery_excursion_m": {
+          "label": "Recovery excursion (m)",
+          "raw_score_rank1": 0.6306391968766815,
+          "selected_change_percent": 4.037106635004522,
+          "selected_minus_raw": 0.02545957686004774,
+          "selected_rank15": 0.6560987737367292
+        },
+        "servo_rate_saturation_percent": {
+          "label": "Servo-rate saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "strict_settling_time_s": {
+          "label": "Strict settling time (s)",
+          "raw_score_rank1": 7.425000000000105,
+          "selected_change_percent": 7.474747474748538,
+          "selected_minus_raw": 0.5550000000000868,
+          "selected_rank15": 7.980000000000191
+        },
+        "tail_high_frequency_vane_energy_deg2": {
+          "label": "Tail high-frequency vane energy (deg^2)",
+          "raw_score_rank1": 0.0003917328913348145,
+          "selected_change_percent": -2.1247234784738294,
+          "selected_minus_raw": -8.323240715095177e-06,
+          "selected_rank15": 0.0003834096506197193
+        },
+        "tail_path_length_m": {
+          "label": "Tail path (m)",
+          "raw_score_rank1": 0.07866783715776379,
+          "selected_change_percent": 26.50220553011041,
+          "selected_minus_raw": 0.02084871188964313,
+          "selected_rank15": 0.09951654904740692
+        },
+        "tail_rms_horizontal_velocity_m_s": {
+          "label": "Tail RMS vx (m/s)",
+          "raw_score_rank1": 0.039140649563351906,
+          "selected_change_percent": 27.83280161793279,
+          "selected_minus_raw": 0.010893939344938014,
+          "selected_rank15": 0.05003458890828992
+        },
+        "tail_rms_pitch_deg": {
+          "label": "Tail RMS pitch (deg)",
+          "raw_score_rank1": 0.6291736356657613,
+          "selected_change_percent": 5.379835403185782,
+          "selected_minus_raw": 0.033848505999057754,
+          "selected_rank15": 0.6630221416648191
+        },
+        "tail_rms_pitch_rate_deg_s": {
+          "label": "Tail RMS pitch rate (deg/s)",
+          "raw_score_rank1": 2.460170182163868,
+          "selected_change_percent": 7.6503695263496345,
+          "selected_minus_raw": 0.18821210991260484,
+          "selected_rank15": 2.648382292076473
+        },
+        "vane_command_rate_rms_deg_s": {
+          "label": "Vane command-rate RMS (deg/s)",
+          "raw_score_rank1": 5.661129373670695,
+          "selected_change_percent": -3.5409103298627724,
+          "selected_minus_raw": -0.20045551477920132,
+          "selected_rank15": 5.460673858891494
+        },
+        "vane_command_rms_deg": {
+          "label": "Vane RMS (deg)",
+          "raw_score_rank1": 0.5015870766931579,
+          "selected_change_percent": 0.16650693314735912,
+          "selected_minus_raw": 0.0008351772584652695,
+          "selected_rank15": 0.5024222539516232
+        },
+        "vane_command_total_variation_deg": {
+          "label": "Vane total variation (deg)",
+          "raw_score_rank1": 25.004331931061575,
+          "selected_change_percent": -1.860440623090181,
+          "selected_minus_raw": -0.4651907487777791,
+          "selected_rank15": 24.539141182283796
+        },
+        "vane_saturation_percent": {
+          "label": "Vane saturation (%)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        },
+        "vane_total_variation_per_second_deg_s": {
+          "label": "Vane variation rate (deg/s)",
+          "raw_score_rank1": 2.083694327588382,
+          "selected_change_percent": -1.8604406230901909,
+          "selected_minus_raw": -0.03876589573148026,
+          "selected_rank15": 2.044928431856902
+        },
+        "vane_zero_crossing_frequency_hz": {
+          "label": "Vane zero-crossing frequency (Hz)",
+          "raw_score_rank1": 0.0,
+          "selected_change_percent": 0.0,
+          "selected_minus_raw": 0.0,
+          "selected_rank15": 0.0
+        }
+      },
+      "raw_score_rank1_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 0,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 0.0003917328913348145,
+        "target_capture_count": 1,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 2.083694327588382
+      },
+      "raw_score_rank1_rejected": false,
+      "selected_rank15_hard_gates": {
+        "capture_discontinuity": false,
+        "crash": false,
+        "early_velocity_reversal": false,
+        "finite": true,
+        "ground_contact": false,
+        "meaningful_vane_sign_change_count": 0,
+        "mixer_saturation_percent": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "moving_mass_max_abs_offset_m": 0.0,
+        "moving_mass_max_abs_target_m": 0.0,
+        "premature_pause": false,
+        "second_acceleration_lobe_after_full_pause": false,
+        "servo_rate_saturation_percent": 0.0,
+        "shaped_velocity_sign_reversal_after_release": false,
+        "tail_high_frequency_vane_energy_deg2": 0.0003834096506197193,
+        "target_capture_count": 1,
+        "vane_saturation_percent": 0.0,
+        "vane_total_variation_per_second_deg_s": 2.044928431856902
+      },
+      "selected_rank15_rejected": false
+    }
+  },
+  "raw_score_rank1": {
+    "all_hard_gates_pass": true,
+    "candidate": {
+      "angle_p": 25.0,
+      "rate_d": 0.0195,
+      "rate_p": 0.09,
+      "stage": "raw_score_validation"
+    },
+    "raw_aggregate_score": 0.39690256845961375,
+    "raw_score_rank": 1,
+    "scenario_mean_score": 0.26221490868808434,
+    "symmetry": {
+      "forward_1m__backward_1m__peak_abs_pitch_deg": 0.0,
+      "forward_1m__backward_1m__position_overshoot_m": 0.0,
+      "forward_1m__backward_1m__tail_path_length_m": 0.0,
+      "forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s": 0.0,
+      "forward_1m__backward_1m__tail_rms_pitch_deg": 0.0,
+      "forward_1m__backward_1m__tail_rms_pitch_rate_deg_s": 0.0,
+      "forward_1m__backward_1m__vane_command_rms_deg": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__peak_abs_pitch_deg": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__peak_abs_pitch_deg": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg": 0.0
+    },
+    "worst_scenario_score": 0.268866157393353
+  },
+  "score_penalty": {
+    "absolute": 0.009247867295571255,
+    "relative_percent": 2.3300094356815073
+  },
+  "selected_rank15": {
+    "all_hard_gates_pass": true,
+    "boundary_flags": {
+      "angle_p_at_max": false,
+      "angle_p_at_min": false,
+      "rate_d_at_max": false,
+      "rate_d_at_min": false,
+      "rate_p_at_max": false,
+      "rate_p_at_min": false
+    },
+    "candidate": {
+      "angle_p": 25.0,
+      "rate_d": 0.0185,
+      "rate_p": 0.085,
+      "stage": "selected_validation"
+    },
+    "raw_aggregate_score": 0.406150435755185,
+    "raw_score_rank": 15,
+    "scenario_mean_score": 0.2683824515473136,
+    "symmetry": {
+      "forward_1m__backward_1m__peak_abs_pitch_deg": 0.0,
+      "forward_1m__backward_1m__position_overshoot_m": 0.0,
+      "forward_1m__backward_1m__tail_path_length_m": 0.0,
+      "forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s": 0.0,
+      "forward_1m__backward_1m__tail_rms_pitch_deg": 0.0,
+      "forward_1m__backward_1m__tail_rms_pitch_rate_deg_s": 0.0,
+      "forward_1m__backward_1m__vane_command_rms_deg": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__peak_abs_pitch_deg": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s": 0.0,
+      "loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__peak_abs_pitch_deg": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s": 0.0,
+      "pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg": 0.0
+    },
+    "worst_scenario_score": 0.27760151433224084
+  },
+  "selection_description": "the selected robust low-control-effort candidate under the predeclared near-equivalence rule"
+}

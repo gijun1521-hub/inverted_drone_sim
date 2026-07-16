@@ -1,0 +1,2 @@
+rate_p,rate_i,rate_d,angle_p,position_p,velocity_p,moving_mass_assist_gain_m_per_Nm
+0.085,0.0,0.0185,25.0,0.55,0.7,0.0

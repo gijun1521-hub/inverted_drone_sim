@@ -1,0 +1,145 @@
+scope,scenario,metric,label,raw_score_rank1,selected_rank15,selected_minus_raw,selected_change_percent
+all_scenarios_mean,all,tail_rms_pitch_deg,Tail RMS pitch (deg),0.5800476163631348,0.6463501724871469,0.06630255612401204,11.43053677898467
+all_scenarios_mean,all,tail_rms_pitch_rate_deg_s,Tail RMS pitch rate (deg/s),2.5070620645440584,2.6055164042110452,0.0984543396669868,3.9270802689478685
+all_scenarios_mean,all,tail_rms_horizontal_velocity_m_s,Tail RMS vx (m/s),0.030709111408352103,0.03559766522592468,0.004888553817572579,15.918903522044003
+all_scenarios_mean,all,tail_path_length_m,Tail path (m),0.0638841327661518,0.0758084243407365,0.011924291574584689,18.665498079520965
+all_scenarios_mean,all,final_abs_position_error_m,Final absolute error (m),0.012403503697684833,0.00816848695417952,-0.004235016743505314,-34.14371331461608
+all_scenarios_mean,all,position_overshoot_m,Position overshoot (m),0.33259994535722026,0.3384022855062603,0.0058023401490400195,1.7445403193942706
+all_scenarios_mean,all,recovery_excursion_m,Recovery excursion (m),0.5882813730048971,0.5957110345569655,0.007429661552068367,1.262943532296155
+all_scenarios_mean,all,strict_settling_time_s,Strict settling time (s),5.143571428571363,4.978571428571387,-0.16499999999997605,-3.2078877933616083
+all_scenarios_mean,all,vane_command_rms_deg,Vane RMS (deg),0.7123899409223641,0.6941952163735429,-0.018194724548821206,-2.554040070423181
+all_scenarios_mean,all,vane_command_total_variation_deg,Vane total variation (deg),33.536981401396254,32.10237017235434,-1.4346112290419128,-4.277699330990431
+all_scenarios_mean,all,vane_command_rate_rms_deg_s,Vane command-rate RMS (deg/s),28.4854616390268,26.955244974050466,-1.530216664976333,-5.371921594136442
+all_scenarios_mean,all,meaningful_vane_sign_change_count,Meaningful vane sign changes,0.5714285714285714,0.2857142857142857,-0.2857142857142857,-50.0
+all_scenarios_mean,all,vane_total_variation_per_second_deg_s,Vane variation rate (deg/s),3.1565664610943074,3.020625735279565,-0.13594072581474226,-4.306601096167473
+all_scenarios_mean,all,tail_high_frequency_vane_energy_deg2,Tail high-frequency vane energy (deg^2),0.00043243805701802636,0.0003302358252097569,-0.00010220223180826949,-23.633958702207643
+all_scenarios_mean,all,vane_zero_crossing_frequency_hz,Vane zero-crossing frequency (Hz),0.05952380952380925,0.023809523809522865,-0.035714285714286385,-60.00000000000141
+all_scenarios_mean,all,vane_saturation_percent,Vane saturation (%),0.0,0.0,0.0,0.0
+all_scenarios_mean,all,servo_rate_saturation_percent,Servo-rate saturation (%),0.0,0.0,0.0,0.0
+all_scenarios_mean,all,mixer_saturation_percent,Mixer saturation (%),0.0,0.0,0.0,0.0
+scenario,backward_1m,tail_rms_pitch_deg,Tail RMS pitch (deg),0.5968408303179902,0.6448605809147705,0.04801975059678032,8.045654411946972
+scenario,backward_1m,tail_rms_pitch_rate_deg_s,Tail RMS pitch rate (deg/s),2.376287973001618,2.6373509574644696,0.2610629844628516,10.986167814210194
+scenario,backward_1m,tail_rms_horizontal_velocity_m_s,Tail RMS vx (m/s),0.02934447244654535,0.03358182908705704,0.0042373566405116934,14.440050500926784
+scenario,backward_1m,tail_path_length_m,Tail path (m),0.058883901975981125,0.07207660829144967,0.013192706315468546,22.40460613641039
+scenario,backward_1m,final_abs_position_error_m,Final absolute error (m),0.00283800747275198,0.003604305753970194,0.000766298281218214,27.00127778293495
+scenario,backward_1m,position_overshoot_m,Position overshoot (m),0.10685328815980899,0.10108238984017981,-0.005770898319629181,-5.400768117681384
+scenario,backward_1m,recovery_excursion_m,Recovery excursion (m),1.0017382849266778,1.0016630115176481,-7.527340902968582e-05,-0.007514278945143387
+scenario,backward_1m,strict_settling_time_s,Strict settling time (s),6.979999999999863,5.764999999999889,-1.214999999999974,-17.406876790830918
+scenario,backward_1m,vane_command_rms_deg,Vane RMS (deg),0.7362899166541742,0.7159066505256031,-0.02038326612857111,-2.7683750201545765
+scenario,backward_1m,vane_command_total_variation_deg,Vane total variation (deg),44.68066973404661,42.76321931592778,-1.9174504181188325,-4.291454066226178
+scenario,backward_1m,vane_command_rate_rms_deg_s,Vane command-rate RMS (deg/s),49.33363265253423,46.74581979767318,-2.587812854861049,-5.245534771557342
+scenario,backward_1m,meaningful_vane_sign_change_count,Meaningful vane sign changes,0.0,0.0,0.0,0.0
+scenario,backward_1m,vane_total_variation_per_second_deg_s,Vane variation rate (deg/s),3.7233891445037366,3.5636016096605068,-0.15978753484322983,-4.291454066226181
+scenario,backward_1m,tail_high_frequency_vane_energy_deg2,Tail high-frequency vane energy (deg^2),8.111147393607076e-05,0.0006197243422061984,0.0005386128682701276,664.040291876145
+scenario,backward_1m,vane_zero_crossing_frequency_hz,Vane zero-crossing frequency (Hz),0.0,0.0,0.0,0.0
+scenario,backward_1m,vane_saturation_percent,Vane saturation (%),0.0,0.0,0.0,0.0
+scenario,backward_1m,servo_rate_saturation_percent,Servo-rate saturation (%),0.0,0.0,0.0,0.0
+scenario,backward_1m,mixer_saturation_percent,Mixer saturation (%),0.0,0.0,0.0,0.0
+scenario,forward_1m,tail_rms_pitch_deg,Tail RMS pitch (deg),0.5968408303179902,0.6448605809147705,0.04801975059678032,8.045654411946972
+scenario,forward_1m,tail_rms_pitch_rate_deg_s,Tail RMS pitch rate (deg/s),2.376287973001618,2.6373509574644696,0.2610629844628516,10.986167814210194
+scenario,forward_1m,tail_rms_horizontal_velocity_m_s,Tail RMS vx (m/s),0.02934447244654535,0.03358182908705704,0.0042373566405116934,14.440050500926784
+scenario,forward_1m,tail_path_length_m,Tail path (m),0.058883901975981125,0.07207660829144967,0.013192706315468546,22.40460613641039
+scenario,forward_1m,final_abs_position_error_m,Final absolute error (m),0.00283800747275198,0.003604305753970194,0.000766298281218214,27.00127778293495
+scenario,forward_1m,position_overshoot_m,Position overshoot (m),0.10685328815980899,0.10108238984017981,-0.005770898319629181,-5.400768117681384
+scenario,forward_1m,recovery_excursion_m,Recovery excursion (m),1.0017382849266778,1.0016630115176481,-7.527340902968582e-05,-0.007514278945143387
+scenario,forward_1m,strict_settling_time_s,Strict settling time (s),6.979999999999863,5.764999999999889,-1.214999999999974,-17.406876790830918
+scenario,forward_1m,vane_command_rms_deg,Vane RMS (deg),0.7362899166541742,0.7159066505256031,-0.02038326612857111,-2.7683750201545765
+scenario,forward_1m,vane_command_total_variation_deg,Vane total variation (deg),44.68066973404661,42.76321931592778,-1.9174504181188325,-4.291454066226178
+scenario,forward_1m,vane_command_rate_rms_deg_s,Vane command-rate RMS (deg/s),49.33363265253423,46.74581979767318,-2.587812854861049,-5.245534771557342
+scenario,forward_1m,meaningful_vane_sign_change_count,Meaningful vane sign changes,0.0,0.0,0.0,0.0
+scenario,forward_1m,vane_total_variation_per_second_deg_s,Vane variation rate (deg/s),3.7233891445037366,3.5636016096605068,-0.15978753484322983,-4.291454066226181
+scenario,forward_1m,tail_high_frequency_vane_energy_deg2,Tail high-frequency vane energy (deg^2),8.111147393607076e-05,0.0006197243422061984,0.0005386128682701276,664.040291876145
+scenario,forward_1m,vane_zero_crossing_frequency_hz,Vane zero-crossing frequency (Hz),0.0,0.0,0.0,0.0
+scenario,forward_1m,vane_saturation_percent,Vane saturation (%),0.0,0.0,0.0,0.0
+scenario,forward_1m,servo_rate_saturation_percent,Servo-rate saturation (%),0.0,0.0,0.0,0.0
+scenario,forward_1m,mixer_saturation_percent,Mixer saturation (%),0.0,0.0,0.0,0.0
+scenario,loiter_negative_disturbance,tail_rms_pitch_deg,Tail RMS pitch (deg),0.5585248400863814,0.6599487003460683,0.10142386025968697,18.159238941637902
+scenario,loiter_negative_disturbance,tail_rms_pitch_rate_deg_s,Tail RMS pitch rate (deg/s),2.565895666846223,2.5410331429493525,-0.024862523896870492,-0.9689608279135276
+scenario,loiter_negative_disturbance,tail_rms_horizontal_velocity_m_s,Tail RMS vx (m/s),0.03128726436760379,0.03694179621611781,0.00565453184851402,18.07295064879169
+scenario,loiter_negative_disturbance,tail_path_length_m,Tail path (m),0.06379063778575486,0.07850122598114113,0.014710588195386273,23.06073227358656
+scenario,loiter_negative_disturbance,final_abs_position_error_m,Final absolute error (m),0.020484731867885804,0.007848101518836564,-0.01263663034904924,-61.688043712497205
+scenario,loiter_negative_disturbance,position_overshoot_m,Position overshoot (m),0.6875366020719439,0.6954978412109062,0.007961239138962295,1.1579367723798988
+scenario,loiter_negative_disturbance,recovery_excursion_m,Recovery excursion (m),0.6875366020719439,0.6954978412109062,0.007961239138962295,1.1579367723798988
+scenario,loiter_negative_disturbance,strict_settling_time_s,Strict settling time (s),6.804999999999856,7.1449999999998735,0.3400000000000176,4.996326230713076
+scenario,loiter_negative_disturbance,vane_command_rms_deg,Vane RMS (deg),0.6122199269492242,0.6026511781858246,-0.009568748763399637,-1.562959378189799
+scenario,loiter_negative_disturbance,vane_command_total_variation_deg,Vane total variation (deg),29.80388628315622,28.309535139162474,-1.4943511439937467,-5.013947274514615
+scenario,loiter_negative_disturbance,vane_command_rate_rms_deg_s,Vane command-rate RMS (deg/s),12.861621468898482,12.168652509533192,-0.6929689593652899,-5.387881777122759
+scenario,loiter_negative_disturbance,meaningful_vane_sign_change_count,Meaningful vane sign changes,1.0,1.0,0.0,0.0
+scenario,loiter_negative_disturbance,vane_total_variation_per_second_deg_s,Vane variation rate (deg/s),2.4836571902629196,2.359127928263446,-0.12452926199947356,-5.0139472745146
+scenario,loiter_negative_disturbance,tail_high_frequency_vane_energy_deg2,Tail high-frequency vane energy (deg^2),0.0005917889671043546,8.457171069439462e-05,-0.00050721725640996,-85.70914373273853
+scenario,loiter_negative_disturbance,vane_zero_crossing_frequency_hz,Vane zero-crossing frequency (Hz),0.08333333333333003,0.08333333333333003,0.0,0.0
+scenario,loiter_negative_disturbance,vane_saturation_percent,Vane saturation (%),0.0,0.0,0.0,0.0
+scenario,loiter_negative_disturbance,servo_rate_saturation_percent,Servo-rate saturation (%),0.0,0.0,0.0,0.0
+scenario,loiter_negative_disturbance,mixer_saturation_percent,Mixer saturation (%),0.0,0.0,0.0,0.0
+scenario,loiter_positive_disturbance,tail_rms_pitch_deg,Tail RMS pitch (deg),0.5585248400863814,0.6599487003460683,0.10142386025968697,18.159238941637902
+scenario,loiter_positive_disturbance,tail_rms_pitch_rate_deg_s,Tail RMS pitch rate (deg/s),2.565895666846223,2.5410331429493525,-0.024862523896870492,-0.9689608279135276
+scenario,loiter_positive_disturbance,tail_rms_horizontal_velocity_m_s,Tail RMS vx (m/s),0.03128726436760379,0.03694179621611781,0.00565453184851402,18.07295064879169
+scenario,loiter_positive_disturbance,tail_path_length_m,Tail path (m),0.06379063778575486,0.07850122598114113,0.014710588195386273,23.06073227358656
+scenario,loiter_positive_disturbance,final_abs_position_error_m,Final absolute error (m),0.020484731867885804,0.007848101518836564,-0.01263663034904924,-61.688043712497205
+scenario,loiter_positive_disturbance,position_overshoot_m,Position overshoot (m),0.6875366020719439,0.6954978412109062,0.007961239138962295,1.1579367723798988
+scenario,loiter_positive_disturbance,recovery_excursion_m,Recovery excursion (m),0.6875366020719439,0.6954978412109062,0.007961239138962295,1.1579367723798988
+scenario,loiter_positive_disturbance,strict_settling_time_s,Strict settling time (s),6.804999999999856,7.1449999999998735,0.3400000000000176,4.996326230713076
+scenario,loiter_positive_disturbance,vane_command_rms_deg,Vane RMS (deg),0.6122199269492242,0.6026511781858246,-0.009568748763399637,-1.562959378189799
+scenario,loiter_positive_disturbance,vane_command_total_variation_deg,Vane total variation (deg),29.80388628315622,28.309535139162474,-1.4943511439937467,-5.013947274514615
+scenario,loiter_positive_disturbance,vane_command_rate_rms_deg_s,Vane command-rate RMS (deg/s),12.861621468898482,12.168652509533192,-0.6929689593652899,-5.387881777122759
+scenario,loiter_positive_disturbance,meaningful_vane_sign_change_count,Meaningful vane sign changes,1.0,1.0,0.0,0.0
+scenario,loiter_positive_disturbance,vane_total_variation_per_second_deg_s,Vane variation rate (deg/s),2.4836571902629196,2.359127928263446,-0.12452926199947356,-5.0139472745146
+scenario,loiter_positive_disturbance,tail_high_frequency_vane_energy_deg2,Tail high-frequency vane energy (deg^2),0.0005917889671043546,8.457171069439462e-05,-0.00050721725640996,-85.70914373273853
+scenario,loiter_positive_disturbance,vane_zero_crossing_frequency_hz,Vane zero-crossing frequency (Hz),0.08333333333333003,0.08333333333333003,0.0,0.0
+scenario,loiter_positive_disturbance,vane_saturation_percent,Vane saturation (%),0.0,0.0,0.0,0.0
+scenario,loiter_positive_disturbance,servo_rate_saturation_percent,Servo-rate saturation (%),0.0,0.0,0.0,0.0
+scenario,loiter_positive_disturbance,mixer_saturation_percent,Mixer saturation (%),0.0,0.0,0.0,0.0
+scenario,pitch_negative_recovery,tail_rms_pitch_deg,Tail RMS pitch (deg),0.5602141690337197,0.6259052516117658,0.06569108257804612,11.726065888578432
+scenario,pitch_negative_recovery,tail_rms_pitch_rate_deg_s,Tail RMS pitch rate (deg/s),2.602448494974429,2.6167321682865987,0.014283673312169842,0.5488551777202488
+scenario,pitch_negative_recovery,tail_rms_horizontal_velocity_m_s,Tail RMS vx (m/s),0.027279828333407266,0.02905090853341657,0.0017710802000093055,6.492270326497676
+scenario,pitch_negative_recovery,tail_path_length_m,Tail path (m),0.061586006340913435,0.06499337639628346,0.003407370055370021,5.532701757779677
+scenario,pitch_negative_recovery,final_abs_position_error_m,Final absolute error (m),0.007449932703443833,0.005987272174127213,-0.0014626605293166202,-19.63320458774729
+scenario,pitch_negative_recovery,position_overshoot_m,Position overshoot (m),0.05439032008017743,0.059778381352460434,0.005388061272283001,9.90628711936314
+scenario,pitch_negative_recovery,recovery_excursion_m,Recovery excursion (m),0.05439032008017743,0.059778381352460434,0.005388061272283001,9.90628711936314
+scenario,pitch_negative_recovery,strict_settling_time_s,Strict settling time (s),0.5050000000000003,0.5250000000000004,0.020000000000000018,3.9603960396039612
+scenario,pitch_negative_recovery,vane_command_rms_deg,Vane RMS (deg),0.8940614112782965,0.8599143016201609,-0.03414710965813561,-3.819324850326927
+scenario,pitch_negative_recovery,vane_command_total_variation_deg,Vane total variation (deg),30.39271292215326,29.015970557008053,-1.3767423651452084,-4.529843613077726
+scenario,pitch_negative_recovery,vane_command_rate_rms_deg_s,Vane command-rate RMS (deg/s),34.67329692832574,32.69854817252451,-1.9747487558012295,-5.695301372359527
+scenario,pitch_negative_recovery,meaningful_vane_sign_change_count,Meaningful vane sign changes,1.0,0.0,-1.0,-100.0
+scenario,pitch_negative_recovery,vane_total_variation_per_second_deg_s,Vane variation rate (deg/s),3.7990891152692283,3.6269963196260737,-0.1720927956431546,-4.529843613077736
+scenario,pitch_negative_recovery,tail_high_frequency_vane_energy_deg2,Tail high-frequency vane energy (deg^2),0.0006447663128552597,0.00025982451002369626,-0.0003849418028315634,-59.70253022787452
+scenario,pitch_negative_recovery,vane_zero_crossing_frequency_hz,Vane zero-crossing frequency (Hz),0.12500000000000233,0.0,-0.12500000000000233,-100.0
+scenario,pitch_negative_recovery,vane_saturation_percent,Vane saturation (%),0.0,0.0,0.0,0.0
+scenario,pitch_negative_recovery,servo_rate_saturation_percent,Servo-rate saturation (%),0.0,0.0,0.0,0.0
+scenario,pitch_negative_recovery,mixer_saturation_percent,Mixer saturation (%),0.0,0.0,0.0,0.0
+scenario,pitch_positive_recovery,tail_rms_pitch_deg,Tail RMS pitch (deg),0.5602141690337197,0.6259052516117658,0.06569108257804612,11.726065888578432
+scenario,pitch_positive_recovery,tail_rms_pitch_rate_deg_s,Tail RMS pitch rate (deg/s),2.602448494974429,2.6167321682865987,0.014283673312169842,0.5488551777202488
+scenario,pitch_positive_recovery,tail_rms_horizontal_velocity_m_s,Tail RMS vx (m/s),0.027279828333407266,0.02905090853341657,0.0017710802000093055,6.492270326497676
+scenario,pitch_positive_recovery,tail_path_length_m,Tail path (m),0.061586006340913435,0.06499337639628346,0.003407370055370021,5.532701757779677
+scenario,pitch_positive_recovery,final_abs_position_error_m,Final absolute error (m),0.007449932703443833,0.005987272174127213,-0.0014626605293166202,-19.63320458774729
+scenario,pitch_positive_recovery,position_overshoot_m,Position overshoot (m),0.05439032008017743,0.059778381352460434,0.005388061272283001,9.90628711936314
+scenario,pitch_positive_recovery,recovery_excursion_m,Recovery excursion (m),0.05439032008017743,0.059778381352460434,0.005388061272283001,9.90628711936314
+scenario,pitch_positive_recovery,strict_settling_time_s,Strict settling time (s),0.5050000000000003,0.5250000000000004,0.020000000000000018,3.9603960396039612
+scenario,pitch_positive_recovery,vane_command_rms_deg,Vane RMS (deg),0.8940614112782965,0.8599143016201609,-0.03414710965813561,-3.819324850326927
+scenario,pitch_positive_recovery,vane_command_total_variation_deg,Vane total variation (deg),30.39271292215326,29.015970557008053,-1.3767423651452084,-4.529843613077726
+scenario,pitch_positive_recovery,vane_command_rate_rms_deg_s,Vane command-rate RMS (deg/s),34.67329692832574,32.69854817252451,-1.9747487558012295,-5.695301372359527
+scenario,pitch_positive_recovery,meaningful_vane_sign_change_count,Meaningful vane sign changes,1.0,0.0,-1.0,-100.0
+scenario,pitch_positive_recovery,vane_total_variation_per_second_deg_s,Vane variation rate (deg/s),3.7990891152692283,3.6269963196260737,-0.1720927956431546,-4.529843613077736
+scenario,pitch_positive_recovery,tail_high_frequency_vane_energy_deg2,Tail high-frequency vane energy (deg^2),0.0006447663128552597,0.00025982451002369626,-0.0003849418028315634,-59.70253022787452
+scenario,pitch_positive_recovery,vane_zero_crossing_frequency_hz,Vane zero-crossing frequency (Hz),0.12500000000000233,0.0,-0.12500000000000233,-100.0
+scenario,pitch_positive_recovery,vane_saturation_percent,Vane saturation (%),0.0,0.0,0.0,0.0
+scenario,pitch_positive_recovery,servo_rate_saturation_percent,Servo-rate saturation (%),0.0,0.0,0.0,0.0
+scenario,pitch_positive_recovery,mixer_saturation_percent,Mixer saturation (%),0.0,0.0,0.0,0.0
+scenario,stick_release,tail_rms_pitch_deg,Tail RMS pitch (deg),0.6291736356657613,0.6630221416648191,0.033848505999057754,5.379835403185782
+scenario,stick_release,tail_rms_pitch_rate_deg_s,Tail RMS pitch rate (deg/s),2.460170182163868,2.648382292076473,0.18821210991260484,7.6503695263496345
+scenario,stick_release,tail_rms_horizontal_velocity_m_s,Tail RMS vx (m/s),0.039140649563351906,0.05003458890828992,0.010893939344938014,27.83280161793279
+scenario,stick_release,tail_path_length_m,Tail path (m),0.07866783715776379,0.09951654904740692,0.02084871188964313,26.50220553011041
+scenario,stick_release,final_abs_position_error_m,Final absolute error (m),0.0252791817956306,0.022300049785388687,-0.002979132010241914,-11.784922606778531
+scenario,stick_release,position_overshoot_m,Position overshoot (m),0.6306391968766815,0.6560987737367292,0.02545957686004774,4.037106635004522
+scenario,stick_release,recovery_excursion_m,Recovery excursion (m),0.6306391968766815,0.6560987737367292,0.02545957686004774,4.037106635004522
+scenario,stick_release,strict_settling_time_s,Strict settling time (s),7.425000000000105,7.980000000000191,0.5550000000000868,7.474747474748538
+scenario,stick_release,vane_command_rms_deg,Vane RMS (deg),0.5015870766931579,0.5024222539516232,0.0008351772584652695,0.16650693314735912
+scenario,stick_release,vane_command_total_variation_deg,Vane total variation (deg),25.004331931061575,24.539141182283796,-0.4651907487777791,-1.860440623090181
+scenario,stick_release,vane_command_rate_rms_deg_s,Vane command-rate RMS (deg/s),5.661129373670695,5.460673858891494,-0.20045551477920132,-3.5409103298627724
+scenario,stick_release,meaningful_vane_sign_change_count,Meaningful vane sign changes,0.0,0.0,0.0,0.0
+scenario,stick_release,vane_total_variation_per_second_deg_s,Vane variation rate (deg/s),2.083694327588382,2.044928431856902,-0.03876589573148026,-1.8604406230901909
+scenario,stick_release,tail_high_frequency_vane_energy_deg2,Tail high-frequency vane energy (deg^2),0.0003917328913348145,0.0003834096506197193,-8.323240715095177e-06,-2.1247234784738294
+scenario,stick_release,vane_zero_crossing_frequency_hz,Vane zero-crossing frequency (Hz),0.0,0.0,0.0,0.0
+scenario,stick_release,vane_saturation_percent,Vane saturation (%),0.0,0.0,0.0,0.0
+scenario,stick_release,servo_rate_saturation_percent,Servo-rate saturation (%),0.0,0.0,0.0,0.0
+scenario,stick_release,mixer_saturation_percent,Mixer saturation (%),0.0,0.0,0.0,0.0
