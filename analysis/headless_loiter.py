@@ -44,6 +44,9 @@ class LoiterScenarioConfig:
     stick_end_s: float = 2.0
     stick_x: float = 0.0
     stick_z: float = 0.0
+    # Optional (start_s, end_s, stick_x) segments. When present, this supersedes
+    # the legacy single stick window and permits deterministic stop/go testing.
+    stick_timeline: tuple[tuple[float, float, float], ...] = ()
     disturbance_start_s: float = 0.0
     disturbance_duration_s: float = 0.0
     disturbance_force_x: float = 0.0
@@ -354,7 +357,7 @@ def run_headless_loiter(
     steps = int(math.ceil(scenario_cfg.duration_s / rb_cfg.dt))
 
     for _step in range(steps):
-        commands.stick_x = scenario_cfg.stick_x if scenario_cfg.stick_start_s <= sim_time < scenario_cfg.stick_end_s else 0.0
+        commands.stick_x = next((value for start, end, value in scenario_cfg.stick_timeline if start <= sim_time < end), scenario_cfg.stick_x if scenario_cfg.stick_start_s <= sim_time < scenario_cfg.stick_end_s else 0.0)
         commands.stick_z = scenario_cfg.stick_z if scenario_cfg.stick_start_s <= sim_time < scenario_cfg.stick_end_s else 0.0
         if scenario_cfg.disturbance_start_s <= sim_time < scenario_cfg.disturbance_start_s + scenario_cfg.disturbance_duration_s:
             disturbance_force = np.array([scenario_cfg.disturbance_force_x, scenario_cfg.disturbance_force_z], dtype=float)

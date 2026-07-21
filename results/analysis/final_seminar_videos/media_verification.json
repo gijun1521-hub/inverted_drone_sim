@@ -1,0 +1,55 @@
+{
+  "passed": true,
+  "videos": [
+    {
+      "file": "loiter_locked.mp4",
+      "codec": "h264",
+      "pixel_format": "yuv420p",
+      "width": 960,
+      "height": 540,
+      "fps": 30,
+      "frame_count": 240,
+      "duration_s": 8.0
+    },
+    {
+      "file": "loiter_assist.mp4",
+      "codec": "h264",
+      "pixel_format": "yuv420p",
+      "width": 960,
+      "height": 540,
+      "fps": 30,
+      "frame_count": 240,
+      "duration_s": 8.0
+    },
+    {
+      "file": "forward_1m_locked.mp4",
+      "codec": "h264",
+      "pixel_format": "yuv420p",
+      "width": 960,
+      "height": 540,
+      "fps": 30,
+      "frame_count": 240,
+      "duration_s": 8.0
+    },
+    {
+      "file": "forward_1m_assist.mp4",
+      "codec": "h264",
+      "pixel_format": "yuv420p",
+      "width": 960,
+      "height": 540,
+      "fps": 30,
+      "frame_count": 240,
+      "duration_s": 8.0
+    },
+    {
+      "file": "seminar_scenario_comparison.mp4",
+      "codec": "h264",
+      "pixel_format": "yuv420p",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "frame_count": 240,
+      "duration_s": 8.0
+    }
+  ]
+}

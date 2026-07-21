@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "artifacts": {
+    "deterministic.json": "c33af85f3eb862e903b1c295df0c2c134ac3fee66f2217a2a29b470eb54c4b65",
+    "event_capture_audit.csv": "a9b38cf6422db0331c95cec7ea04ba4291bc18972031cd77b307f49049ae2e83",
+    "scenario_metrics.csv": "c44f5f0af889b5a03673e1ef0575fa199a8190861237b4ebb220abe9bde4ae01",
+    "scenario_specification.json": "593af9f4c560a319b012e9c95ea4e647065f9ae27dcc0138cd4a28cc9fa7f3ce",
+    "summary.md": "c438f52cb13c3cefd47f4f17efe3ea848cc2c28514f584c469d35ebc1e265e6f",
+    "plots/commanded_reversal.png": "d836a9bee3a31f7952d5b00b9dcba6da19679a028aae99380ad67722230e4ae3",
+    "plots/full_long_hold.png": "97d92113fb076799c2e6937f68184b4e2c7a0e6cc0ac1d9da20b4d1856969745",
+    "plots/gradual_taper.png": "53a42412c28a99c45a2f63b3cf09a27ac59d8d84fbffff6a9b7be4a1d5f811a0",
+    "plots/light_short_pulse.png": "236e954e49ba4bc85435b9d64679c8e2195fb0e0cec24c209e772f77547d6c3f",
+    "plots/medium_pulse.png": "5bdcc7d3b736e3c5a4f4cf8f2d1c135aff49012f2645ffd42aa4de56fe1fe8f3",
+    "plots/move_stop_move.png": "9116dc250d617a78c314a337eee86d8dfdf347491188a4c4b0063a331d69321b",
+    "plots/repeated_pulse_release.png": "454c7e08564465ec19e8d4ca1b1df7ad637d714eeda338921d3765400c3b8fe7",
+    "plots/small_sustained.png": "200b2e04c46795adcb0e45a35985dac53e4b1b147c748189f20fbc3222c07870",
+    "timeseries/commanded_reversal_-1_moving_mass_assist.csv": "ac7ff26ab5e621125b3840fd9c9b3bee483833b1ee37f3a259af20bd58471451",
+    "timeseries/commanded_reversal_-1_vane_only.csv": "ac7ff26ab5e621125b3840fd9c9b3bee483833b1ee37f3a259af20bd58471451",
+    "timeseries/commanded_reversal_1_moving_mass_assist.csv": "0ebf1de3ff5f90fb6cb4a8ad79142fe2ebab9c2c82485955b0b92220413b8307",
+    "timeseries/commanded_reversal_1_vane_only.csv": "0ebf1de3ff5f90fb6cb4a8ad79142fe2ebab9c2c82485955b0b92220413b8307",
+    "timeseries/medium_pulse_-1_moving_mass_assist.csv": "8c94eae5b72e7cf80ed1598649a47cc77c410946f48111b1fc2a36be9bbe5ba3",
+    "timeseries/medium_pulse_-1_vane_only.csv": "8c94eae5b72e7cf80ed1598649a47cc77c410946f48111b1fc2a36be9bbe5ba3",
+    "timeseries/medium_pulse_1_moving_mass_assist.csv": "9b6bedb430cc5f954fbe5935767c37fa417faf896f4fab8a032d7f574932573d",
+    "timeseries/medium_pulse_1_vane_only.csv": "9b6bedb430cc5f954fbe5935767c37fa417faf896f4fab8a032d7f574932573d",
+    "timeseries/repeated_pulse_release_-1_moving_mass_assist.csv": "c78dd2461fa72fe65956fe2175e9091eecc7e2467c2d0c93f6ff5216093641e7",
+    "timeseries/repeated_pulse_release_-1_vane_only.csv": "c78dd2461fa72fe65956fe2175e9091eecc7e2467c2d0c93f6ff5216093641e7",
+    "timeseries/repeated_pulse_release_1_moving_mass_assist.csv": "d629145c3611df5c4aedb1fd24c4ed7193d7ff6b734134e02c8f716ff5c32d84",
+    "timeseries/repeated_pulse_release_1_vane_only.csv": "d629145c3611df5c4aedb1fd24c4ed7193d7ff6b734134e02c8f716ff5c32d84"
+  }
+}
