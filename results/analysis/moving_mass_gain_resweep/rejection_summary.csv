@@ -1,4 +1,6 @@
 rejection_category,candidate_count
-moving_mass_acceleration_limit,29
-moving_mass_saturation,29
+excessive_moving_mass_acceleration_limiter_continuous_duration,5
+excessive_moving_mass_acceleration_limiter_duty,6
+excessive_moving_mass_rate_limiter_duty,5
+premature_pause,1
 second_acceleration_lobe_after_full_pause,1

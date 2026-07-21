@@ -74,6 +74,19 @@ MOVING_MASS_CHATTER_THRESHOLDS = {
     "max_tail_high_frequency_energy_m2": 2.5e-5,
     "high_frequency_window_s": 0.10,
 }
+MOVING_MASS_LIMITER_HARD_GATES = {
+    "command_clipping": {"max_duty_percent": 5.0, "max_continuous_duration_s": 0.5},
+    "rail_contact": {"max_duty_percent": 5.0, "max_continuous_duration_s": 0.5},
+    "rate_limiter": {"max_duty_percent": 20.0, "max_continuous_duration_s": 1.0},
+    "acceleration_limiter": {"max_duty_percent": 30.0, "max_continuous_duration_s": 1.0},
+}
+MOVING_MASS_LIMITER_SCORE_PENALTIES = {
+    "command_clipping": 0.25,
+    "rail_contact": 0.25,
+    "rate_limiter": 0.10,
+    "acceleration_limiter": 0.10,
+}
+MOVING_MASS_PHYSICAL_LIMIT_TOLERANCE = 1e-9
 SYMMETRY_METRICS = (
     "tail_rms_pitch_deg",
     "tail_rms_pitch_rate_deg_s",
@@ -176,6 +189,19 @@ def _rms(values: np.ndarray) -> float:
     return float(np.sqrt(np.mean(values * values))) if values.size else 0.0
 
 
+def _duty_and_longest_duration(flags: np.ndarray, time_values: np.ndarray) -> tuple[float, float]:
+    """Return sampled duty (%) and maximum contiguous active time (s)."""
+    active = np.asarray(flags, dtype=bool)
+    if not active.size:
+        return 0.0, 0.0
+    dt = float(np.median(np.diff(time_values))) if time_values.size > 1 else 0.0
+    longest = current = 0
+    for value in active:
+        current = current + 1 if value else 0
+        longest = max(longest, current)
+    return float(100.0 * np.mean(active)), float(longest * dt)
+
+
 def _gain_key(gain: float, definition: ScenarioDefinition, fingerprint: str) -> str:
     scenario_hash = _sha256_bytes(_canonical_json(asdict(definition)).encode())
     return f"gain={gain:.8f}:scenario={definition.key}:scenario_hash={scenario_hash}:workflow={fingerprint}"
@@ -193,6 +219,17 @@ def _moving_mass_metrics(result: LoiterRunResult) -> dict[str, Any]:
     velocity = _array(rows, "moving_mass_velocity_m_s")
     dt = float(np.median(np.diff(time_values)))
     acceleration = np.diff(velocity, prepend=velocity[0]) / dt
+    limiter_fields = {
+        "command_clipping": "moving_mass_command_clipped",
+        "rail_contact": "moving_mass_rail_contact",
+        "rate_limiter": "moving_mass_rate_limited",
+        "acceleration_limiter": "moving_mass_acceleration_limited",
+    }
+    limiter_metrics = {}
+    for name, field in limiter_fields.items():
+        duty, longest = _duty_and_longest_duration(_array(rows, field) > 0.5, time_values)
+        limiter_metrics[f"moving_mass_{name}_duty_percent"] = duty
+        limiter_metrics[f"moving_mass_{name}_longest_continuous_duration_s"] = longest
     travel = float(np.sum(np.abs(np.diff(offset))))
     meaningful = 0
     for index in range(len(velocity) - 1):
@@ -223,6 +260,7 @@ def _moving_mass_metrics(result: LoiterRunResult) -> dict[str, Any]:
         "tail_high_frequency_moving_mass_energy_m2": float(
             np.mean((offset[tail] - smoothed[tail]) ** 2)
         ),
+        **limiter_metrics,
     }
 
 
@@ -246,13 +284,17 @@ def _hard_gate_reasons(definition: ScenarioDefinition, metrics: dict[str, Any]) 
         or _number(metrics.get("vane_total_variation_per_second_deg_s"), math.inf) > CHATTER_THRESHOLDS["max_total_variation_per_second_deg_s"]
         or _number(metrics.get("tail_high_frequency_vane_energy_deg2"), math.inf) > CHATTER_THRESHOLDS["max_tail_high_frequency_energy_deg2"]
     ): reasons.append("vane_chatter")
-    if _number(metrics.get("moving_mass_saturation_percent"), math.inf) > 0.0: reasons.append("moving_mass_saturation")
-    if (
-        _number(metrics.get("moving_mass_max_abs_offset_m"), math.inf) >= _number(metrics.get("effective_moving_mass_max_offset_m"), 0.0)
-        or _number(metrics.get("moving_mass_max_abs_target_m"), math.inf) > _number(metrics.get("effective_moving_mass_max_offset_m"), 0.0)
-    ): reasons.append("moving_mass_position_limit")
-    if _number(metrics.get("moving_mass_max_abs_velocity_m_s"), math.inf) >= _number(metrics.get("effective_moving_mass_max_rate_m_s"), 0.0): reasons.append("moving_mass_rate_limit")
-    if _number(metrics.get("moving_mass_max_abs_acceleration_m_s2"), math.inf) >= _number(metrics.get("effective_moving_mass_max_accel_m_s2"), 0.0): reasons.append("moving_mass_acceleration_limit")
+    for name, limits in MOVING_MASS_LIMITER_HARD_GATES.items():
+        if _number(metrics.get(f"moving_mass_{name}_duty_percent"), math.inf) > limits["max_duty_percent"]:
+            reasons.append(f"excessive_moving_mass_{name}_duty")
+        if _number(metrics.get(f"moving_mass_{name}_longest_continuous_duration_s"), math.inf) > limits["max_continuous_duration_s"]:
+            reasons.append(f"excessive_moving_mass_{name}_continuous_duration")
+    if _number(metrics.get("moving_mass_max_abs_offset_m"), math.inf) > _number(metrics.get("effective_moving_mass_max_offset_m"), 0.0) + MOVING_MASS_PHYSICAL_LIMIT_TOLERANCE:
+        reasons.append("moving_mass_actual_offset_physical_limit_violation")
+    if _number(metrics.get("moving_mass_max_abs_velocity_m_s"), math.inf) > _number(metrics.get("effective_moving_mass_max_rate_m_s"), 0.0) + MOVING_MASS_PHYSICAL_LIMIT_TOLERANCE:
+        reasons.append("moving_mass_actual_rate_physical_limit_violation")
+    if _number(metrics.get("moving_mass_max_abs_acceleration_m_s2"), math.inf) > _number(metrics.get("effective_moving_mass_max_accel_m_s2"), 0.0) + MOVING_MASS_PHYSICAL_LIMIT_TOLERANCE:
+        reasons.append("moving_mass_actual_acceleration_physical_limit_violation")
     if (
         int(_number(metrics.get("meaningful_moving_mass_direction_change_count"), 0)) > MOVING_MASS_CHATTER_THRESHOLDS["max_meaningful_direction_changes"]
         or _number(metrics.get("moving_mass_total_travel_per_second_m_s"), math.inf) > MOVING_MASS_CHATTER_THRESHOLDS["max_total_travel_per_second_m_s"]
@@ -301,10 +343,15 @@ def _scenario_rows(gain: float, scenarios: Sequence[ScenarioDefinition], cache: 
 
 
 def _scenario_score(row: dict[str, Any], baseline: dict[str, Any]) -> float:
-    return sum(
+    performance_score = sum(
         weight * _number(row[metric]) / max(abs(_number(baseline[metric])), 1e-12)
         for metric, weight in SCORE_WEIGHTS.items()
     )
+    limiter_penalty = sum(
+        weight * _number(row.get(f"moving_mass_{name}_duty_percent"), 0.0) / 100.0
+        for name, weight in MOVING_MASS_LIMITER_SCORE_PENALTIES.items()
+    )
+    return performance_score + limiter_penalty
 
 
 def aggregate_gain(gain: float, scenarios: Sequence[ScenarioDefinition], cache: ScenarioCache, fingerprint: str, baseline: dict[str, dict[str, Any]], stage: str) -> dict[str, Any]:
@@ -328,6 +375,8 @@ def aggregate_gain(gain: float, scenarios: Sequence[ScenarioDefinition], cache: 
         "final_score": math.inf if reasons else final_score, "inner_loop_aggregate": group_scores["inner_loop"], "integrated_loiter_aggregate": group_scores["integrated_loiter"], "worst_scenario_score": max(scores.values()), "scenario_mean_score": float(np.mean(list(scores.values()))),
         "mean_vane_command_rms_deg": float(np.mean([_number(row["vane_command_rms_deg"]) for row in rows])), "mean_vane_total_variation_deg": float(np.mean([_number(row["vane_command_total_variation_deg"]) for row in rows])),
         "mean_moving_mass_rms_displacement_m": float(np.mean([_number(row["moving_mass_rms_displacement_m"]) for row in rows])), "mean_moving_mass_total_travel_m": float(np.mean([_number(row["moving_mass_total_travel_m"]) for row in rows])), "worst_asymmetry_fraction": worst_symmetry,
+        **{f"mean_moving_mass_{name}_duty_percent": float(np.mean([_number(row[f"moving_mass_{name}_duty_percent"]) for row in rows])) for name in MOVING_MASS_LIMITER_HARD_GATES},
+        **{f"max_moving_mass_{name}_longest_continuous_duration_s": float(np.max([_number(row[f"moving_mass_{name}_longest_continuous_duration_s"]) for row in rows])) for name in MOVING_MASS_LIMITER_HARD_GATES},
         "scenario_scores_json": _canonical_json(scores), "symmetry_json": _canonical_json(symmetry),
     }
 
@@ -354,7 +403,7 @@ def _fingerprint() -> tuple[dict[str, Any], str]:
     payload = {
         "schema_version": 1, "base_sha": git_revision("rev-parse", "HEAD"), "source_profile": SOURCE_PROFILE.relative_to(REPO_ROOT).as_posix(), "source_profile_sha256": sha256_file(SOURCE_PROFILE),
         "fixed_controller": FIXED_CONTROLLER, "stage1_gains": STAGE1_GAINS, "stage2": {"half_width": STAGE2_HALF_WIDTH, "step": STAGE2_STEP}, "stage3": {"half_width": STAGE3_HALF_WIDTH, "step": STAGE3_STEP, "max_gain": MAX_GAIN},
-        "scenarios": [asdict(item) for item in required_scenarios(False)], "score_weights": SCORE_WEIGHTS, "group_weights": GROUP_WEIGHTS, "hard_gate_thresholds": HARD_GATE_THRESHOLDS, "moving_mass_chatter_thresholds": MOVING_MASS_CHATTER_THRESHOLDS, "source_hashes": source_hashes(),
+        "scenarios": [asdict(item) for item in required_scenarios(False)], "score_weights": SCORE_WEIGHTS, "group_weights": GROUP_WEIGHTS, "hard_gate_thresholds": HARD_GATE_THRESHOLDS, "moving_mass_chatter_thresholds": MOVING_MASS_CHATTER_THRESHOLDS, "moving_mass_limiter_hard_gates": MOVING_MASS_LIMITER_HARD_GATES, "moving_mass_limiter_score_penalties": MOVING_MASS_LIMITER_SCORE_PENALTIES, "moving_mass_physical_limit_tolerance": MOVING_MASS_PHYSICAL_LIMIT_TOLERANCE, "source_hashes": source_hashes(),
     }
     return payload, _sha256_bytes(_canonical_json(payload).encode())
 
@@ -390,11 +439,19 @@ def _run_fresh(gain: float, scenarios: Sequence[ScenarioDefinition]) -> tuple[li
 
 
 def _comparison(baseline: dict[str, dict[str, Any]], reference: dict[str, dict[str, Any]], selected: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    metrics = ("tail_rms_pitch_deg", "tail_rms_pitch_rate_deg_s", "tail_rms_horizontal_velocity_m_s", "tail_path_length_m", "final_abs_position_error_m", "position_overshoot_m", "recovery_excursion_m", "strict_settling_time_s", "vane_command_rms_deg", "vane_command_total_variation_deg", "vane_command_rate_rms_deg_s", "moving_mass_rms_displacement_m", "moving_mass_total_travel_m", "moving_mass_rate_rms_m_s", "moving_mass_acceleration_rms_m_s2")
+    metrics = ("tail_rms_pitch_deg", "tail_rms_pitch_rate_deg_s", "tail_rms_horizontal_velocity_m_s", "tail_path_length_m", "final_abs_position_error_m", "position_overshoot_m", "recovery_excursion_m", "strict_settling_time_s", "vane_command_rms_deg", "vane_command_total_variation_deg", "vane_command_rate_rms_deg_s", "moving_mass_rms_displacement_m", "moving_mass_total_travel_m", "moving_mass_rate_rms_m_s", "moving_mass_acceleration_rms_m_s2", "moving_mass_max_abs_offset_m", "moving_mass_max_abs_velocity_m_s", "moving_mass_max_abs_acceleration_m_s2", "moving_mass_command_clipping_duty_percent", "moving_mass_rail_contact_duty_percent", "moving_mass_rate_limiter_duty_percent", "moving_mass_acceleration_limiter_duty_percent")
     result = {"aggregate": {}, "per_scenario": {}}
     for metric in metrics:
         values = {label: float(np.mean([_number(row[metric]) for row in rows.values()])) for label, rows in (("gain_zero_baseline", baseline), ("old_pr20_reference_0_1325", reference), ("selected", selected))}
-        result["aggregate"][metric] = {**values, "selected_vs_baseline_percent": 100.0 * (values["selected"] - values["gain_zero_baseline"]) / max(abs(values["gain_zero_baseline"]), 1e-12)}
+        baseline_value = values["gain_zero_baseline"]
+        result["aggregate"][metric] = {
+            **values,
+            "selected_minus_baseline": values["selected"] - baseline_value,
+            "selected_vs_baseline_percent": (
+                100.0 * (values["selected"] - baseline_value) / abs(baseline_value)
+                if abs(baseline_value) > 1e-12 else None
+            ),
+        }
     for name in selected:
         result["per_scenario"][name] = {"gain_zero_baseline": baseline[name], "old_pr20_reference_0_1325": reference[name], "selected": selected[name]}
     return result
@@ -415,6 +472,11 @@ def _comparison_csv_rows(comparison: dict[str, Any]) -> list[dict[str, Any]]:
                 "shaped_velocity_sign_reversal_after_release": metrics["shaped_velocity_sign_reversal_after_release"],
                 "vane_saturation_percent": metrics["vane_saturation_percent"], "servo_rate_saturation_percent": metrics["servo_rate_saturation_percent"],
                 "mixer_saturation_percent": metrics["mixer_saturation_percent"], "moving_mass_saturation_percent": metrics["moving_mass_saturation_percent"],
+                "moving_mass_command_clipping_duty_percent": metrics["moving_mass_command_clipping_duty_percent"], "moving_mass_command_clipping_longest_continuous_duration_s": metrics["moving_mass_command_clipping_longest_continuous_duration_s"],
+                "moving_mass_rail_contact_duty_percent": metrics["moving_mass_rail_contact_duty_percent"], "moving_mass_rail_contact_longest_continuous_duration_s": metrics["moving_mass_rail_contact_longest_continuous_duration_s"],
+                "moving_mass_rate_limiter_duty_percent": metrics["moving_mass_rate_limiter_duty_percent"], "moving_mass_rate_limiter_longest_continuous_duration_s": metrics["moving_mass_rate_limiter_longest_continuous_duration_s"],
+                "moving_mass_acceleration_limiter_duty_percent": metrics["moving_mass_acceleration_limiter_duty_percent"], "moving_mass_acceleration_limiter_longest_continuous_duration_s": metrics["moving_mass_acceleration_limiter_longest_continuous_duration_s"],
+                "moving_mass_max_abs_offset_m": metrics["moving_mass_max_abs_offset_m"], "moving_mass_max_abs_velocity_m_s": metrics["moving_mass_max_abs_velocity_m_s"], "moving_mass_max_abs_acceleration_m_s2": metrics["moving_mass_max_abs_acceleration_m_s2"],
                 "meaningful_vane_sign_change_count": metrics["meaningful_vane_sign_change_count"], "meaningful_moving_mass_direction_change_count": metrics["meaningful_moving_mass_direction_change_count"],
                 "worst_asymmetry_fraction": "see_candidate_results", "finite": metrics["finite"], "crash": metrics["crash"], "ground_contact": metrics["ground_contact"],
             })
@@ -427,11 +489,11 @@ def _selection_markdown(summary: dict[str, Any], comparison: dict[str, Any]) -> 
         "",
         "The merged PR #22 Pitch controller is fixed. This is a simulation-only virtual-actuator sweep; no hardware, HIL, Pixhawk, Raspberry Pi, or real-flight claim is made.",
         "",
-        f"Stage 0 gain `0.0` is a **VALID Vane-only comparison baseline**: it passes all seven full-duration scenarios with exactly zero moving-mass target and actual displacement.",
+        "Stage 0 gain `0.0` is a **VALID Vane-only comparison baseline**: it passes all seven full-duration scenarios with exactly zero moving-mass target and actual displacement.",
         "",
         f"Raw-score rank 1 is gain `{_number(summary['raw_score_rank1']['gain']):.5f}` with score `{_number(summary['raw_score_rank1']['final_score']):.12f}`. Decision: **{summary['decision']}**.",
         "",
-        f"All nonzero candidates are hard-rejected for Moving-mass saturation and/or acceleration-limit saturation. The old PR #20 reference gain `0.1325` is hard-rejected; PR #20 uses the obsolete pre-PR-22 Pitch controller and is comparison-only.",
+        "Normal Moving-mass limiter engagement is recorded and penalized, not automatically rejected. Actual offset/rate/acceleration violations use a +1e-9 numerical tolerance.",
         "",
         "| metric | gain 0 Vane-only | old PR #20 reference 0.1325 | selected | selected vs gain 0 |",
         "| --- | ---: | ---: | ---: | ---: |",
@@ -439,12 +501,15 @@ def _selection_markdown(summary: dict[str, Any], comparison: dict[str, Any]) -> 
     for metric, values in comparison["aggregate"].items():
         reference = values["old_pr20_reference_0_1325"]
         reference_text = f"{reference:.9f}" if math.isfinite(reference) else "hard-rejected"
-        rows.append(f"| {metric} | {values['gain_zero_baseline']:.9f} | {reference_text} | {values['selected']:.9f} | {values['selected_vs_baseline_percent']:.3f}% |")
-    rows.extend([
-        "",
-        "The comparison CSV/JSON preserves every scenario-level hard-gate, chatter, saturation, symmetry, and transient field. Since gain zero is selected, no performance or effort metric is hidden as worse than the adopted baseline.",
-        "",
-    ])
+        change = values["selected_vs_baseline_percent"]
+        change_text = f"{change:.3f}%" if change is not None else f"new; delta {values['selected_minus_baseline']:.9f}"
+        rows.append(f"| {metric} | {values['gain_zero_baseline']:.9f} | {reference_text} | {values['selected']:.9f} | {change_text} |")
+    worse = [metric for metric, values in comparison["aggregate"].items() if values["selected_minus_baseline"] > 1e-12]
+    selected_rows = [values["selected"] for values in comparison["per_scenario"].values()]
+    rows.extend(["", "Metrics worse than gain zero: " + (", ".join(worse) if worse else "none") + ".", "", "| selected limiter diagnostic | maximum duty | longest continuous duration | hard-gate duty / duration |", "| --- | ---: | ---: | ---: |"])
+    for name, limits in MOVING_MASS_LIMITER_HARD_GATES.items():
+        rows.append(f"| {name} | {max(_number(item[f'moving_mass_{name}_duty_percent']) for item in selected_rows):.3f}% | {max(_number(item[f'moving_mass_{name}_longest_continuous_duration_s']) for item in selected_rows):.3f} s | {limits['max_duty_percent']:.1f}% / {limits['max_continuous_duration_s']:.1f} s |")
+    rows.extend(["", "Actual selected maxima remain within the unchanged physical limits (offset 0.050 m, rate 0.200 m/s, acceleration 1.000 m/s²), using the required +1e-9 tolerance for violation checks.", "The comparison CSV/JSON preserves every scenario-level hard-gate, chatter, saturation, symmetry, and transient field.", ""])
     return "\n".join(rows)
 
 
@@ -520,7 +585,7 @@ def run_resweep(output_dir: Path = DEFAULT_OUTPUT_DIR, *, resume: bool = True) -
         decision_note = "The selected nonzero gain satisfies the required meaningful-improvement threshold."
     report = f"""# Moving-mass assist-gain resweep\n\nThe merged Pitch controller is fixed at P/I/D `{FIXED_CONTROLLER['atc_rat_pit_p']:.5f} / 0.0 / {FIXED_CONTROLLER['atc_rat_pit_d']:.5f}`, Angle P `{FIXED_CONTROLLER['atc_ang_pit_p']:.1f}`. Only the simulation-only `moving_mass_assist_gain_m_per_Nm` changed.\n\nStage 0 gain `0.0` is the valid Vane-only comparison baseline: it passes all seven full-duration scenarios and maintains exactly zero moving-mass actual and target displacement.\n\nRaw-score rank 1 is gain `{_number(raw_best['gain']):.5f}` with score `{_number(raw_best['final_score']):.12f}`. Gain-zero score is `{_number(baseline['final_score']):.12f}`; improvement is `{improvement_percent:.3f}%`. Decision: **{decision}**. {decision_note}\n\nThe old PR #20 gain `0.1325` is included only as a reference. PR #20 uses the obsolete pre-PR-22 Pitch controller and was not modified.\n\nAll selected hard gates, symmetry, chatter, saturation, and moving-mass physical-limit results are in `selection_comparison.json` and the scenario results. No hardware, HIL, Pixhawk, Raspberry Pi, or real-flight claim is made.\n"""
     atomic_text(output_dir / "selection_report.md", report + "\n" + _selection_markdown(summary, comparison))
-    atomic_text(output_dir / "methodology.md", "# Methodology\n\nSeven full-duration mirrored LOITER/Pitch/stick-release scenarios were evaluated deterministically with the merged PR #22 Pitch controller fixed. Stage 1: 0.000..0.200 m/Nm by 0.025 plus 0.1325. Stage 2: best +/-0.025 by 0.0025. Stage 3: best +/-0.005 by 0.0005, extending only an upper boundary and never above 0.300 without authorization. Raw aggregate score uses the pre-existing pitch-retune scenario weights and group aggregation; no near-equivalent tie-break is used.\n")
+    atomic_text(output_dir / "methodology.md", "# Methodology\n\nSeven full-duration mirrored LOITER/Pitch/stick-release scenarios were evaluated deterministically with the merged PR #22 Pitch controller fixed. Stage 1: 0.000..0.200 m/Nm by 0.025 plus 0.1325. Stage 2: best +/-0.025 by 0.0025. Stage 3: best +/-0.005 by 0.0005, extending only an upper boundary and never above 0.300 without authorization. Raw aggregate score uses the pre-existing pitch-retune scenario weights and group aggregation plus predeclared Moving-mass limiter-duty penalties; no near-equivalent tie-break is used. Command clipping and rail contact hard-reject above 5% duty or 0.5 s continuous; rate limiting above 20% or 1.0 s; acceleration limiting above 30% or 1.0 s. Actual offset, rate, and acceleration reject only above their unchanged physical limits plus 1e-9.\n")
     profile = json.loads(SOURCE_PROFILE.read_text(encoding="utf-8")); profile.setdefault("analysis", {}).update({"profile_status": "provisional", "profile_notes": "Simulation-only moving-mass assist gain resweep; not hardware or flight validation.", "moving_mass_assist_gain_m_per_Nm": _number(selected["gain"]), "gain_resweep_summary": summary}); atomic_json(PROVISIONAL_PROFILE, profile)
     atomic_json(output_dir / "summary.json", summary)
     rejection_counts = Counter(reason for row in aggregates if _boolean(row["rejected"]) for reason in str(row["rejection_reasons"]).split("; ") if reason)

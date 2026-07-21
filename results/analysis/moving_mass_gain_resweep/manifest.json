@@ -1,145 +1,145 @@
 {
   "artifacts": {
     "baseline/baseline_scenario_results.csv": {
-      "sha256": "4abac577a02300367c6bdf14a83dead850badfff1f1b8da91cdada082c265067",
-      "size_bytes": 10097
+      "sha256": "1a35f73630dda2cd3e11e21f37b248a2fc6925ba3ccb1efd1551e08ee033145f",
+      "size_bytes": 10717
     },
     "boundary_diagnostics.csv": {
-      "sha256": "b22f97c8d8432ca85992c6501e758eb0d88a683b4a25e8c7b3f4955a6458c0a9",
-      "size_bytes": 96
+      "sha256": "1566525aa64dc43dfb8a433ca62f23a2d3eed62cc4abd4f7d2b3182f78af5a71",
+      "size_bytes": 118
     },
     "candidate_results.csv": {
-      "sha256": "05f685ac0ccdded2a119d4831631569dbf74eab78f57cddd58ea64a1123e1752",
-      "size_bytes": 79182
+      "sha256": "1bf79ec0c5676e31c0e6a1f986b99e9c26f35e0050967242cea59c0502f1a3ff",
+      "size_bytes": 132411
     },
     "methodology.md": {
-      "sha256": "5be26ceb97531807c4df420958ba78556506426be8eb61ccbb6ca357b87c5a17",
-      "size_bytes": 489
+      "sha256": "962efee9af13a0d7e6b64fb579c68e1af8e528588e942b6750a62267b3482fd6",
+      "size_bytes": 797
     },
     "moving_mass_gain_resweep.xlsx": {
-      "sha256": "34fbe9a90062575ac543da7fa7d719c3f5e5a8966887fc36c1a068d2babb8733",
-      "size_bytes": 18716
+      "sha256": "b390daf08fb1201b3448fdbf0d456cf88226c0290691504e1818b2c1ff4d63a1",
+      "size_bytes": 26308
     },
     "moving_mass_gain_resweep.xlsx.inspect.ndjson": {
-      "sha256": "f57fe999846cf7c23b66b670887a5e6f001008dab0b3fd6a4ad059bab833b330",
-      "size_bytes": 319153
+      "sha256": "560439421f2f80e8f09b71722cde092d48d697fe9dc40c0a33dc41b24e4a3779",
+      "size_bytes": 540081
     },
     "plots/baseline_vs_selected_forward_1m.png": {
-      "sha256": "3f5f62a45e1302c4752268f0915c1dc9b280d4a14ab9db0926539012fc151dc8",
-      "size_bytes": 176588
+      "sha256": "720917f542810c5a8e17d76509144da1802596893df665ce3e36920f9d5182a4",
+      "size_bytes": 215503
     },
     "plots/baseline_vs_selected_loiter.png": {
-      "sha256": "4e0fa4b177c1d94795c89c7f0948b20cfc75bf283e7bb24e1c04d5ad1633111b",
-      "size_bytes": 178024
+      "sha256": "731b18fd5a3c4fe2bd0dc6276d8ef540b6020c09d227f27553e3abaf3ae43a9d",
+      "size_bytes": 222398
     },
     "plots/baseline_vs_selected_pitch_recovery.png": {
-      "sha256": "6e703d41f6f6cd3063417ed38895efd1d7789b7d4f89743734a52a461ba71e94",
-      "size_bytes": 198885
+      "sha256": "c961a1dd684d7236d0473c68c9a7d42dcbf6924af767617a292e343aca6c4bec",
+      "size_bytes": 247342
     },
     "plots/baseline_vs_selected_stick_release.png": {
-      "sha256": "e6b54093567378d625c2938af84046a07a45559015016f182c17f2c6110d2503",
-      "size_bytes": 122252
+      "sha256": "ed0233298c18cf5e7164c808755ceffb399f5be42fc3fbc1ae4f335158fc8eca",
+      "size_bytes": 167074
     },
     "rejection_summary.csv": {
-      "sha256": "cf25160a86d239e2639993ba93ea511b7eea12313c4e46e696582506e3f8762b",
-      "size_bytes": 143
+      "sha256": "088e087346a6e78769ee06ec6b2c140a5b320acc06986176bab4a2c78ec9ce05",
+      "size_bytes": 260
     },
     "scenario_results.csv": {
-      "sha256": "35a1843ed349f8cb94f30658994642b74bbcb9a4dd457387136b4a01d40970f3",
-      "size_bytes": 254700
+      "sha256": "8bedab6fa225c7bb8e2128c0947b225363c22509bb36736180c3e4f42f92d458",
+      "size_bytes": 426460
     },
     "selection_comparison.csv": {
-      "sha256": "3784abbb3ef9d9b10ba8e63771c6cf93c325f92219e9927a3b1dfa09fdfb69f1",
-      "size_bytes": 6163
+      "sha256": "f6931a923be09cff7b795e4e5020b8cd013a0afdba9818299d19e15068e8cd59",
+      "size_bytes": 11194
     },
     "selection_comparison.json": {
-      "sha256": "5a7e929956b77df050e8989289bfab72c42c1d08e7a48b0d0980746f33ffd239",
-      "size_bytes": 92948
+      "sha256": "6f2b97def20d7ca77740900396aa37fce36a0ea5a8263cfe64c7f18b6206b2ea",
+      "size_bytes": 109316
     },
     "selection_report.md": {
-      "sha256": "a47260e428c32bc00aac3f71e9f321c194ea8af37a40cae96d2950b579211de5",
-      "size_bytes": 3313
+      "sha256": "74ffd499d44c19d6d10ca3c2f4c5b5a6c3b1e2353fec125079375cf24a67a532",
+      "size_bytes": 4906
     },
     "stage1_coarse.csv": {
-      "sha256": "955a73b57a001b7f955380f6dfd323f8b898de47863196a585e9bc73852942a1",
-      "size_bytes": 24306
+      "sha256": "6a102cd168a9d388579b5d7300c87f9b39068314c172c411484d272949bfbec8",
+      "size_bytes": 26133
     },
     "stage2_fine.csv": {
-      "sha256": "33844a30fd29673375e81d29e80644086f7c0cb1471ef02022d85d0040c2b697",
-      "size_bytes": 26713
+      "sha256": "591c16c7284899be76a02f179c9b6171eb61d0c67c50fb74b88f4f11f656b1c2",
+      "size_bytes": 52845
     },
     "stage3_local.csv": {
-      "sha256": "11e13cb6757f6aabf2da6dbf347c3d80ee2fbc9c14a280dfa71836b4f2ff1578",
-      "size_bytes": 26711
+      "sha256": "8dd047304ef3c1c17dea37fe6d1d0946c97aac622bca8cfddfc6208563df3546",
+      "size_bytes": 52813
     },
     "summary.json": {
-      "sha256": "2f3f58f0f790009dbf17ab34991ef00bc46766061b87a361ac200e0924373aa1",
-      "size_bytes": 12237
+      "sha256": "1f5c7506a548f81ddb4c3f2de1a2e175efbfac70072ba5e73be0f9a204b58d89",
+      "size_bytes": 15098
     },
     "validation/deterministic_reruns.json": {
-      "sha256": "0b4ac2198c62bbbaa13f37fb40145ceada763014e04081a383db41b50c2ef306",
-      "size_bytes": 58874
+      "sha256": "f5aa500adb45933386ce5cb9deede0529f07435a0bba0f681ec81d15ee29f4e3",
+      "size_bytes": 69256
     },
     "validation/gain_zero/backward_1m_timeseries.csv": {
-      "sha256": "d24277d78f73e4bdf8a02a88ef9c450fa3e055e4b5889d3496838303311de267",
-      "size_bytes": 3797382
+      "sha256": "836fea0674671d14942f056aa6c81d7f624d22916027a9840e8254675a8c547c",
+      "size_bytes": 3826315
     },
     "validation/gain_zero/forward_1m_timeseries.csv": {
-      "sha256": "641113a3d1b98ddb37cc709e0a862f4f974b02861cd46f2d04e645c26b020802",
-      "size_bytes": 3789668
+      "sha256": "d2062a15c3c73ff96817f2613408b0fe85dd32589c0d37cc27cefab5313ccf03",
+      "size_bytes": 3818601
     },
     "validation/gain_zero/loiter_negative_disturbance_timeseries.csv": {
-      "sha256": "c8fe84a46322500380eb7df4ef2016358495b56c2f00c503e76ee7db053a8885",
-      "size_bytes": 3681973
+      "sha256": "65c3b8a5af76c091455910fd343c10651b22bf14f241afb5ebee0983b95a8fb3",
+      "size_bytes": 3710906
     },
     "validation/gain_zero/loiter_positive_disturbance_timeseries.csv": {
-      "sha256": "be3dd504b176f4c33382d71d5634fa30b05bf064cce9d8579e01cc10fcbcb4a7",
-      "size_bytes": 3684973
+      "sha256": "da31784df2c6c4e1830049cc79dca1d0685b5f464f2f4876ca9c115c9aa8e5f2",
+      "size_bytes": 3713906
     },
     "validation/gain_zero/pitch_negative_recovery_timeseries.csv": {
-      "sha256": "9207dc5b9b17268d673c4ad0ce94ea4579cfd257d8c84387fcb8569a1d458cdb",
-      "size_bytes": 2621517
+      "sha256": "8dbf56ba8225e360bde01e721e16947917ab8a61990be5e0dee11a094bb5b2b2",
+      "size_bytes": 2640850
     },
     "validation/gain_zero/pitch_positive_recovery_timeseries.csv": {
-      "sha256": "c7b34548bbef3f7d65b42dd659125dc9f019063f715d01b192459b2a46c48ebc",
-      "size_bytes": 2622916
+      "sha256": "947bc25bf809091789f6383c2b799a2da1ad241883010f882c417d80c0e968ba",
+      "size_bytes": 2642249
     },
     "validation/gain_zero/stick_release_timeseries.csv": {
-      "sha256": "96643b54c45b2d5da9c252d1bd68dce7d3ec2926cc7178c4789d3fd0c2b6947d",
-      "size_bytes": 3848039
+      "sha256": "23b1ab7162b74fc0aeebf6eb05f08df1f13460fd8deadb81f2b4cd9aaa22c790",
+      "size_bytes": 3876972
     },
     "validation/selected/backward_1m_timeseries.csv": {
-      "sha256": "d24277d78f73e4bdf8a02a88ef9c450fa3e055e4b5889d3496838303311de267",
-      "size_bytes": 3797382
+      "sha256": "0b4e5e00af55e22f99ae0e9a43517749fc410c9e0bec2fbf28bde0b007af6283",
+      "size_bytes": 4066000
     },
     "validation/selected/forward_1m_timeseries.csv": {
-      "sha256": "641113a3d1b98ddb37cc709e0a862f4f974b02861cd46f2d04e645c26b020802",
-      "size_bytes": 3789668
+      "sha256": "e39e1fadbd6a4fecb52ceae75e6de2b9ee1539ce7685bfafac6119eb87873fc5",
+      "size_bytes": 4097820
     },
     "validation/selected/loiter_negative_disturbance_timeseries.csv": {
-      "sha256": "c8fe84a46322500380eb7df4ef2016358495b56c2f00c503e76ee7db053a8885",
-      "size_bytes": 3681973
+      "sha256": "4d2543df65bde108511521490996d0f49ae111e60f69452d54da7ebcff145123",
+      "size_bytes": 3954624
     },
     "validation/selected/loiter_positive_disturbance_timeseries.csv": {
-      "sha256": "be3dd504b176f4c33382d71d5634fa30b05bf064cce9d8579e01cc10fcbcb4a7",
-      "size_bytes": 3684973
+      "sha256": "e3c7552602931024d75e0375d9400244ebc863ff3250bd7383bf5844c26dc626",
+      "size_bytes": 3982218
     },
     "validation/selected/pitch_negative_recovery_timeseries.csv": {
-      "sha256": "9207dc5b9b17268d673c4ad0ce94ea4579cfd257d8c84387fcb8569a1d458cdb",
-      "size_bytes": 2621517
+      "sha256": "8e3d04c8a8c10c624b5568a74f9d86cef2131888d9e12c8faa83994311a34fd1",
+      "size_bytes": 2854403
     },
     "validation/selected/pitch_positive_recovery_timeseries.csv": {
-      "sha256": "c7b34548bbef3f7d65b42dd659125dc9f019063f715d01b192459b2a46c48ebc",
-      "size_bytes": 2622916
+      "sha256": "039ac60827539e1ac97d3abc6b761cd4adea126ff6c591941987e08306fe6e70",
+      "size_bytes": 2829265
     },
     "validation/selected/stick_release_timeseries.csv": {
-      "sha256": "96643b54c45b2d5da9c252d1bd68dce7d3ec2926cc7178c4789d3fd0c2b6947d",
-      "size_bytes": 3848039
+      "sha256": "2d9dfd911318792bb3642e1bf653273886d967525c144085f861515b282ffafa",
+      "size_bytes": 4143279
     }
   },
   "deterministic": true,
   "fingerprint_payload": {
-    "base_sha": "a0ab26fd2d9be5eeabc4929c9ba835609f940433",
+    "base_sha": "767d2d67179b1678ec6a1643c0673d0a42ffc2ab",
     "fixed_controller": {
       "atc_ang_pit_p": 25.0,
       "atc_rat_pit_d": 0.021,
@@ -184,6 +184,31 @@
       "max_total_travel_per_second_m_s": 0.5,
       "meaningful_rate_m_s": 0.01
     },
+    "moving_mass_limiter_hard_gates": {
+      "acceleration_limiter": {
+        "max_continuous_duration_s": 1.0,
+        "max_duty_percent": 30.0
+      },
+      "command_clipping": {
+        "max_continuous_duration_s": 0.5,
+        "max_duty_percent": 5.0
+      },
+      "rail_contact": {
+        "max_continuous_duration_s": 0.5,
+        "max_duty_percent": 5.0
+      },
+      "rate_limiter": {
+        "max_continuous_duration_s": 1.0,
+        "max_duty_percent": 20.0
+      }
+    },
+    "moving_mass_limiter_score_penalties": {
+      "acceleration_limiter": 0.1,
+      "command_clipping": 0.25,
+      "rail_contact": 0.25,
+      "rate_limiter": 0.1
+    },
+    "moving_mass_physical_limit_tolerance": 1e-09,
     "scenarios": [
       {
         "config": {
@@ -538,10 +563,10 @@
       "analysis/pitch_damping_retune.py": "be73a36703db834017f2571a3a7d7b8e6bc6a33a4a4d60ee21170434bfae5069",
       "cascaded_controller.py": "a2d57321bfdcbdf17ac7882de860e82d24c387cf74d53a3ff356eaeee1953843",
       "config.py": "e3073a461a4b14ea6e15720e87745c3c71aeef8d2e1ed84d3146ca55c2864205",
-      "interactive_logging.py": "6d6f6e77312eabd2461ad4362b9676b173e6c0b09270230138ec5ca06f3ea075",
+      "interactive_logging.py": "ad4d999099583f9b7b4368ac616e955ad01e1a0a4e8435cccf32e98b6dbced3f",
       "interactive_sim.py": "bd32e2ce7f9e97906646615b1efbe1af153929f4ecb5bc41ae1f0923629c6fa7",
       "params.py": "138bcfb9748f785178ae7e3cfabc949640ef94843f13fa579961dfc4fdfdec46",
-      "rigid_body_model.py": "de58bedd8c9557ec7aecaa823e41da4ffa18549958abf86c0a2660b3b7cf53bf",
+      "rigid_body_model.py": "0b2a639c7525c088cc9f3def219212dfb0f2e436816700b403a34ea73f902727",
       "singlecopter_mixer.py": "4e58801419b2f0c1b114085dfb042792d0ce8aba76bd3716e500ee2fa42965ed"
     },
     "source_profile": "params/pitch_damping_retune_provisional.json",
@@ -568,18 +593,18 @@
       "step": 0.0005
     }
   },
-  "provisional_profile_sha256": "6889709afbf9f4bc6850394285831cc5f9944b7ebaa9aca636ba1de9ecc72557",
+  "provisional_profile_sha256": "1cc27947a995aeaaaa37a3b8d7e558a85bf93e2a378a010f44323cd87de42708",
   "schema_version": 1,
   "summary": {
     "candidate_counts": {
       "stage1": 10,
-      "stage2": 11,
-      "stage3": 11
+      "stage2": 21,
+      "stage3": 21
     },
-    "decision": "retain_gain_zero_valid_raw_score_rank1",
+    "decision": "adopt_valid_raw_score_rank1",
     "deterministic_digests": [
-      "0b378778e8e58435e6506d096cbef57bc1227178bf5528f93c56c7f5d885dabf",
-      "0b378778e8e58435e6506d096cbef57bc1227178bf5528f93c56c7f5d885dabf"
+      "838fc259eed729c0e3cecfbd2d557dec122ec2ff8eeddcfd779cba7d7f58d796",
+      "838fc259eed729c0e3cecfbd2d557dec122ec2ff8eeddcfd779cba7d7f58d796"
     ],
     "fixed_controller": {
       "atc_ang_pit_p": 25.0,
@@ -603,6 +628,14 @@
       "gain": 0.0,
       "inner_loop_aggregate": 1.5,
       "integrated_loiter_aggregate": 1.5,
+      "max_moving_mass_acceleration_limiter_longest_continuous_duration_s": 0.0,
+      "max_moving_mass_command_clipping_longest_continuous_duration_s": 0.0,
+      "max_moving_mass_rail_contact_longest_continuous_duration_s": 0.0,
+      "max_moving_mass_rate_limiter_longest_continuous_duration_s": 0.0,
+      "mean_moving_mass_acceleration_limiter_duty_percent": 0.0,
+      "mean_moving_mass_command_clipping_duty_percent": 0.0,
+      "mean_moving_mass_rail_contact_duty_percent": 0.0,
+      "mean_moving_mass_rate_limiter_duty_percent": 0.0,
       "mean_moving_mass_rms_displacement_m": 0.0,
       "mean_moving_mass_total_travel_m": 0.0,
       "mean_vane_command_rms_deg": 0.7324137788938853,
@@ -622,71 +655,95 @@
       "candidate_key": "gain=0.13250000",
       "final_score": null,
       "gain": 0.1325,
-      "inner_loop_aggregate": 4.220902672705687,
-      "integrated_loiter_aggregate": 3.706697796328422,
+      "inner_loop_aggregate": 4.465027672705688,
+      "integrated_loiter_aggregate": 3.903089462995089,
+      "max_moving_mass_acceleration_limiter_longest_continuous_duration_s": 4.519999999999904,
+      "max_moving_mass_command_clipping_longest_continuous_duration_s": 0.03999999999999915,
+      "max_moving_mass_rail_contact_longest_continuous_duration_s": 0.0,
+      "max_moving_mass_rate_limiter_longest_continuous_duration_s": 0.25999999999999446,
+      "mean_moving_mass_acceleration_limiter_duty_percent": 82.23214285714286,
+      "mean_moving_mass_command_clipping_duty_percent": 0.21428571428571427,
+      "mean_moving_mass_rail_contact_duty_percent": 0.0,
+      "mean_moving_mass_rate_limiter_duty_percent": 51.06547619047619,
       "mean_moving_mass_rms_displacement_m": 0.008011023623836698,
       "mean_moving_mass_total_travel_m": 0.6996131934251938,
       "mean_vane_command_rms_deg": 1.8244210288332037,
       "mean_vane_total_variation_deg": 170.13051968890676,
       "rank": "",
       "rejected": true,
-      "rejection_reasons": "moving_mass_saturation; moving_mass_acceleration_limit",
+      "rejection_reasons": "excessive_moving_mass_rate_limiter_duty; excessive_moving_mass_acceleration_limiter_duty; excessive_moving_mass_acceleration_limiter_continuous_duration",
       "scenario_count": 7,
-      "scenario_mean_score": 2.4501458523318336,
-      "scenario_scores_json": "{\"backward_1m\":2.7276970800470752,\"forward_1m\":2.7276970800470752,\"loiter_negative_disturbance\":2.804135298237411,\"loiter_positive_disturbance\":2.804135298237411,\"pitch_negative_recovery\":2.813935115137125,\"pitch_positive_recovery\":2.813935115137125,\"stick_release\":0.4594859794796123}",
+      "scenario_mean_score": 2.583979185665167,
+      "scenario_scores_json": "{\"backward_1m\":2.882322080047075,\"forward_1m\":2.882322080047075,\"loiter_negative_disturbance\":2.952385298237411,\"loiter_positive_disturbance\":2.952385298237411,\"pitch_negative_recovery\":2.976685115137125,\"pitch_positive_recovery\":2.976685115137125,\"stick_release\":0.4650693128129456}",
       "stage": "stage1_coarse",
       "symmetry_json": "{\"forward_1m__backward_1m__final_abs_position_error_m\":0.0,\"forward_1m__backward_1m__moving_mass_rms_displacement_m\":0.0,\"forward_1m__backward_1m__position_overshoot_m\":0.0,\"forward_1m__backward_1m__tail_path_length_m\":0.0,\"forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_deg\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_rate_deg_s\":0.0,\"forward_1m__backward_1m__vane_command_rms_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__final_abs_position_error_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__moving_mass_rms_displacement_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__final_abs_position_error_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__moving_mass_rms_displacement_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg\":0.0}",
       "worst_asymmetry_fraction": 0.0,
-      "worst_scenario_score": 2.813935115137125
+      "worst_scenario_score": 2.976685115137125
     },
     "practically_marginal": false,
-    "raw_score_improvement_vs_gain_zero_percent": 0.0,
+    "raw_score_improvement_vs_gain_zero_percent": 60.94399414900011,
     "raw_score_rank1": {
-      "candidate_key": "gain=0.00000000",
-      "final_score": 1.5,
-      "gain": 0.0,
-      "inner_loop_aggregate": 1.5,
-      "integrated_loiter_aggregate": 1.5,
-      "mean_moving_mass_rms_displacement_m": 0.0,
-      "mean_moving_mass_total_travel_m": 0.0,
-      "mean_vane_command_rms_deg": 0.7324137788938853,
-      "mean_vane_total_variation_deg": 34.517019466703736,
+      "candidate_key": "gain=0.04150000",
+      "final_score": 0.5858400877649983,
+      "gain": 0.0415,
+      "inner_loop_aggregate": 0.38676824745426164,
+      "integrated_loiter_aggregate": 0.7487170480192373,
+      "max_moving_mass_acceleration_limiter_longest_continuous_duration_s": 0.42999999999999083,
+      "max_moving_mass_command_clipping_longest_continuous_duration_s": 0.0,
+      "max_moving_mass_rail_contact_longest_continuous_duration_s": 0.0,
+      "max_moving_mass_rate_limiter_longest_continuous_duration_s": 0.02999999999999936,
+      "mean_moving_mass_acceleration_limiter_duty_percent": 4.892857142857143,
+      "mean_moving_mass_command_clipping_duty_percent": 0.0,
+      "mean_moving_mass_rail_contact_duty_percent": 0.0,
+      "mean_moving_mass_rate_limiter_duty_percent": 0.17857142857142858,
+      "mean_moving_mass_rms_displacement_m": 0.0009197803867279649,
+      "mean_moving_mass_total_travel_m": 0.02854773933939016,
+      "mean_vane_command_rms_deg": 0.574999283796635,
+      "mean_vane_total_variation_deg": 20.499985136541174,
       "rank": 1,
       "rejected": false,
       "rejection_reasons": "",
       "scenario_count": 7,
-      "scenario_mean_score": 1.0,
-      "scenario_scores_json": "{\"backward_1m\":1.0,\"forward_1m\":1.0,\"loiter_negative_disturbance\":1.0,\"loiter_positive_disturbance\":1.0,\"pitch_negative_recovery\":1.0,\"pitch_positive_recovery\":1.0,\"stick_release\":1.0}",
+      "scenario_mean_score": 0.3994134205199783,
+      "scenario_scores_json": "{\"backward_1m\":0.5853529172248085,\"forward_1m\":0.5853529172248085,\"loiter_negative_disturbance\":0.32548294476749623,\"loiter_positive_disturbance\":0.32548294476749623,\"pitch_negative_recovery\":0.2578454983028411,\"pitch_positive_recovery\":0.2578454983028411,\"stick_release\":0.4585312230495558}",
       "stage": "stage3_local",
       "symmetry_json": "{\"forward_1m__backward_1m__final_abs_position_error_m\":0.0,\"forward_1m__backward_1m__moving_mass_rms_displacement_m\":0.0,\"forward_1m__backward_1m__position_overshoot_m\":0.0,\"forward_1m__backward_1m__tail_path_length_m\":0.0,\"forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_deg\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_rate_deg_s\":0.0,\"forward_1m__backward_1m__vane_command_rms_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__final_abs_position_error_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__moving_mass_rms_displacement_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__final_abs_position_error_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__moving_mass_rms_displacement_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg\":0.0}",
       "worst_asymmetry_fraction": 0.0,
-      "worst_scenario_score": 1.0
+      "worst_scenario_score": 0.5853529172248085
     },
-    "runtime_s": 20.769451500003925,
-    "scenario_run_count": 189,
+    "runtime_s": 42.06774939999741,
+    "scenario_run_count": 308,
     "schema_version": 1,
     "selected": {
-      "candidate_key": "gain=0.00000000",
-      "final_score": 1.5,
-      "gain": 0.0,
-      "inner_loop_aggregate": 1.5,
-      "integrated_loiter_aggregate": 1.5,
-      "mean_moving_mass_rms_displacement_m": 0.0,
-      "mean_moving_mass_total_travel_m": 0.0,
-      "mean_vane_command_rms_deg": 0.7324137788938853,
-      "mean_vane_total_variation_deg": 34.517019466703736,
+      "candidate_key": "gain=0.04150000",
+      "final_score": 0.5858400877649983,
+      "gain": 0.0415,
+      "inner_loop_aggregate": 0.38676824745426164,
+      "integrated_loiter_aggregate": 0.7487170480192373,
+      "max_moving_mass_acceleration_limiter_longest_continuous_duration_s": 0.42999999999999083,
+      "max_moving_mass_command_clipping_longest_continuous_duration_s": 0.0,
+      "max_moving_mass_rail_contact_longest_continuous_duration_s": 0.0,
+      "max_moving_mass_rate_limiter_longest_continuous_duration_s": 0.02999999999999936,
+      "mean_moving_mass_acceleration_limiter_duty_percent": 4.892857142857143,
+      "mean_moving_mass_command_clipping_duty_percent": 0.0,
+      "mean_moving_mass_rail_contact_duty_percent": 0.0,
+      "mean_moving_mass_rate_limiter_duty_percent": 0.17857142857142858,
+      "mean_moving_mass_rms_displacement_m": 0.0009197803867279649,
+      "mean_moving_mass_total_travel_m": 0.02854773933939016,
+      "mean_vane_command_rms_deg": 0.574999283796635,
+      "mean_vane_total_variation_deg": 20.499985136541174,
       "rank": 1,
       "rejected": false,
       "rejection_reasons": "",
       "scenario_count": 7,
-      "scenario_mean_score": 1.0,
-      "scenario_scores_json": "{\"backward_1m\":1.0,\"forward_1m\":1.0,\"loiter_negative_disturbance\":1.0,\"loiter_positive_disturbance\":1.0,\"pitch_negative_recovery\":1.0,\"pitch_positive_recovery\":1.0,\"stick_release\":1.0}",
+      "scenario_mean_score": 0.3994134205199783,
+      "scenario_scores_json": "{\"backward_1m\":0.5853529172248085,\"forward_1m\":0.5853529172248085,\"loiter_negative_disturbance\":0.32548294476749623,\"loiter_positive_disturbance\":0.32548294476749623,\"pitch_negative_recovery\":0.2578454983028411,\"pitch_positive_recovery\":0.2578454983028411,\"stick_release\":0.4585312230495558}",
       "stage": "stage3_local",
       "symmetry_json": "{\"forward_1m__backward_1m__final_abs_position_error_m\":0.0,\"forward_1m__backward_1m__moving_mass_rms_displacement_m\":0.0,\"forward_1m__backward_1m__position_overshoot_m\":0.0,\"forward_1m__backward_1m__tail_path_length_m\":0.0,\"forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_deg\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_rate_deg_s\":0.0,\"forward_1m__backward_1m__vane_command_rms_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__final_abs_position_error_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__moving_mass_rms_displacement_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__final_abs_position_error_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__moving_mass_rms_displacement_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg\":0.0}",
       "worst_asymmetry_fraction": 0.0,
-      "worst_scenario_score": 1.0
+      "worst_scenario_score": 0.5853529172248085
     },
     "stage0_status": "VALID Vane-only comparison baseline",
-    "unique_gain_count": 27
+    "unique_gain_count": 44
   }
 }

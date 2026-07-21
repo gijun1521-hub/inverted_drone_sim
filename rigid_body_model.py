@@ -34,8 +34,13 @@ class ForceMomentBreakdown:
     moving_mass_offset_m: float
     moving_mass_velocity_m_s: float
     moving_mass_target_m: float
+    moving_mass_command_m: float
     moving_mass_moment: float
     moving_mass_saturated: bool
+    moving_mass_command_clipped: bool
+    moving_mass_rail_contact: bool
+    moving_mass_rate_limited: bool
+    moving_mass_acceleration_limited: bool
     total_com_body_right_m: float
     total_com_body_up_m: float
     thrust_application_arm_body_right_m: float
@@ -61,6 +66,11 @@ class RigidBodySingleFan2D:
         self.state = np.zeros(8, dtype=float)
         self.last_breakdown: ForceMomentBreakdown | None = None
         self.last_moving_mass_saturated = False
+        self.last_moving_mass_command_m = 0.0
+        self.last_moving_mass_command_clipped = False
+        self.last_moving_mass_rail_contact = False
+        self.last_moving_mass_rate_limited = False
+        self.last_moving_mass_acceleration_limited = False
 
     def _with_moving_mass_state(self, state: np.ndarray) -> np.ndarray:
         mm = self.cfg.moving_mass
@@ -87,12 +97,22 @@ class RigidBodySingleFan2D:
         command_clipped = abs(float(command) - target) > 1e-12
         bounded_offset = float(np.clip(offset, -limit, limit))
         rail_clipped = abs(float(offset) - bounded_offset) > 1e-12
+        rate_limited = False
+        acceleration_limited = False
         if dt <= 0.0:
+            self.last_moving_mass_command_clipped = command_clipped
+            self.last_moving_mass_rail_contact = rail_clipped
+            self.last_moving_mass_rate_limited = False
+            self.last_moving_mass_acceleration_limited = False
             return bounded_offset, 0.0, target, command_clipped or rail_clipped
 
         max_rate = max(0.0, float(mm.max_rate_m_s))
         max_accel = max(0.0, float(mm.max_accel_m_s2))
         if max_rate <= 0.0 or max_accel <= 0.0:
+            self.last_moving_mass_command_clipped = command_clipped
+            self.last_moving_mass_rail_contact = rail_clipped
+            self.last_moving_mass_rate_limited = False
+            self.last_moving_mass_acceleration_limited = False
             return bounded_offset, 0.0, target, command_clipped or rail_clipped
 
         error = target - bounded_offset
@@ -100,6 +120,10 @@ class RigidBodySingleFan2D:
         velocity_tolerance = 1e-12
         if abs(error) <= position_tolerance and abs(velocity) <= velocity_tolerance:
             saturated = command_clipped or rail_clipped or abs(bounded_offset) >= limit - 1e-12
+            self.last_moving_mass_command_clipped = command_clipped
+            self.last_moving_mass_rail_contact = rail_clipped or abs(bounded_offset) >= limit - 1e-12
+            self.last_moving_mass_rate_limited = False
+            self.last_moving_mass_acceleration_limited = False
             return target, 0.0, target, bool(saturated)
 
         accel_step = max_accel * dt
@@ -111,9 +135,11 @@ class RigidBodySingleFan2D:
             braking_speed = float(
                 np.sqrt(accel_step**2 + 2.0 * max_accel * abs(error)) - accel_step
             )
+            rate_limited = braking_speed > max_rate + 1e-12
             desired_velocity = float(np.copysign(min(max_rate, braking_speed), error))
         raw_delta_v = desired_velocity - velocity
         delta_v = float(np.clip(raw_delta_v, -accel_step, accel_step))
+        acceleration_limited = abs(raw_delta_v - delta_v) > 1e-12
         new_velocity = float(np.clip(velocity + delta_v, -max_rate, max_rate))
         new_offset = float(bounded_offset + new_velocity * dt)
 
@@ -136,6 +162,10 @@ class RigidBodySingleFan2D:
             or abs(desired_velocity) >= max_rate - 1e-12
             or abs(new_offset) >= limit - 1e-12
         )
+        self.last_moving_mass_command_clipped = command_clipped
+        self.last_moving_mass_rail_contact = rail_clipped or abs(new_offset) >= limit - 1e-12
+        self.last_moving_mass_rate_limited = rate_limited
+        self.last_moving_mass_acceleration_limited = acceleration_limited
         return new_offset, new_velocity, target, bool(saturated)
 
     def reset(self, state: np.ndarray | None = None) -> np.ndarray:
@@ -157,6 +187,11 @@ class RigidBodySingleFan2D:
         self.state = self._with_moving_mass_state(np.asarray(state, dtype=float))
         self.last_breakdown = None
         self.last_moving_mass_saturated = False
+        self.last_moving_mass_command_m = 0.0
+        self.last_moving_mass_command_clipped = False
+        self.last_moving_mass_rail_contact = False
+        self.last_moving_mass_rate_limited = False
+        self.last_moving_mass_acceleration_limited = False
         return self.state.copy()
 
     def body_axes(self, theta: float) -> tuple[np.ndarray, np.ndarray]:
@@ -221,11 +256,13 @@ class RigidBodySingleFan2D:
         moving_mass_offset = 0.0
         moving_mass_velocity = 0.0
         moving_mass_target = 0.0
+        moving_mass_command = 0.0
         moving_mass_saturated = False
         if self.cfg.moving_mass.enabled and full_state.shape == (11,):
             moving_mass_offset = float(full_state[8])
             moving_mass_velocity = float(full_state[9])
             moving_mass_target = float(full_state[10])
+            moving_mass_command = float(self.last_moving_mass_command_m)
             limit = abs(float(self.cfg.moving_mass.max_offset_m))
             moving_mass_saturated = bool(
                 self.last_moving_mass_saturated
@@ -304,8 +341,13 @@ class RigidBodySingleFan2D:
             moving_mass_offset_m=moving_mass_offset,
             moving_mass_velocity_m_s=moving_mass_velocity,
             moving_mass_target_m=moving_mass_target,
+            moving_mass_command_m=moving_mass_command,
             moving_mass_moment=moving_mass_moment,
             moving_mass_saturated=moving_mass_saturated,
+            moving_mass_command_clipped=bool(self.last_moving_mass_command_clipped),
+            moving_mass_rail_contact=bool(self.last_moving_mass_rail_contact),
+            moving_mass_rate_limited=bool(self.last_moving_mass_rate_limited),
+            moving_mass_acceleration_limited=bool(self.last_moving_mass_acceleration_limited),
             total_com_body_right_m=float(total_com_body[0]),
             total_com_body_up_m=float(total_com_body[1]),
             thrust_application_arm_body_right_m=float(thrust_arm_body[0]),
@@ -382,11 +424,17 @@ class RigidBodySingleFan2D:
                 self.state = self._with_moving_mass_state(self.state)
             offset, velocity, current_target = [float(v) for v in self.state[8:11]]
             command = current_target if moving_mass_target_m is None else float(moving_mass_target_m)
+            self.last_moving_mass_command_m = command
             new_offset, new_velocity, target, saturated = self._moving_mass_update(offset, velocity, command, dt)
             self.last_moving_mass_saturated = saturated
             state_values.extend([new_offset, new_velocity, target])
         else:
             self.last_moving_mass_saturated = False
+            self.last_moving_mass_command_m = 0.0
+            self.last_moving_mass_command_clipped = False
+            self.last_moving_mass_rail_contact = False
+            self.last_moving_mass_rate_limited = False
+            self.last_moving_mass_acceleration_limited = False
 
         self.state = np.array(state_values, dtype=float)
         self.last_breakdown = self.force_moment_breakdown(self.state, disturbance_force, disturbance_moment)
