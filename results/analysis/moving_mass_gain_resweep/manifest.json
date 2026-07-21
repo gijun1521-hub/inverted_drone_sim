@@ -1,0 +1,692 @@
+{
+  "artifacts": {
+    "baseline/baseline_scenario_results.csv": {
+      "sha256": "4abac577a02300367c6bdf14a83dead850badfff1f1b8da91cdada082c265067",
+      "size_bytes": 10097
+    },
+    "boundary_diagnostics.csv": {
+      "sha256": "b22f97c8d8432ca85992c6501e758eb0d88a683b4a25e8c7b3f4955a6458c0a9",
+      "size_bytes": 96
+    },
+    "candidate_results.csv": {
+      "sha256": "05f685ac0ccdded2a119d4831631569dbf74eab78f57cddd58ea64a1123e1752",
+      "size_bytes": 79182
+    },
+    "methodology.md": {
+      "sha256": "5be26ceb97531807c4df420958ba78556506426be8eb61ccbb6ca357b87c5a17",
+      "size_bytes": 489
+    },
+    "moving_mass_gain_resweep.xlsx": {
+      "sha256": "34fbe9a90062575ac543da7fa7d719c3f5e5a8966887fc36c1a068d2babb8733",
+      "size_bytes": 18716
+    },
+    "moving_mass_gain_resweep.xlsx.inspect.ndjson": {
+      "sha256": "f57fe999846cf7c23b66b670887a5e6f001008dab0b3fd6a4ad059bab833b330",
+      "size_bytes": 319153
+    },
+    "plots/baseline_vs_selected_forward_1m.png": {
+      "sha256": "3f5f62a45e1302c4752268f0915c1dc9b280d4a14ab9db0926539012fc151dc8",
+      "size_bytes": 176588
+    },
+    "plots/baseline_vs_selected_loiter.png": {
+      "sha256": "4e0fa4b177c1d94795c89c7f0948b20cfc75bf283e7bb24e1c04d5ad1633111b",
+      "size_bytes": 178024
+    },
+    "plots/baseline_vs_selected_pitch_recovery.png": {
+      "sha256": "6e703d41f6f6cd3063417ed38895efd1d7789b7d4f89743734a52a461ba71e94",
+      "size_bytes": 198885
+    },
+    "plots/baseline_vs_selected_stick_release.png": {
+      "sha256": "e6b54093567378d625c2938af84046a07a45559015016f182c17f2c6110d2503",
+      "size_bytes": 122252
+    },
+    "rejection_summary.csv": {
+      "sha256": "cf25160a86d239e2639993ba93ea511b7eea12313c4e46e696582506e3f8762b",
+      "size_bytes": 143
+    },
+    "scenario_results.csv": {
+      "sha256": "35a1843ed349f8cb94f30658994642b74bbcb9a4dd457387136b4a01d40970f3",
+      "size_bytes": 254700
+    },
+    "selection_comparison.csv": {
+      "sha256": "3784abbb3ef9d9b10ba8e63771c6cf93c325f92219e9927a3b1dfa09fdfb69f1",
+      "size_bytes": 6163
+    },
+    "selection_comparison.json": {
+      "sha256": "5a7e929956b77df050e8989289bfab72c42c1d08e7a48b0d0980746f33ffd239",
+      "size_bytes": 92948
+    },
+    "selection_report.md": {
+      "sha256": "a47260e428c32bc00aac3f71e9f321c194ea8af37a40cae96d2950b579211de5",
+      "size_bytes": 3313
+    },
+    "stage1_coarse.csv": {
+      "sha256": "955a73b57a001b7f955380f6dfd323f8b898de47863196a585e9bc73852942a1",
+      "size_bytes": 24306
+    },
+    "stage2_fine.csv": {
+      "sha256": "33844a30fd29673375e81d29e80644086f7c0cb1471ef02022d85d0040c2b697",
+      "size_bytes": 26713
+    },
+    "stage3_local.csv": {
+      "sha256": "11e13cb6757f6aabf2da6dbf347c3d80ee2fbc9c14a280dfa71836b4f2ff1578",
+      "size_bytes": 26711
+    },
+    "summary.json": {
+      "sha256": "2f3f58f0f790009dbf17ab34991ef00bc46766061b87a361ac200e0924373aa1",
+      "size_bytes": 12237
+    },
+    "validation/deterministic_reruns.json": {
+      "sha256": "0b4ac2198c62bbbaa13f37fb40145ceada763014e04081a383db41b50c2ef306",
+      "size_bytes": 58874
+    },
+    "validation/gain_zero/backward_1m_timeseries.csv": {
+      "sha256": "d24277d78f73e4bdf8a02a88ef9c450fa3e055e4b5889d3496838303311de267",
+      "size_bytes": 3797382
+    },
+    "validation/gain_zero/forward_1m_timeseries.csv": {
+      "sha256": "641113a3d1b98ddb37cc709e0a862f4f974b02861cd46f2d04e645c26b020802",
+      "size_bytes": 3789668
+    },
+    "validation/gain_zero/loiter_negative_disturbance_timeseries.csv": {
+      "sha256": "c8fe84a46322500380eb7df4ef2016358495b56c2f00c503e76ee7db053a8885",
+      "size_bytes": 3681973
+    },
+    "validation/gain_zero/loiter_positive_disturbance_timeseries.csv": {
+      "sha256": "be3dd504b176f4c33382d71d5634fa30b05bf064cce9d8579e01cc10fcbcb4a7",
+      "size_bytes": 3684973
+    },
+    "validation/gain_zero/pitch_negative_recovery_timeseries.csv": {
+      "sha256": "9207dc5b9b17268d673c4ad0ce94ea4579cfd257d8c84387fcb8569a1d458cdb",
+      "size_bytes": 2621517
+    },
+    "validation/gain_zero/pitch_positive_recovery_timeseries.csv": {
+      "sha256": "c7b34548bbef3f7d65b42dd659125dc9f019063f715d01b192459b2a46c48ebc",
+      "size_bytes": 2622916
+    },
+    "validation/gain_zero/stick_release_timeseries.csv": {
+      "sha256": "96643b54c45b2d5da9c252d1bd68dce7d3ec2926cc7178c4789d3fd0c2b6947d",
+      "size_bytes": 3848039
+    },
+    "validation/selected/backward_1m_timeseries.csv": {
+      "sha256": "d24277d78f73e4bdf8a02a88ef9c450fa3e055e4b5889d3496838303311de267",
+      "size_bytes": 3797382
+    },
+    "validation/selected/forward_1m_timeseries.csv": {
+      "sha256": "641113a3d1b98ddb37cc709e0a862f4f974b02861cd46f2d04e645c26b020802",
+      "size_bytes": 3789668
+    },
+    "validation/selected/loiter_negative_disturbance_timeseries.csv": {
+      "sha256": "c8fe84a46322500380eb7df4ef2016358495b56c2f00c503e76ee7db053a8885",
+      "size_bytes": 3681973
+    },
+    "validation/selected/loiter_positive_disturbance_timeseries.csv": {
+      "sha256": "be3dd504b176f4c33382d71d5634fa30b05bf064cce9d8579e01cc10fcbcb4a7",
+      "size_bytes": 3684973
+    },
+    "validation/selected/pitch_negative_recovery_timeseries.csv": {
+      "sha256": "9207dc5b9b17268d673c4ad0ce94ea4579cfd257d8c84387fcb8569a1d458cdb",
+      "size_bytes": 2621517
+    },
+    "validation/selected/pitch_positive_recovery_timeseries.csv": {
+      "sha256": "c7b34548bbef3f7d65b42dd659125dc9f019063f715d01b192459b2a46c48ebc",
+      "size_bytes": 2622916
+    },
+    "validation/selected/stick_release_timeseries.csv": {
+      "sha256": "96643b54c45b2d5da9c252d1bd68dce7d3ec2926cc7178c4789d3fd0c2b6947d",
+      "size_bytes": 3848039
+    }
+  },
+  "deterministic": true,
+  "fingerprint_payload": {
+    "base_sha": "a0ab26fd2d9be5eeabc4929c9ba835609f940433",
+    "fixed_controller": {
+      "atc_ang_pit_p": 25.0,
+      "atc_rat_pit_d": 0.021,
+      "atc_rat_pit_i": 0.0,
+      "atc_rat_pit_p": 0.09375,
+      "loit_brk_acc_mss": 1.0,
+      "loit_brk_delay_s": 0.5,
+      "loit_brk_jerk_msss": 3.0,
+      "loit_capture_desired_vx_threshold_ms": 0.02,
+      "loit_capture_persistent": true,
+      "loit_capture_vx_threshold_ms": 0.08,
+      "loit_capture_without_jump": true,
+      "loit_shaper_clamp_target": true,
+      "psc_ne_pos_p": 0.55,
+      "psc_ne_vel_p": 0.7
+    },
+    "group_weights": {
+      "inner_loop": 0.45,
+      "integrated_loiter": 0.55
+    },
+    "hard_gate_thresholds": {
+      "capture_jump_m": 0.02,
+      "mixer_saturation_percent": 5.0,
+      "motion_started_speed_m_s": 0.1,
+      "moving_mass_lock_tolerance_m": 0.0,
+      "pitch_divergence_deg": 45.0,
+      "premature_pause_duration_s": 0.15,
+      "premature_pause_error_m": 0.1,
+      "premature_pause_speed_m_s": 0.03,
+      "second_lobe_speed_m_s": 0.1,
+      "servo_rate_saturation_percent": 20.0,
+      "shaped_velocity_reversal_m_s": 1e-06,
+      "symmetry_max_fraction": 0.15,
+      "target_region_error_m": 0.02,
+      "vane_saturation_percent": 5.0
+    },
+    "moving_mass_chatter_thresholds": {
+      "command_deadband_m": 0.0005,
+      "high_frequency_window_s": 0.1,
+      "max_meaningful_direction_changes": 30,
+      "max_tail_high_frequency_energy_m2": 2.5e-05,
+      "max_total_travel_per_second_m_s": 0.5,
+      "meaningful_rate_m_s": 0.01
+    },
+    "scenarios": [
+      {
+        "config": {
+          "T_max_factor": null,
+          "capture_current_target": false,
+          "disturbance_duration_s": 0.2,
+          "disturbance_force_x": 8.0,
+          "disturbance_force_z": 0.0,
+          "disturbance_moment": 0.0,
+          "disturbance_start_s": 1.0,
+          "duration_s": 12.0,
+          "initial_omega_deg_s": 0.0,
+          "initial_theta_deg": 0.0,
+          "initial_vx": 0.0,
+          "initial_vz": 0.0,
+          "initial_x": 0.0,
+          "initial_z": 1.0,
+          "max_final_x_error": 0.45,
+          "max_final_z_error": 0.35,
+          "max_rms_x_error": 1.0,
+          "max_rms_z_error": 0.8,
+          "max_saturation_percent": 85.0,
+          "max_theta_deg_limit": 55.0,
+          "mode": "LOITER",
+          "moving_mass_assist_gain_m_per_Nm": 0.0,
+          "moving_mass_enabled": true,
+          "moving_mass_target_m": 0.0,
+          "name": "loiter_positive_disturbance",
+          "notes": "",
+          "settle_time_s": 2.0,
+          "stick_end_s": 2.0,
+          "stick_start_s": 0.5,
+          "stick_x": 0.0,
+          "stick_z": 0.0,
+          "target_step_time_s": null,
+          "target_step_x": null,
+          "target_step_z": null,
+          "target_x": 0.0,
+          "target_z": 1.0,
+          "vane_angle_max_deg": null,
+          "vane_rate_limit_deg_s": null
+        },
+        "direction": -1,
+        "event_time_s": 1.0,
+        "group": "integrated_loiter",
+        "key": "loiter_positive_disturbance",
+        "requires_capture_gates": false,
+        "requires_target_transient_gates": false
+      },
+      {
+        "config": {
+          "T_max_factor": null,
+          "capture_current_target": false,
+          "disturbance_duration_s": 0.2,
+          "disturbance_force_x": -8.0,
+          "disturbance_force_z": 0.0,
+          "disturbance_moment": 0.0,
+          "disturbance_start_s": 1.0,
+          "duration_s": 12.0,
+          "initial_omega_deg_s": 0.0,
+          "initial_theta_deg": 0.0,
+          "initial_vx": 0.0,
+          "initial_vz": 0.0,
+          "initial_x": 0.0,
+          "initial_z": 1.0,
+          "max_final_x_error": 0.45,
+          "max_final_z_error": 0.35,
+          "max_rms_x_error": 1.0,
+          "max_rms_z_error": 0.8,
+          "max_saturation_percent": 85.0,
+          "max_theta_deg_limit": 55.0,
+          "mode": "LOITER",
+          "moving_mass_assist_gain_m_per_Nm": 0.0,
+          "moving_mass_enabled": true,
+          "moving_mass_target_m": 0.0,
+          "name": "loiter_negative_disturbance",
+          "notes": "",
+          "settle_time_s": 2.0,
+          "stick_end_s": 2.0,
+          "stick_start_s": 0.5,
+          "stick_x": 0.0,
+          "stick_z": 0.0,
+          "target_step_time_s": null,
+          "target_step_x": null,
+          "target_step_z": null,
+          "target_x": 0.0,
+          "target_z": 1.0,
+          "vane_angle_max_deg": null,
+          "vane_rate_limit_deg_s": null
+        },
+        "direction": 1,
+        "event_time_s": 1.0,
+        "group": "integrated_loiter",
+        "key": "loiter_negative_disturbance",
+        "requires_capture_gates": false,
+        "requires_target_transient_gates": false
+      },
+      {
+        "config": {
+          "T_max_factor": null,
+          "capture_current_target": false,
+          "disturbance_duration_s": 0.0,
+          "disturbance_force_x": 0.0,
+          "disturbance_force_z": 0.0,
+          "disturbance_moment": 0.0,
+          "disturbance_start_s": 0.0,
+          "duration_s": 12.0,
+          "initial_omega_deg_s": 0.0,
+          "initial_theta_deg": 0.0,
+          "initial_vx": 0.0,
+          "initial_vz": 0.0,
+          "initial_x": 0.0,
+          "initial_z": 1.0,
+          "max_final_x_error": 0.45,
+          "max_final_z_error": 0.35,
+          "max_rms_x_error": 1.0,
+          "max_rms_z_error": 0.8,
+          "max_saturation_percent": 85.0,
+          "max_theta_deg_limit": 55.0,
+          "mode": "LOITER",
+          "moving_mass_assist_gain_m_per_Nm": 0.0,
+          "moving_mass_enabled": true,
+          "moving_mass_target_m": 0.0,
+          "name": "forward_1m",
+          "notes": "",
+          "settle_time_s": 2.0,
+          "stick_end_s": 2.0,
+          "stick_start_s": 0.5,
+          "stick_x": 0.0,
+          "stick_z": 0.0,
+          "target_step_time_s": 0.5,
+          "target_step_x": 1.0,
+          "target_step_z": null,
+          "target_x": 0.0,
+          "target_z": 1.0,
+          "vane_angle_max_deg": null,
+          "vane_rate_limit_deg_s": null
+        },
+        "direction": 1,
+        "event_time_s": 0.5,
+        "group": "integrated_loiter",
+        "key": "forward_1m",
+        "requires_capture_gates": false,
+        "requires_target_transient_gates": true
+      },
+      {
+        "config": {
+          "T_max_factor": null,
+          "capture_current_target": false,
+          "disturbance_duration_s": 0.0,
+          "disturbance_force_x": 0.0,
+          "disturbance_force_z": 0.0,
+          "disturbance_moment": 0.0,
+          "disturbance_start_s": 0.0,
+          "duration_s": 12.0,
+          "initial_omega_deg_s": 0.0,
+          "initial_theta_deg": 0.0,
+          "initial_vx": 0.0,
+          "initial_vz": 0.0,
+          "initial_x": 0.0,
+          "initial_z": 1.0,
+          "max_final_x_error": 0.45,
+          "max_final_z_error": 0.35,
+          "max_rms_x_error": 1.0,
+          "max_rms_z_error": 0.8,
+          "max_saturation_percent": 85.0,
+          "max_theta_deg_limit": 55.0,
+          "mode": "LOITER",
+          "moving_mass_assist_gain_m_per_Nm": 0.0,
+          "moving_mass_enabled": true,
+          "moving_mass_target_m": 0.0,
+          "name": "backward_1m",
+          "notes": "",
+          "settle_time_s": 2.0,
+          "stick_end_s": 2.0,
+          "stick_start_s": 0.5,
+          "stick_x": 0.0,
+          "stick_z": 0.0,
+          "target_step_time_s": 0.5,
+          "target_step_x": -1.0,
+          "target_step_z": null,
+          "target_x": 0.0,
+          "target_z": 1.0,
+          "vane_angle_max_deg": null,
+          "vane_rate_limit_deg_s": null
+        },
+        "direction": -1,
+        "event_time_s": 0.5,
+        "group": "integrated_loiter",
+        "key": "backward_1m",
+        "requires_capture_gates": false,
+        "requires_target_transient_gates": true
+      },
+      {
+        "config": {
+          "T_max_factor": null,
+          "capture_current_target": false,
+          "disturbance_duration_s": 0.0,
+          "disturbance_force_x": 0.0,
+          "disturbance_force_z": 0.0,
+          "disturbance_moment": 0.0,
+          "disturbance_start_s": 0.0,
+          "duration_s": 8.0,
+          "initial_omega_deg_s": 0.0,
+          "initial_theta_deg": 3.0,
+          "initial_vx": 0.0,
+          "initial_vz": 0.0,
+          "initial_x": 0.0,
+          "initial_z": 1.0,
+          "max_final_x_error": 0.45,
+          "max_final_z_error": 0.35,
+          "max_rms_x_error": 1.0,
+          "max_rms_z_error": 0.8,
+          "max_saturation_percent": 85.0,
+          "max_theta_deg_limit": 55.0,
+          "mode": "LOITER",
+          "moving_mass_assist_gain_m_per_Nm": 0.0,
+          "moving_mass_enabled": true,
+          "moving_mass_target_m": 0.0,
+          "name": "pitch_positive_recovery",
+          "notes": "",
+          "settle_time_s": 2.0,
+          "stick_end_s": 2.0,
+          "stick_start_s": 0.5,
+          "stick_x": 0.0,
+          "stick_z": 0.0,
+          "target_step_time_s": null,
+          "target_step_x": null,
+          "target_step_z": null,
+          "target_x": 0.0,
+          "target_z": 1.0,
+          "vane_angle_max_deg": null,
+          "vane_rate_limit_deg_s": null
+        },
+        "direction": 1,
+        "event_time_s": 0.0,
+        "group": "inner_loop",
+        "key": "pitch_positive_recovery",
+        "requires_capture_gates": false,
+        "requires_target_transient_gates": false
+      },
+      {
+        "config": {
+          "T_max_factor": null,
+          "capture_current_target": false,
+          "disturbance_duration_s": 0.0,
+          "disturbance_force_x": 0.0,
+          "disturbance_force_z": 0.0,
+          "disturbance_moment": 0.0,
+          "disturbance_start_s": 0.0,
+          "duration_s": 8.0,
+          "initial_omega_deg_s": 0.0,
+          "initial_theta_deg": -3.0,
+          "initial_vx": 0.0,
+          "initial_vz": 0.0,
+          "initial_x": 0.0,
+          "initial_z": 1.0,
+          "max_final_x_error": 0.45,
+          "max_final_z_error": 0.35,
+          "max_rms_x_error": 1.0,
+          "max_rms_z_error": 0.8,
+          "max_saturation_percent": 85.0,
+          "max_theta_deg_limit": 55.0,
+          "mode": "LOITER",
+          "moving_mass_assist_gain_m_per_Nm": 0.0,
+          "moving_mass_enabled": true,
+          "moving_mass_target_m": 0.0,
+          "name": "pitch_negative_recovery",
+          "notes": "",
+          "settle_time_s": 2.0,
+          "stick_end_s": 2.0,
+          "stick_start_s": 0.5,
+          "stick_x": 0.0,
+          "stick_z": 0.0,
+          "target_step_time_s": null,
+          "target_step_x": null,
+          "target_step_z": null,
+          "target_x": 0.0,
+          "target_z": 1.0,
+          "vane_angle_max_deg": null,
+          "vane_rate_limit_deg_s": null
+        },
+        "direction": -1,
+        "event_time_s": 0.0,
+        "group": "inner_loop",
+        "key": "pitch_negative_recovery",
+        "requires_capture_gates": false,
+        "requires_target_transient_gates": false
+      },
+      {
+        "config": {
+          "T_max_factor": null,
+          "capture_current_target": true,
+          "disturbance_duration_s": 0.0,
+          "disturbance_force_x": 0.0,
+          "disturbance_force_z": 0.0,
+          "disturbance_moment": 0.0,
+          "disturbance_start_s": 0.0,
+          "duration_s": 12.0,
+          "initial_omega_deg_s": 0.0,
+          "initial_theta_deg": 0.0,
+          "initial_vx": 0.0,
+          "initial_vz": 0.0,
+          "initial_x": 0.0,
+          "initial_z": 1.0,
+          "max_final_x_error": 0.45,
+          "max_final_z_error": 0.35,
+          "max_rms_x_error": 1.0,
+          "max_rms_z_error": 0.8,
+          "max_saturation_percent": 85.0,
+          "max_theta_deg_limit": 55.0,
+          "mode": "LOITER",
+          "moving_mass_assist_gain_m_per_Nm": 0.0,
+          "moving_mass_enabled": true,
+          "moving_mass_target_m": 0.0,
+          "name": "stick_release",
+          "notes": "",
+          "settle_time_s": 2.0,
+          "stick_end_s": 2.2,
+          "stick_start_s": 0.5,
+          "stick_x": 0.65,
+          "stick_z": 0.0,
+          "target_step_time_s": null,
+          "target_step_x": null,
+          "target_step_z": null,
+          "target_x": 0.0,
+          "target_z": 1.0,
+          "vane_angle_max_deg": null,
+          "vane_rate_limit_deg_s": null
+        },
+        "direction": 1,
+        "event_time_s": 2.2,
+        "group": "integrated_loiter",
+        "key": "stick_release",
+        "requires_capture_gates": true,
+        "requires_target_transient_gates": false
+      }
+    ],
+    "schema_version": 1,
+    "score_weights": {
+      "tail_path_length_m": 0.15,
+      "tail_rms_horizontal_velocity_m_s": 0.15,
+      "tail_rms_pitch_deg": 0.3,
+      "tail_rms_pitch_rate_deg_s": 0.2,
+      "tail_rms_position_error_m": 0.1,
+      "vane_command_rms_deg": 0.05,
+      "vane_command_total_variation_deg": 0.05
+    },
+    "source_hashes": {
+      "actuators.py": "40d214484a7da703e0e38406160275a6fb6b75f270b4d8c55bb63f717c22e869",
+      "analysis/headless_loiter.py": "b899202d39688c56e5d730ec9df19f1ff3126e6a956434da33b8c9d426b74f50",
+      "analysis/pitch_damping_retune.py": "be73a36703db834017f2571a3a7d7b8e6bc6a33a4a4d60ee21170434bfae5069",
+      "cascaded_controller.py": "a2d57321bfdcbdf17ac7882de860e82d24c387cf74d53a3ff356eaeee1953843",
+      "config.py": "e3073a461a4b14ea6e15720e87745c3c71aeef8d2e1ed84d3146ca55c2864205",
+      "interactive_logging.py": "6d6f6e77312eabd2461ad4362b9676b173e6c0b09270230138ec5ca06f3ea075",
+      "interactive_sim.py": "bd32e2ce7f9e97906646615b1efbe1af153929f4ecb5bc41ae1f0923629c6fa7",
+      "params.py": "138bcfb9748f785178ae7e3cfabc949640ef94843f13fa579961dfc4fdfdec46",
+      "rigid_body_model.py": "de58bedd8c9557ec7aecaa823e41da4ffa18549958abf86c0a2660b3b7cf53bf",
+      "singlecopter_mixer.py": "4e58801419b2f0c1b114085dfb042792d0ce8aba76bd3716e500ee2fa42965ed"
+    },
+    "source_profile": "params/pitch_damping_retune_provisional.json",
+    "source_profile_sha256": "db5b9164d443924fea099832534fc2aa79fc94482ae1b5d714b49397f4463966",
+    "stage1_gains": [
+      0.0,
+      0.025,
+      0.05,
+      0.075,
+      0.1,
+      0.125,
+      0.15,
+      0.175,
+      0.2,
+      0.1325
+    ],
+    "stage2": {
+      "half_width": 0.025,
+      "step": 0.0025
+    },
+    "stage3": {
+      "half_width": 0.005,
+      "max_gain": 0.3,
+      "step": 0.0005
+    }
+  },
+  "provisional_profile_sha256": "6889709afbf9f4bc6850394285831cc5f9944b7ebaa9aca636ba1de9ecc72557",
+  "schema_version": 1,
+  "summary": {
+    "candidate_counts": {
+      "stage1": 10,
+      "stage2": 11,
+      "stage3": 11
+    },
+    "decision": "retain_gain_zero_valid_raw_score_rank1",
+    "deterministic_digests": [
+      "0b378778e8e58435e6506d096cbef57bc1227178bf5528f93c56c7f5d885dabf",
+      "0b378778e8e58435e6506d096cbef57bc1227178bf5528f93c56c7f5d885dabf"
+    ],
+    "fixed_controller": {
+      "atc_ang_pit_p": 25.0,
+      "atc_rat_pit_d": 0.021,
+      "atc_rat_pit_i": 0.0,
+      "atc_rat_pit_p": 0.09375,
+      "loit_brk_acc_mss": 1.0,
+      "loit_brk_delay_s": 0.5,
+      "loit_brk_jerk_msss": 3.0,
+      "loit_capture_desired_vx_threshold_ms": 0.02,
+      "loit_capture_persistent": true,
+      "loit_capture_vx_threshold_ms": 0.08,
+      "loit_capture_without_jump": true,
+      "loit_shaper_clamp_target": true,
+      "psc_ne_pos_p": 0.55,
+      "psc_ne_vel_p": 0.7
+    },
+    "gain_zero_baseline": {
+      "candidate_key": "gain=0.00000000",
+      "final_score": 1.5,
+      "gain": 0.0,
+      "inner_loop_aggregate": 1.5,
+      "integrated_loiter_aggregate": 1.5,
+      "mean_moving_mass_rms_displacement_m": 0.0,
+      "mean_moving_mass_total_travel_m": 0.0,
+      "mean_vane_command_rms_deg": 0.7324137788938853,
+      "mean_vane_total_variation_deg": 34.517019466703736,
+      "rejected": false,
+      "rejection_reasons": "",
+      "scenario_count": 7,
+      "scenario_mean_score": 1.0,
+      "scenario_scores_json": "{\"backward_1m\":1.0,\"forward_1m\":1.0,\"loiter_negative_disturbance\":1.0,\"loiter_positive_disturbance\":1.0,\"pitch_negative_recovery\":1.0,\"pitch_positive_recovery\":1.0,\"stick_release\":1.0}",
+      "stage": "stage0_gain_zero",
+      "symmetry_json": "{\"forward_1m__backward_1m__final_abs_position_error_m\":0.0,\"forward_1m__backward_1m__moving_mass_rms_displacement_m\":0.0,\"forward_1m__backward_1m__position_overshoot_m\":0.0,\"forward_1m__backward_1m__tail_path_length_m\":0.0,\"forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_deg\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_rate_deg_s\":0.0,\"forward_1m__backward_1m__vane_command_rms_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__final_abs_position_error_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__moving_mass_rms_displacement_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__final_abs_position_error_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__moving_mass_rms_displacement_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg\":0.0}",
+      "worst_asymmetry_fraction": 0.0,
+      "worst_scenario_score": 1.0
+    },
+    "old_pr20_note": "PR #20 uses the obsolete pre-PR-22 Pitch controller and is comparison-only.",
+    "old_pr20_reference_gain": {
+      "candidate_key": "gain=0.13250000",
+      "final_score": null,
+      "gain": 0.1325,
+      "inner_loop_aggregate": 4.220902672705687,
+      "integrated_loiter_aggregate": 3.706697796328422,
+      "mean_moving_mass_rms_displacement_m": 0.008011023623836698,
+      "mean_moving_mass_total_travel_m": 0.6996131934251938,
+      "mean_vane_command_rms_deg": 1.8244210288332037,
+      "mean_vane_total_variation_deg": 170.13051968890676,
+      "rank": "",
+      "rejected": true,
+      "rejection_reasons": "moving_mass_saturation; moving_mass_acceleration_limit",
+      "scenario_count": 7,
+      "scenario_mean_score": 2.4501458523318336,
+      "scenario_scores_json": "{\"backward_1m\":2.7276970800470752,\"forward_1m\":2.7276970800470752,\"loiter_negative_disturbance\":2.804135298237411,\"loiter_positive_disturbance\":2.804135298237411,\"pitch_negative_recovery\":2.813935115137125,\"pitch_positive_recovery\":2.813935115137125,\"stick_release\":0.4594859794796123}",
+      "stage": "stage1_coarse",
+      "symmetry_json": "{\"forward_1m__backward_1m__final_abs_position_error_m\":0.0,\"forward_1m__backward_1m__moving_mass_rms_displacement_m\":0.0,\"forward_1m__backward_1m__position_overshoot_m\":0.0,\"forward_1m__backward_1m__tail_path_length_m\":0.0,\"forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_deg\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_rate_deg_s\":0.0,\"forward_1m__backward_1m__vane_command_rms_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__final_abs_position_error_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__moving_mass_rms_displacement_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__final_abs_position_error_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__moving_mass_rms_displacement_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg\":0.0}",
+      "worst_asymmetry_fraction": 0.0,
+      "worst_scenario_score": 2.813935115137125
+    },
+    "practically_marginal": false,
+    "raw_score_improvement_vs_gain_zero_percent": 0.0,
+    "raw_score_rank1": {
+      "candidate_key": "gain=0.00000000",
+      "final_score": 1.5,
+      "gain": 0.0,
+      "inner_loop_aggregate": 1.5,
+      "integrated_loiter_aggregate": 1.5,
+      "mean_moving_mass_rms_displacement_m": 0.0,
+      "mean_moving_mass_total_travel_m": 0.0,
+      "mean_vane_command_rms_deg": 0.7324137788938853,
+      "mean_vane_total_variation_deg": 34.517019466703736,
+      "rank": 1,
+      "rejected": false,
+      "rejection_reasons": "",
+      "scenario_count": 7,
+      "scenario_mean_score": 1.0,
+      "scenario_scores_json": "{\"backward_1m\":1.0,\"forward_1m\":1.0,\"loiter_negative_disturbance\":1.0,\"loiter_positive_disturbance\":1.0,\"pitch_negative_recovery\":1.0,\"pitch_positive_recovery\":1.0,\"stick_release\":1.0}",
+      "stage": "stage3_local",
+      "symmetry_json": "{\"forward_1m__backward_1m__final_abs_position_error_m\":0.0,\"forward_1m__backward_1m__moving_mass_rms_displacement_m\":0.0,\"forward_1m__backward_1m__position_overshoot_m\":0.0,\"forward_1m__backward_1m__tail_path_length_m\":0.0,\"forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_deg\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_rate_deg_s\":0.0,\"forward_1m__backward_1m__vane_command_rms_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__final_abs_position_error_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__moving_mass_rms_displacement_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__final_abs_position_error_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__moving_mass_rms_displacement_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg\":0.0}",
+      "worst_asymmetry_fraction": 0.0,
+      "worst_scenario_score": 1.0
+    },
+    "runtime_s": 20.769451500003925,
+    "scenario_run_count": 189,
+    "schema_version": 1,
+    "selected": {
+      "candidate_key": "gain=0.00000000",
+      "final_score": 1.5,
+      "gain": 0.0,
+      "inner_loop_aggregate": 1.5,
+      "integrated_loiter_aggregate": 1.5,
+      "mean_moving_mass_rms_displacement_m": 0.0,
+      "mean_moving_mass_total_travel_m": 0.0,
+      "mean_vane_command_rms_deg": 0.7324137788938853,
+      "mean_vane_total_variation_deg": 34.517019466703736,
+      "rank": 1,
+      "rejected": false,
+      "rejection_reasons": "",
+      "scenario_count": 7,
+      "scenario_mean_score": 1.0,
+      "scenario_scores_json": "{\"backward_1m\":1.0,\"forward_1m\":1.0,\"loiter_negative_disturbance\":1.0,\"loiter_positive_disturbance\":1.0,\"pitch_negative_recovery\":1.0,\"pitch_positive_recovery\":1.0,\"stick_release\":1.0}",
+      "stage": "stage3_local",
+      "symmetry_json": "{\"forward_1m__backward_1m__final_abs_position_error_m\":0.0,\"forward_1m__backward_1m__moving_mass_rms_displacement_m\":0.0,\"forward_1m__backward_1m__position_overshoot_m\":0.0,\"forward_1m__backward_1m__tail_path_length_m\":0.0,\"forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_deg\":0.0,\"forward_1m__backward_1m__tail_rms_pitch_rate_deg_s\":0.0,\"forward_1m__backward_1m__vane_command_rms_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__final_abs_position_error_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__moving_mass_rms_displacement_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s\":0.0,\"loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__final_abs_position_error_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__moving_mass_rms_displacement_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s\":0.0,\"pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg\":0.0}",
+      "worst_asymmetry_fraction": 0.0,
+      "worst_scenario_score": 1.0
+    },
+    "stage0_status": "VALID Vane-only comparison baseline",
+    "unique_gain_count": 27
+  }
+}

@@ -1,0 +1,37 @@
+scope,scenario,metric,gain_zero_baseline,old_pr20_reference_0_1325,selected,selected_vs_baseline_percent,controller_set,rejected,rejection_reasons,early_velocity_reversal,premature_pause,second_acceleration_lobe_after_full_pause,target_capture_count,capture_discontinuity,shaped_velocity_sign_reversal_after_release,vane_saturation_percent,servo_rate_saturation_percent,mixer_saturation_percent,moving_mass_saturation_percent,meaningful_vane_sign_change_count,meaningful_moving_mass_direction_change_count,worst_asymmetry_fraction,finite,crash,ground_contact
+aggregate_mean,all,tail_rms_pitch_deg,0.5255464177915979,1.0856988477598764,0.5255464177915979,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,tail_rms_pitch_rate_deg_s,2.37222359161449,10.490676146122007,2.37222359161449,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,tail_rms_horizontal_velocity_m_s,0.03023908845187382,0.039889226064712506,0.03023908845187382,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,tail_path_length_m,0.06313959546321832,0.08468901268379135,0.06313959546321832,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,final_abs_position_error_m,0.01736159035498888,0.011098083835853806,0.01736159035498888,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,position_overshoot_m,0.3301493683863709,0.33103831359277625,0.3301493683863709,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,recovery_excursion_m,0.5851838806518579,0.5893382924613062,0.5851838806518579,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,strict_settling_time_s,5.134285714285655,9.692142857143088,5.134285714285655,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,vane_command_rms_deg,0.7324137788938853,1.8244210288332037,0.7324137788938853,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,vane_command_total_variation_deg,34.517019466703736,170.13051968890676,34.517019466703736,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,vane_command_rate_rms_deg_s,30.716419702006515,40.17700356065404,30.716419702006515,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,moving_mass_rms_displacement_m,0.0,0.008011023623836698,0.0,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,moving_mass_total_travel_m,0.0,0.6996131934251938,0.0,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,moving_mass_rate_rms_m_s,0.0,0.07876968503121659,0.0,0.0,,,,,,,,,,,,,,,,,,,
+aggregate_mean,all,moving_mass_acceleration_rms_m_s2,0.0,0.8895957941012086,0.0,0.0,,,,,,,,,,,,,,,,,,,
+scenario_hard_gates,loiter_positive_disturbance,,,,,,gain_zero_baseline,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,loiter_positive_disturbance,,,,,,old_pr20_reference_0_1325,True,moving_mass_saturation; moving_mass_acceleration_limit,False,False,False,0,False,False,0.0,0.0,0.0,90.5,0,0,see_candidate_results,True,False,False
+scenario_hard_gates,loiter_positive_disturbance,,,,,,selected,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,loiter_negative_disturbance,,,,,,gain_zero_baseline,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,loiter_negative_disturbance,,,,,,old_pr20_reference_0_1325,True,moving_mass_saturation; moving_mass_acceleration_limit,False,False,False,0,False,False,0.0,0.0,0.0,90.5,0,0,see_candidate_results,True,False,False
+scenario_hard_gates,loiter_negative_disturbance,,,,,,selected,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,forward_1m,,,,,,gain_zero_baseline,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,forward_1m,,,,,,old_pr20_reference_0_1325,True,moving_mass_saturation; moving_mass_acceleration_limit,False,False,False,0,False,False,0.0,0.0,0.0,95.20833333333333,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,forward_1m,,,,,,selected,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,backward_1m,,,,,,gain_zero_baseline,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,backward_1m,,,,,,old_pr20_reference_0_1325,True,moving_mass_saturation; moving_mass_acceleration_limit,False,False,False,0,False,False,0.0,0.0,0.0,95.20833333333333,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,backward_1m,,,,,,selected,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,pitch_positive_recovery,,,,,,gain_zero_baseline,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,pitch_positive_recovery,,,,,,old_pr20_reference_0_1325,True,moving_mass_saturation; moving_mass_acceleration_limit,False,False,False,0,False,False,0.0,0.0,0.0,99.3125,0,0,see_candidate_results,True,False,False
+scenario_hard_gates,pitch_positive_recovery,,,,,,selected,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,pitch_negative_recovery,,,,,,gain_zero_baseline,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,pitch_negative_recovery,,,,,,old_pr20_reference_0_1325,True,moving_mass_saturation; moving_mass_acceleration_limit,False,False,False,0,False,False,0.0,0.0,0.0,99.3125,0,0,see_candidate_results,True,False,False
+scenario_hard_gates,pitch_negative_recovery,,,,,,selected,False,,False,False,False,0,False,False,0.0,0.0,0.0,0.0,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,stick_release,,,,,,gain_zero_baseline,False,,False,False,False,1,False,False,0.0,0.0,0.0,0.0,0,0,see_candidate_results,True,False,False
+scenario_hard_gates,stick_release,,,,,,old_pr20_reference_0_1325,True,moving_mass_saturation; moving_mass_acceleration_limit,False,False,False,1,False,False,0.0,0.0,0.0,5.583333333333333,1,0,see_candidate_results,True,False,False
+scenario_hard_gates,stick_release,,,,,,selected,False,,False,False,False,1,False,False,0.0,0.0,0.0,0.0,0,0,see_candidate_results,True,False,False
