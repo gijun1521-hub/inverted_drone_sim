@@ -21,19 +21,19 @@ except ImportError:  # pragma: no cover - direct script execution from repositor
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-LOITER_PARAMETER_FILE = REPO_ROOT / "params" / "loiter_tuned_vane_only.json"
-MOVING_MASS_PARAMETER_FILE = REPO_ROOT / "params" / "moving_mass_prototype_2kg_tuned.json"
-DEFAULT_OUTPUT_DIR = REPO_ROOT / "results" / "analysis" / "seminar_videos"
+LOITER_PARAMETER_FILE = REPO_ROOT / "params" / "moving_mass_gain_resweep_provisional.json"
+MOVING_MASS_PARAMETER_FILE = REPO_ROOT / "params" / "moving_mass_gain_resweep_provisional.json"
+DEFAULT_OUTPUT_DIR = REPO_ROOT / "results" / "analysis" / "final_seminar_videos"
 TAIL_WINDOW_S = 2.0
-ASSIST_GAIN_M_PER_NM = 0.055
+ASSIST_GAIN_M_PER_NM = 0.04150
 
 SELECTED_CONTROLLER_VALUES = {
-    "atc_rat_pit_p": 0.07,
+    "atc_rat_pit_p": 0.09375,
     "atc_rat_pit_i": 0.0,
-    "atc_rat_pit_d": 0.008,
-    "atc_ang_pit_p": 10.0,
-    "psc_ne_pos_p": 0.5,
-    "psc_ne_vel_p": 0.9,
+    "atc_rat_pit_d": 0.021,
+    "atc_ang_pit_p": 25.0,
+    "psc_ne_pos_p": 0.55,
+    "psc_ne_vel_p": 0.70,
 }
 
 SHARED_RIGID_BODY_OVERRIDES = {

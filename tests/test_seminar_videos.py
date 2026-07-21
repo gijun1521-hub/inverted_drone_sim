@@ -70,7 +70,7 @@ class SeminarScenarioTests(unittest.TestCase):
         for scenario_key in ("loiter", "forward_1m"):
             result = self.by_key[(scenario_key, "assist")]
             self.assertEqual(result.variant.assist_gain_m_per_Nm, ASSIST_GAIN_M_PER_NM)
-            self.assertEqual(result.metrics["assist_gain_m_per_Nm"], 0.055)
+            self.assertEqual(result.metrics["assist_gain_m_per_Nm"], 0.0415)
 
     def test_total_com_geometry_and_legacy_moment_policy_match(self):
         for result in self.short_results:
