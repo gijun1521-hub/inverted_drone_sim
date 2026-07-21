@@ -3,318 +3,318 @@
     "tail_path_length_m": {
       "baseline_mean": 0.5947348934511064,
       "baseline_worst": 0.6304304892187684,
-      "mean_improvement_percent": 89.25838495948216,
-      "selected_mean": 0.0638841327661518,
-      "selected_worst": 0.07866783715776379,
-      "worst_improvement_percent": 87.52156843568126
+      "mean_improvement_percent": 89.3835730577646,
+      "selected_mean": 0.06313959546321832,
+      "selected_worst": 0.0891607489690521,
+      "worst_improvement_percent": 85.85716419275019
     },
     "tail_rms_horizontal_velocity_m_s": {
       "baseline_mean": 0.2629426505989953,
       "baseline_worst": 0.277585351306112,
-      "mean_improvement_percent": 88.32098507473194,
-      "selected_mean": 0.030709111408352103,
-      "selected_worst": 0.039140649563351906,
-      "worst_improvement_percent": 85.89959831122758
+      "mean_improvement_percent": 88.49974000680841,
+      "selected_mean": 0.03023908845187382,
+      "selected_worst": 0.045501433982966334,
+      "worst_improvement_percent": 83.60812853817028
     },
     "tail_rms_pitch_deg": {
       "baseline_mean": 4.091931517114959,
       "baseline_worst": 4.177802275715607,
-      "mean_improvement_percent": 85.82460107318461,
-      "selected_mean": 0.5800476163631348,
-      "selected_worst": 0.6291736356657613,
-      "worst_improvement_percent": 84.94008107269768
+      "mean_improvement_percent": 87.1565197121838,
+      "selected_mean": 0.5255464177915979,
+      "selected_worst": 0.6033269525313913,
+      "worst_improvement_percent": 85.55874805185583
     },
     "tail_rms_pitch_rate_deg_s": {
       "baseline_mean": 12.052651431797766,
       "baseline_worst": 12.505620550852989,
-      "mean_improvement_percent": 79.19908263562795,
-      "selected_mean": 2.5070620645440584,
-      "selected_worst": 2.602448494974429,
-      "worst_improvement_percent": 79.18976923702583
+      "mean_improvement_percent": 80.3178279481642,
+      "selected_mean": 2.37222359161449,
+      "selected_worst": 2.3991082334839327,
+      "worst_improvement_percent": 80.815760211753
     },
     "tail_rms_position_error_m": {
       "baseline_mean": 0.09585322592740322,
       "baseline_worst": 0.10543801814153844,
-      "mean_improvement_percent": 76.98313018990669,
-      "selected_mean": 0.022062412220485012,
-      "selected_worst": 0.03849887341331642,
-      "worst_improvement_percent": 63.486725099824895
+      "mean_improvement_percent": 77.22223635498122,
+      "selected_mean": 0.021833221247869766,
+      "selected_worst": 0.041984334107184905,
+      "worst_improvement_percent": 60.181028771969366
     },
     "vane_command_rms_deg": {
       "baseline_mean": 0.7416337308073949,
       "baseline_worst": 0.7580298864472256,
-      "mean_improvement_percent": 3.9431580132141493,
-      "selected_mean": 0.7123899409223641,
-      "selected_worst": 0.8940614112782965,
-      "worst_improvement_percent": -17.945403903351448
+      "mean_improvement_percent": 1.2431947915141575,
+      "selected_mean": 0.7324137788938853,
+      "selected_worst": 0.9380810254589921,
+      "worst_improvement_percent": -23.75251190367172
     },
     "vane_command_total_variation_deg": {
       "baseline_mean": 22.77884883078058,
       "baseline_worst": 29.519842070823646,
-      "mean_improvement_percent": -47.22860514390191,
-      "selected_mean": 33.536981401396254,
-      "selected_worst": 44.68066973404661,
-      "worst_improvement_percent": -51.35809204822062
+      "mean_improvement_percent": -51.53100897733522,
+      "selected_mean": 34.517019466703736,
+      "selected_worst": 46.99119037105219,
+      "worst_improvement_percent": -59.18510084949472
     }
   },
   "per_scenario": {
     "backward_1m": {
       "tail_path_length_m": {
         "baseline": 0.6304304892187684,
-        "change_percent": -90.65973124984004,
-        "selected": 0.058883901975981125
+        "change_percent": -90.75165043248649,
+        "selected": 0.0583044154231374
       },
       "tail_rms_horizontal_velocity_m_s": {
         "baseline": 0.277585351306112,
-        "change_percent": -89.42866678357777,
-        "selected": 0.02934447244654535
+        "change_percent": -89.79949785768936,
+        "selected": 0.028315099706720477
       },
       "tail_rms_pitch_deg": {
         "baseline": 3.9657987376680026,
-        "change_percent": -84.95029955380568,
-        "selected": 0.5968408303179902
+        "change_percent": -87.13458982937634,
+        "selected": 0.510216274142404
       },
       "tail_rms_pitch_rate_deg_s": {
         "baseline": 12.505620550852989,
-        "change_percent": -80.99824024454719,
-        "selected": 2.376287973001618
+        "change_percent": -80.84091119114693,
+        "selected": 2.395962947436106
       },
       "tail_rms_position_error_m": {
         "baseline": 0.08943121362829813,
-        "change_percent": -78.34519272765864,
-        "selected": 0.019366156952523854
+        "change_percent": -81.56484984859259,
+        "selected": 0.016486778514602694
       },
       "vane_command_rms_deg": {
         "baseline": 0.7454800277999141,
-        "change_percent": -1.2327776470232252,
-        "selected": 0.7362899166541742
+        "change_percent": 2.2480621051968916,
+        "selected": 0.7622388818066952
       },
       "vane_command_total_variation_deg": {
         "baseline": 29.519842070823646,
-        "change_percent": 51.35809204822062,
-        "selected": 44.68066973404661
+        "change_percent": 59.18510084949472,
+        "selected": 46.99119037105219
       }
     },
     "forward_1m": {
       "tail_path_length_m": {
         "baseline": 0.6304304892187684,
-        "change_percent": -90.65973124984004,
-        "selected": 0.058883901975981125
+        "change_percent": -90.75165043248649,
+        "selected": 0.0583044154231374
       },
       "tail_rms_horizontal_velocity_m_s": {
         "baseline": 0.277585351306112,
-        "change_percent": -89.42866678357777,
-        "selected": 0.02934447244654535
+        "change_percent": -89.79949785768936,
+        "selected": 0.028315099706720477
       },
       "tail_rms_pitch_deg": {
         "baseline": 3.9657987376680026,
-        "change_percent": -84.95029955380568,
-        "selected": 0.5968408303179902
+        "change_percent": -87.13458982937634,
+        "selected": 0.510216274142404
       },
       "tail_rms_pitch_rate_deg_s": {
         "baseline": 12.505620550852989,
-        "change_percent": -80.99824024454719,
-        "selected": 2.376287973001618
+        "change_percent": -80.84091119114693,
+        "selected": 2.395962947436106
       },
       "tail_rms_position_error_m": {
         "baseline": 0.08943121362829813,
-        "change_percent": -78.34519272765864,
-        "selected": 0.019366156952523854
+        "change_percent": -81.56484984859259,
+        "selected": 0.016486778514602694
       },
       "vane_command_rms_deg": {
         "baseline": 0.7454800277999141,
-        "change_percent": -1.2327776470232252,
-        "selected": 0.7362899166541742
+        "change_percent": 2.2480621051968916,
+        "selected": 0.7622388818066952
       },
       "vane_command_total_variation_deg": {
         "baseline": 29.519842070823646,
-        "change_percent": 51.35809204822062,
-        "selected": 44.68066973404661
+        "change_percent": 59.18510084949472,
+        "selected": 46.99119037105219
       }
     },
     "loiter_negative_disturbance": {
       "tail_path_length_m": {
         "baseline": 0.5960159575145443,
-        "change_percent": -89.29715941637382,
-        "selected": 0.06379063778575486
+        "change_percent": -89.75192246313692,
+        "selected": 0.0610801774581674
       },
       "tail_rms_horizontal_velocity_m_s": {
         "baseline": 0.26389760535073986,
-        "change_percent": -88.14416511054709,
-        "selected": 0.03128726436760379
+        "change_percent": -88.80448629391955,
+        "selected": 0.02954469257706016
       },
       "tail_rms_pitch_deg": {
         "baseline": 4.177802275715607,
-        "change_percent": -86.63113275290864,
-        "selected": 0.5585248400863814
+        "change_percent": -87.74833328025804,
+        "selected": 0.5118504110304715
       },
       "tail_rms_pitch_rate_deg_s": {
         "baseline": 11.845949210604896,
-        "change_percent": -78.3394676000371,
-        "selected": 2.565895666846223
+        "change_percent": -79.75825541177443,
+        "selected": 2.3978267832615665
       },
       "tail_rms_position_error_m": {
         "baseline": 0.10543801814153844,
-        "change_percent": -63.486725099824895,
-        "selected": 0.03849887341331642
+        "change_percent": -60.181028771969366,
+        "selected": 0.041984334107184905
       },
       "vane_command_rms_deg": {
         "baseline": 0.7268524699978226,
-        "change_percent": -15.771088051601692,
-        "selected": 0.6122199269492242
+        "change_percent": -15.15967598695416,
+        "selected": 0.6166639906429795
       },
       "vane_command_total_variation_deg": {
         "baseline": 21.80698760130769,
-        "change_percent": 36.671267155528554,
-        "selected": 29.80388628315622
+        "change_percent": 38.95870959357885,
+        "selected": 30.3027085720089
       }
     },
     "loiter_positive_disturbance": {
       "tail_path_length_m": {
         "baseline": 0.5960159575145443,
-        "change_percent": -89.29715941637382,
-        "selected": 0.06379063778575486
+        "change_percent": -89.75192246313692,
+        "selected": 0.0610801774581674
       },
       "tail_rms_horizontal_velocity_m_s": {
         "baseline": 0.26389760535073986,
-        "change_percent": -88.14416511054709,
-        "selected": 0.03128726436760379
+        "change_percent": -88.80448629391955,
+        "selected": 0.02954469257706016
       },
       "tail_rms_pitch_deg": {
         "baseline": 4.177802275715607,
-        "change_percent": -86.63113275290864,
-        "selected": 0.5585248400863814
+        "change_percent": -87.74833328025804,
+        "selected": 0.5118504110304715
       },
       "tail_rms_pitch_rate_deg_s": {
         "baseline": 11.845949210604896,
-        "change_percent": -78.3394676000371,
-        "selected": 2.565895666846223
+        "change_percent": -79.75825541177443,
+        "selected": 2.3978267832615665
       },
       "tail_rms_position_error_m": {
         "baseline": 0.10543801814153844,
-        "change_percent": -63.486725099824895,
-        "selected": 0.03849887341331642
+        "change_percent": -60.181028771969366,
+        "selected": 0.041984334107184905
       },
       "vane_command_rms_deg": {
         "baseline": 0.7268524699978226,
-        "change_percent": -15.771088051601692,
-        "selected": 0.6122199269492242
+        "change_percent": -15.15967598695416,
+        "selected": 0.6166639906429795
       },
       "vane_command_total_variation_deg": {
         "baseline": 21.80698760130769,
-        "change_percent": 36.671267155528554,
-        "selected": 29.80388628315622
+        "change_percent": 38.95870959357885,
+        "selected": 30.3027085720089
       }
     },
     "pitch_negative_recovery": {
       "tail_path_length_m": {
         "baseline": 0.5690255753850706,
-        "change_percent": -89.17693527233165,
-        "selected": 0.061586006340913435
+        "change_percent": -89.97872517121144,
+        "selected": 0.05702361675543329
       },
       "tail_rms_horizontal_velocity_m_s": {
         "baseline": 0.2522893426175979,
-        "change_percent": -89.18708652122652,
-        "selected": 0.027279828333407266
+        "change_percent": -90.00104402169266,
+        "selected": 0.025226300306294577
       },
       "tail_rms_pitch_deg": {
         "baseline": 4.148663961088268,
-        "change_percent": -86.4965161245124,
-        "selected": 0.5602141690337197
+        "change_percent": -87.56991875773065,
+        "selected": 0.5156823008320215
       },
       "tail_rms_pitch_rate_deg_s": {
         "baseline": 11.776371172253855,
-        "change_percent": -77.90109994914205,
-        "selected": 2.602448494974429
+        "change_percent": -79.62778008274367,
+        "selected": 2.3991082334839327
       },
       "tail_rms_position_error_m": {
         "baseline": 0.09207737088078963,
-        "change_percent": -92.19752186643062,
-        "selected": 0.00718431672893918
+        "change_percent": -92.75777446734834,
+        "selected": 0.006668450863722914
       },
       "vane_command_rms_deg": {
         "baseline": 0.7580298864472256,
-        "change_percent": 17.945403903351448,
-        "selected": 0.8940614112782965
+        "change_percent": 23.75251190367172,
+        "selected": 0.9380810254589921
       },
       "vane_command_total_variation_deg": {
         "baseline": 17.893063281012175,
-        "change_percent": 69.85751654053283,
-        "selected": 30.39271292215326
+        "change_percent": 76.27710128389765,
+        "selected": 31.54137328266173
       }
     },
     "pitch_positive_recovery": {
       "tail_path_length_m": {
         "baseline": 0.5690255753850706,
-        "change_percent": -89.17693527233165,
-        "selected": 0.061586006340913435
+        "change_percent": -89.97872517121144,
+        "selected": 0.05702361675543329
       },
       "tail_rms_horizontal_velocity_m_s": {
         "baseline": 0.2522893426175979,
-        "change_percent": -89.18708652122652,
-        "selected": 0.027279828333407266
+        "change_percent": -90.00104402169266,
+        "selected": 0.025226300306294577
       },
       "tail_rms_pitch_deg": {
         "baseline": 4.148663961088268,
-        "change_percent": -86.4965161245124,
-        "selected": 0.5602141690337197
+        "change_percent": -87.56991875773065,
+        "selected": 0.5156823008320215
       },
       "tail_rms_pitch_rate_deg_s": {
         "baseline": 11.776371172253855,
-        "change_percent": -77.90109994914205,
-        "selected": 2.602448494974429
+        "change_percent": -79.62778008274367,
+        "selected": 2.3991082334839327
       },
       "tail_rms_position_error_m": {
         "baseline": 0.09207737088078963,
-        "change_percent": -92.19752186643062,
-        "selected": 0.00718431672893918
+        "change_percent": -92.75777446734834,
+        "selected": 0.006668450863722914
       },
       "vane_command_rms_deg": {
         "baseline": 0.7580298864472256,
-        "change_percent": 17.945403903351448,
-        "selected": 0.8940614112782965
+        "change_percent": 23.75251190367172,
+        "selected": 0.9380810254589921
       },
       "vane_command_total_variation_deg": {
         "baseline": 17.893063281012175,
-        "change_percent": 69.85751654053283,
-        "selected": 30.39271292215326
+        "change_percent": 76.27710128389765,
+        "selected": 31.54137328266173
       }
     },
     "stick_release": {
       "tail_path_length_m": {
         "baseline": 0.5722002099209779,
-        "change_percent": -86.25169376141473,
-        "selected": 0.07866783715776379
+        "change_percent": -84.41791047553697,
+        "selected": 0.0891607489690521
       },
       "tail_rms_horizontal_velocity_m_s": {
         "baseline": 0.2530539556440677,
-        "change_percent": -84.53268613654669,
-        "selected": 0.039140649563351906
+        "change_percent": -82.01907815779563,
+        "selected": 0.045501433982966334
       },
       "tail_rms_pitch_deg": {
         "baseline": 4.058990670860954,
-        "change_percent": -84.49925888762125,
-        "selected": 0.6291736356657613
+        "change_percent": -85.13603500341577,
+        "selected": 0.6033269525313913
       },
       "tail_rms_pitch_rate_deg_s": {
         "baseline": 12.112678155160875,
-        "change_percent": -79.68929620147087,
-        "selected": 2.460170182163868
+        "change_percent": -81.67400153373649,
+        "selected": 2.2197692129382185
       },
       "tail_rms_position_error_m": {
         "baseline": 0.09707937619057021,
-        "change_percent": -74.92959647159304,
-        "selected": 0.024338191353836178
+        "change_percent": -76.76806068490369,
+        "selected": 0.022553421764067327
       },
       "vane_command_rms_deg": {
         "baseline": 0.7307113471618398,
-        "change_percent": -31.3563312460693,
-        "selected": 0.5015870766931579
+        "change_percent": -32.54126155910275,
+        "selected": 0.4929286564398622
       },
       "vane_command_total_variation_deg": {
         "baseline": 21.01215590917704,
-        "change_percent": 18.99936417348282,
-        "selected": 25.004331931061575
+        "change_percent": 13.974938692611524,
+        "selected": 23.94859181548048
       }
     }
   }

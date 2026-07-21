@@ -30,3 +30,9 @@ The near-equivalent set was defined before final Stage 3C ranking inspection as 
 - High-frequency moving-average window: 0.1 s.
 
 Logarithmic decrement and damping ratio are reported only when at least three significant absolute pitch peaks provide at least two monotonically decaying ratios; otherwise the reason is recorded.
+
+## Targeted boundary-extension audit
+
+The final audit evaluated the explicitly requested 5 x 4 grid at fixed Rate I `0.0` and Angle P `25.0` in all seven full-duration scenarios. The initial best was on the Rate D upper boundary, so one additional D step of `0.00050` was evaluated across the five P values. The raw-score best remained P `0.09375`, D `0.02100` and became interior. No near-equivalent lower-effort tie-break was used.
+
+Stage 0 remains **FAILED / NON-ACCEPTABLE** and normalization-only, with preserved failures `forward_1m:early_velocity_reversal; backward_1m:early_velocity_reversal`.

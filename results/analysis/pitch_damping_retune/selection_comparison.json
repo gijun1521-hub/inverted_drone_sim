@@ -2,1459 +2,1227 @@
   "aggregate_metrics": {
     "final_abs_position_error_m": {
       "label": "Final absolute error (m)",
-      "rank15_change_percent": -34.14371331461608,
-      "rank15_low_control_effort_mean": 0.00816848695417952,
-      "rank15_minus_raw": -0.004235016743505314,
-      "raw_score_rank1_mean": 0.012403503697684833
+      "previous_stage3c_rank1_mean": 0.012403503697684833,
+      "selected_boundary_rank1_mean": 0.01736159035498888,
+      "selected_change_percent": 39.97327511765483,
+      "selected_minus_previous": 0.004958086657304048
     },
     "meaningful_vane_sign_change_count": {
       "label": "Meaningful vane sign changes",
-      "rank15_change_percent": -50.0,
-      "rank15_low_control_effort_mean": 0.2857142857142857,
-      "rank15_minus_raw": -0.2857142857142857,
-      "raw_score_rank1_mean": 0.5714285714285714
+      "previous_stage3c_rank1_mean": 0.5714285714285714,
+      "selected_boundary_rank1_mean": 0.8571428571428571,
+      "selected_change_percent": 50.0,
+      "selected_minus_previous": 0.2857142857142857
     },
     "mixer_saturation_percent": {
       "label": "Mixer saturation (%)",
-      "rank15_change_percent": 0.0,
-      "rank15_low_control_effort_mean": 0.0,
-      "rank15_minus_raw": 0.0,
-      "raw_score_rank1_mean": 0.0
+      "previous_stage3c_rank1_mean": 0.0,
+      "selected_boundary_rank1_mean": 0.0,
+      "selected_change_percent": 0.0,
+      "selected_minus_previous": 0.0
     },
     "position_overshoot_m": {
       "label": "Position overshoot (m)",
-      "rank15_change_percent": 1.7445403193942706,
-      "rank15_low_control_effort_mean": 0.3384022855062603,
-      "rank15_minus_raw": 0.0058023401490400195,
-      "raw_score_rank1_mean": 0.33259994535722026
+      "previous_stage3c_rank1_mean": 0.33259994535722026,
+      "selected_boundary_rank1_mean": 0.3301493683863709,
+      "selected_change_percent": -0.736794159186468,
+      "selected_minus_previous": -0.002450576970849383
     },
     "recovery_excursion_m": {
       "label": "Recovery excursion (m)",
-      "rank15_change_percent": 1.262943532296155,
-      "rank15_low_control_effort_mean": 0.5957110345569655,
-      "rank15_minus_raw": 0.007429661552068367,
-      "raw_score_rank1_mean": 0.5882813730048971
+      "previous_stage3c_rank1_mean": 0.5882813730048971,
+      "selected_boundary_rank1_mean": 0.5851838806518579,
+      "selected_change_percent": -0.5265324545663388,
+      "selected_minus_previous": -0.003097492353039244
     },
     "servo_rate_saturation_percent": {
       "label": "Servo-rate saturation (%)",
-      "rank15_change_percent": 0.0,
-      "rank15_low_control_effort_mean": 0.0,
-      "rank15_minus_raw": 0.0,
-      "raw_score_rank1_mean": 0.0
+      "previous_stage3c_rank1_mean": 0.0,
+      "selected_boundary_rank1_mean": 0.0,
+      "selected_change_percent": 0.0,
+      "selected_minus_previous": 0.0
     },
     "strict_settling_time_s": {
       "label": "Strict settling time (s)",
-      "rank15_change_percent": -3.2078877933616083,
-      "rank15_low_control_effort_mean": 4.978571428571387,
-      "rank15_minus_raw": -0.16499999999997605,
-      "raw_score_rank1_mean": 5.143571428571363
+      "previous_stage3c_rank1_mean": 5.143571428571363,
+      "selected_boundary_rank1_mean": 5.134285714285655,
+      "selected_change_percent": -0.18053048187739953,
+      "selected_minus_previous": -0.009285714285708124
     },
     "tail_high_frequency_vane_energy_deg2": {
       "label": "Tail high-frequency vane energy (deg^2)",
-      "rank15_change_percent": -23.633958702207643,
-      "rank15_low_control_effort_mean": 0.0003302358252097569,
-      "rank15_minus_raw": -0.00010220223180826949,
-      "raw_score_rank1_mean": 0.00043243805701802636
+      "previous_stage3c_rank1_mean": 0.00043243805701802636,
+      "selected_boundary_rank1_mean": 0.0005636490983805441,
+      "selected_change_percent": 30.34215865904886,
+      "selected_minus_previous": 0.00013121104136251774
     },
     "tail_path_length_m": {
       "label": "Tail path (m)",
-      "rank15_change_percent": 18.665498079520965,
-      "rank15_low_control_effort_mean": 0.0758084243407365,
-      "rank15_minus_raw": 0.011924291574584689,
-      "raw_score_rank1_mean": 0.0638841327661518
+      "previous_stage3c_rank1_mean": 0.0638841327661518,
+      "selected_boundary_rank1_mean": 0.06313959546321832,
+      "selected_change_percent": -1.1654494953525782,
+      "selected_minus_previous": -0.0007445373029334873
     },
     "tail_rms_horizontal_velocity_m_s": {
       "label": "Tail RMS vx (m/s)",
-      "rank15_change_percent": 15.918903522044003,
-      "rank15_low_control_effort_mean": 0.03559766522592468,
-      "rank15_minus_raw": 0.004888553817572579,
-      "raw_score_rank1_mean": 0.030709111408352103
+      "previous_stage3c_rank1_mean": 0.030709111408352103,
+      "selected_boundary_rank1_mean": 0.03023908845187382,
+      "selected_change_percent": -1.530565148005058,
+      "selected_minus_previous": -0.0004700229564782825
     },
     "tail_rms_pitch_deg": {
       "label": "Tail RMS pitch (deg)",
-      "rank15_change_percent": 11.43053677898467,
-      "rank15_low_control_effort_mean": 0.6463501724871469,
-      "rank15_minus_raw": 0.06630255612401204,
-      "raw_score_rank1_mean": 0.5800476163631348
+      "previous_stage3c_rank1_mean": 0.5800476163631348,
+      "selected_boundary_rank1_mean": 0.5255464177915979,
+      "selected_change_percent": -9.395986990388183,
+      "selected_minus_previous": -0.0545011985715369
     },
     "tail_rms_pitch_rate_deg_s": {
       "label": "Tail RMS pitch rate (deg/s)",
-      "rank15_change_percent": 3.9270802689478685,
-      "rank15_low_control_effort_mean": 2.6055164042110452,
-      "rank15_minus_raw": 0.0984543396669868,
-      "raw_score_rank1_mean": 2.5070620645440584
+      "previous_stage3c_rank1_mean": 2.5070620645440584,
+      "selected_boundary_rank1_mean": 2.37222359161449,
+      "selected_change_percent": -5.378346026471058,
+      "selected_minus_previous": -0.13483847292956863
     },
     "vane_command_rate_rms_deg_s": {
       "label": "Vane command-rate RMS (deg/s)",
-      "rank15_change_percent": -5.371921594136442,
-      "rank15_low_control_effort_mean": 26.955244974050466,
-      "rank15_minus_raw": -1.530216664976333,
-      "raw_score_rank1_mean": 28.4854616390268
+      "previous_stage3c_rank1_mean": 28.4854616390268,
+      "selected_boundary_rank1_mean": 30.716419702006515,
+      "selected_change_percent": 7.831918229905637,
+      "selected_minus_previous": 2.2309580629797168
     },
     "vane_command_rms_deg": {
       "label": "Vane RMS (deg)",
-      "rank15_change_percent": -2.554040070423181,
-      "rank15_low_control_effort_mean": 0.6941952163735429,
-      "rank15_minus_raw": -0.018194724548821206,
-      "raw_score_rank1_mean": 0.7123899409223641
+      "previous_stage3c_rank1_mean": 0.7123899409223641,
+      "selected_boundary_rank1_mean": 0.7324137788938853,
+      "selected_change_percent": 2.8107974048026843,
+      "selected_minus_previous": 0.020023837971521186
     },
     "vane_command_total_variation_deg": {
       "label": "Vane total variation (deg)",
-      "rank15_change_percent": -4.277699330990431,
-      "rank15_low_control_effort_mean": 32.10237017235434,
-      "rank15_minus_raw": -1.4346112290419128,
-      "raw_score_rank1_mean": 33.536981401396254
+      "previous_stage3c_rank1_mean": 33.536981401396254,
+      "selected_boundary_rank1_mean": 34.517019466703736,
+      "selected_change_percent": 2.9222608128550305,
+      "selected_minus_previous": 0.9800380653074825
     },
     "vane_saturation_percent": {
       "label": "Vane saturation (%)",
-      "rank15_change_percent": 0.0,
-      "rank15_low_control_effort_mean": 0.0,
-      "rank15_minus_raw": 0.0,
-      "raw_score_rank1_mean": 0.0
+      "previous_stage3c_rank1_mean": 0.0,
+      "selected_boundary_rank1_mean": 0.0,
+      "selected_change_percent": 0.0,
+      "selected_minus_previous": 0.0
     },
     "vane_total_variation_per_second_deg_s": {
       "label": "Vane variation rate (deg/s)",
-      "rank15_change_percent": -4.306601096167473,
-      "rank15_low_control_effort_mean": 3.020625735279565,
-      "rank15_minus_raw": -0.13594072581474226,
-      "raw_score_rank1_mean": 3.1565664610943074
+      "previous_stage3c_rank1_mean": 3.1565664610943074,
+      "selected_boundary_rank1_mean": 3.2519108279712206,
+      "selected_change_percent": 3.0205087728094124,
+      "selected_minus_previous": 0.09534436687691317
     },
     "vane_zero_crossing_frequency_hz": {
       "label": "Vane zero-crossing frequency (Hz)",
-      "rank15_change_percent": -60.00000000000141,
-      "rank15_low_control_effort_mean": 0.023809523809522865,
-      "rank15_minus_raw": -0.035714285714286385,
-      "raw_score_rank1_mean": 0.05952380952380925
+      "previous_stage3c_rank1_mean": 0.05952380952380925,
+      "selected_boundary_rank1_mean": 0.08333333333333212,
+      "selected_change_percent": 39.99999999999861,
+      "selected_minus_previous": 0.02380952380952287
     }
   },
   "audit_passed": true,
-  "deterministic_reruns": {
-    "rank15_low_control_effort_byte_identical": true,
-    "rank15_low_control_effort_digests": [
-      "f3ce803930fd40e4c583d7cbd5710a8aa224a5ec37908d65ec2d1faa0a85d59c",
-      "f3ce803930fd40e4c583d7cbd5710a8aa224a5ec37908d65ec2d1faa0a85d59c"
-    ],
-    "selected_raw_score_rank1_byte_identical": true,
-    "selected_raw_score_rank1_digests": [
-      "b11df587239e289047b65fb09ef55a0ed16259ed578f5ec66bf0a80c61e149bf",
-      "b11df587239e289047b65fb09ef55a0ed16259ed578f5ec66bf0a80c61e149bf"
-    ],
-    "workflow_fingerprint": "ed7c32a50fe5899b144f5fef057a5862aaed9b52b7388384da8b04dc0ada4cf6"
-  },
-  "near_equivalence_rule": {
-    "absolute_margin": 0.01,
-    "declared_before_final_ranking": true,
-    "formula": "valid raw aggregate score <= raw-score best + 0.010000",
-    "near_equivalent_candidate_count": 19,
-    "raw_score_best": 0.39690256845961375,
-    "upper_bound_inclusive": 0.40690256845961376,
-    "valid_candidate_count": 120
-  },
+  "near_equivalent_tiebreak_used": false,
   "per_scenario": {
     "backward_1m": {
       "metrics": {
         "final_abs_position_error_m": {
           "label": "Final absolute error (m)",
-          "rank15_change_percent": 27.00127778293495,
-          "rank15_low_control_effort": 0.003604305753970194,
-          "rank15_minus_raw": 0.000766298281218214,
-          "raw_score_rank1": 0.00283800747275198
+          "previous_stage3c_rank1": 0.00283800747275198,
+          "selected_boundary_rank1": 0.00764180823256877,
+          "selected_minus_previous": 0.00480380075981679
         },
         "meaningful_vane_sign_change_count": {
           "label": "Meaningful vane sign changes",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 1.0,
+          "selected_minus_previous": 1.0
         },
         "mixer_saturation_percent": {
           "label": "Mixer saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "position_overshoot_m": {
           "label": "Position overshoot (m)",
-          "rank15_change_percent": -5.400768117681384,
-          "rank15_low_control_effort": 0.10108238984017981,
-          "rank15_minus_raw": -0.005770898319629181,
-          "raw_score_rank1": 0.10685328815980899
+          "previous_stage3c_rank1": 0.10685328815980899,
+          "selected_boundary_rank1": 0.10918081851615202,
+          "selected_minus_previous": 0.0023275303563430327
         },
         "recovery_excursion_m": {
           "label": "Recovery excursion (m)",
-          "rank15_change_percent": -0.007514278945143387,
-          "rank15_low_control_effort": 1.0016630115176481,
-          "rank15_minus_raw": -7.527340902968582e-05,
-          "raw_score_rank1": 1.0017382849266778
+          "previous_stage3c_rank1": 1.0017382849266778,
+          "selected_boundary_rank1": 1.001801611445357,
+          "selected_minus_previous": 6.332651867912986e-05
         },
         "servo_rate_saturation_percent": {
           "label": "Servo-rate saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "strict_settling_time_s": {
           "label": "Strict settling time (s)",
-          "rank15_change_percent": -17.406876790830918,
-          "rank15_low_control_effort": 5.764999999999889,
-          "rank15_minus_raw": -1.214999999999974,
-          "raw_score_rank1": 6.979999999999863
+          "previous_stage3c_rank1": 6.979999999999863,
+          "selected_boundary_rank1": 6.854999999999865,
+          "selected_minus_previous": -0.12499999999999734
         },
         "tail_high_frequency_vane_energy_deg2": {
           "label": "Tail high-frequency vane energy (deg^2)",
-          "rank15_change_percent": 664.040291876145,
-          "rank15_low_control_effort": 0.0006197243422061984,
-          "rank15_minus_raw": 0.0005386128682701276,
-          "raw_score_rank1": 8.111147393607076e-05
+          "previous_stage3c_rank1": 8.111147393607076e-05,
+          "selected_boundary_rank1": 0.0006836378904979885,
+          "selected_minus_previous": 0.0006025264165619177
         },
         "tail_path_length_m": {
           "label": "Tail path (m)",
-          "rank15_change_percent": 22.40460613641039,
-          "rank15_low_control_effort": 0.07207660829144967,
-          "rank15_minus_raw": 0.013192706315468546,
-          "raw_score_rank1": 0.058883901975981125
+          "previous_stage3c_rank1": 0.058883901975981125,
+          "selected_boundary_rank1": 0.0583044154231374,
+          "selected_minus_previous": -0.0005794865528437262
         },
         "tail_rms_horizontal_velocity_m_s": {
           "label": "Tail RMS vx (m/s)",
-          "rank15_change_percent": 14.440050500926784,
-          "rank15_low_control_effort": 0.03358182908705704,
-          "rank15_minus_raw": 0.0042373566405116934,
-          "raw_score_rank1": 0.02934447244654535
+          "previous_stage3c_rank1": 0.02934447244654535,
+          "selected_boundary_rank1": 0.028315099706720477,
+          "selected_minus_previous": -0.0010293727398248721
         },
         "tail_rms_pitch_deg": {
           "label": "Tail RMS pitch (deg)",
-          "rank15_change_percent": 8.045654411946972,
-          "rank15_low_control_effort": 0.6448605809147705,
-          "rank15_minus_raw": 0.04801975059678032,
-          "raw_score_rank1": 0.5968408303179902
+          "previous_stage3c_rank1": 0.5968408303179902,
+          "selected_boundary_rank1": 0.510216274142404,
+          "selected_minus_previous": -0.08662455617558618
         },
         "tail_rms_pitch_rate_deg_s": {
           "label": "Tail RMS pitch rate (deg/s)",
-          "rank15_change_percent": 10.986167814210194,
-          "rank15_low_control_effort": 2.6373509574644696,
-          "rank15_minus_raw": 0.2610629844628516,
-          "raw_score_rank1": 2.376287973001618
+          "previous_stage3c_rank1": 2.376287973001618,
+          "selected_boundary_rank1": 2.395962947436106,
+          "selected_minus_previous": 0.019674974434487957
         },
         "vane_command_rate_rms_deg_s": {
           "label": "Vane command-rate RMS (deg/s)",
-          "rank15_change_percent": -5.245534771557342,
-          "rank15_low_control_effort": 46.74581979767318,
-          "rank15_minus_raw": -2.587812854861049,
-          "raw_score_rank1": 49.33363265253423
+          "previous_stage3c_rank1": 49.33363265253423,
+          "selected_boundary_rank1": 53.1569535582842,
+          "selected_minus_previous": 3.8233209057499735
         },
         "vane_command_rms_deg": {
           "label": "Vane RMS (deg)",
-          "rank15_change_percent": -2.7683750201545765,
-          "rank15_low_control_effort": 0.7159066505256031,
-          "rank15_minus_raw": -0.02038326612857111,
-          "raw_score_rank1": 0.7362899166541742
+          "previous_stage3c_rank1": 0.7362899166541742,
+          "selected_boundary_rank1": 0.7622388818066952,
+          "selected_minus_previous": 0.025948965152520986
         },
         "vane_command_total_variation_deg": {
           "label": "Vane total variation (deg)",
-          "rank15_change_percent": -4.291454066226178,
-          "rank15_low_control_effort": 42.76321931592778,
-          "rank15_minus_raw": -1.9174504181188325,
-          "raw_score_rank1": 44.68066973404661
+          "previous_stage3c_rank1": 44.68066973404661,
+          "selected_boundary_rank1": 46.99119037105219,
+          "selected_minus_previous": 2.310520637005581
         },
         "vane_saturation_percent": {
           "label": "Vane saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "vane_total_variation_per_second_deg_s": {
           "label": "Vane variation rate (deg/s)",
-          "rank15_change_percent": -4.291454066226181,
-          "rank15_low_control_effort": 3.5636016096605068,
-          "rank15_minus_raw": -0.15978753484322983,
-          "raw_score_rank1": 3.7233891445037366
+          "previous_stage3c_rank1": 3.7233891445037366,
+          "selected_boundary_rank1": 3.915932530920861,
+          "selected_minus_previous": 0.1925433864171242
         },
         "vane_zero_crossing_frequency_hz": {
           "label": "Vane zero-crossing frequency (Hz)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.08333333333333003,
+          "selected_minus_previous": 0.08333333333333003
         }
       },
-      "rank15_low_control_effort_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 0,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 0.0006197243422061984,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 3.5636016096605068
+      "previous_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "0",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "8.111147393607076e-05",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "3.7233891445037366"
       },
-      "rank15_low_control_effort_rejected": false,
-      "raw_score_rank1_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 0,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 8.111147393607076e-05,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 3.7233891445037366
-      },
-      "raw_score_rank1_rejected": false
+      "selected_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "1",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0006836378904979885",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "3.915932530920861"
+      }
     },
     "forward_1m": {
       "metrics": {
         "final_abs_position_error_m": {
           "label": "Final absolute error (m)",
-          "rank15_change_percent": 27.00127778293495,
-          "rank15_low_control_effort": 0.003604305753970194,
-          "rank15_minus_raw": 0.000766298281218214,
-          "raw_score_rank1": 0.00283800747275198
+          "previous_stage3c_rank1": 0.00283800747275198,
+          "selected_boundary_rank1": 0.00764180823256877,
+          "selected_minus_previous": 0.00480380075981679
         },
         "meaningful_vane_sign_change_count": {
           "label": "Meaningful vane sign changes",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 1.0,
+          "selected_minus_previous": 1.0
         },
         "mixer_saturation_percent": {
           "label": "Mixer saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "position_overshoot_m": {
           "label": "Position overshoot (m)",
-          "rank15_change_percent": -5.400768117681384,
-          "rank15_low_control_effort": 0.10108238984017981,
-          "rank15_minus_raw": -0.005770898319629181,
-          "raw_score_rank1": 0.10685328815980899
+          "previous_stage3c_rank1": 0.10685328815980899,
+          "selected_boundary_rank1": 0.10918081851615202,
+          "selected_minus_previous": 0.0023275303563430327
         },
         "recovery_excursion_m": {
           "label": "Recovery excursion (m)",
-          "rank15_change_percent": -0.007514278945143387,
-          "rank15_low_control_effort": 1.0016630115176481,
-          "rank15_minus_raw": -7.527340902968582e-05,
-          "raw_score_rank1": 1.0017382849266778
+          "previous_stage3c_rank1": 1.0017382849266778,
+          "selected_boundary_rank1": 1.001801611445357,
+          "selected_minus_previous": 6.332651867912986e-05
         },
         "servo_rate_saturation_percent": {
           "label": "Servo-rate saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "strict_settling_time_s": {
           "label": "Strict settling time (s)",
-          "rank15_change_percent": -17.406876790830918,
-          "rank15_low_control_effort": 5.764999999999889,
-          "rank15_minus_raw": -1.214999999999974,
-          "raw_score_rank1": 6.979999999999863
+          "previous_stage3c_rank1": 6.979999999999863,
+          "selected_boundary_rank1": 6.854999999999865,
+          "selected_minus_previous": -0.12499999999999734
         },
         "tail_high_frequency_vane_energy_deg2": {
           "label": "Tail high-frequency vane energy (deg^2)",
-          "rank15_change_percent": 664.040291876145,
-          "rank15_low_control_effort": 0.0006197243422061984,
-          "rank15_minus_raw": 0.0005386128682701276,
-          "raw_score_rank1": 8.111147393607076e-05
+          "previous_stage3c_rank1": 8.111147393607076e-05,
+          "selected_boundary_rank1": 0.0006836378904979885,
+          "selected_minus_previous": 0.0006025264165619177
         },
         "tail_path_length_m": {
           "label": "Tail path (m)",
-          "rank15_change_percent": 22.40460613641039,
-          "rank15_low_control_effort": 0.07207660829144967,
-          "rank15_minus_raw": 0.013192706315468546,
-          "raw_score_rank1": 0.058883901975981125
+          "previous_stage3c_rank1": 0.058883901975981125,
+          "selected_boundary_rank1": 0.0583044154231374,
+          "selected_minus_previous": -0.0005794865528437262
         },
         "tail_rms_horizontal_velocity_m_s": {
           "label": "Tail RMS vx (m/s)",
-          "rank15_change_percent": 14.440050500926784,
-          "rank15_low_control_effort": 0.03358182908705704,
-          "rank15_minus_raw": 0.0042373566405116934,
-          "raw_score_rank1": 0.02934447244654535
+          "previous_stage3c_rank1": 0.02934447244654535,
+          "selected_boundary_rank1": 0.028315099706720477,
+          "selected_minus_previous": -0.0010293727398248721
         },
         "tail_rms_pitch_deg": {
           "label": "Tail RMS pitch (deg)",
-          "rank15_change_percent": 8.045654411946972,
-          "rank15_low_control_effort": 0.6448605809147705,
-          "rank15_minus_raw": 0.04801975059678032,
-          "raw_score_rank1": 0.5968408303179902
+          "previous_stage3c_rank1": 0.5968408303179902,
+          "selected_boundary_rank1": 0.510216274142404,
+          "selected_minus_previous": -0.08662455617558618
         },
         "tail_rms_pitch_rate_deg_s": {
           "label": "Tail RMS pitch rate (deg/s)",
-          "rank15_change_percent": 10.986167814210194,
-          "rank15_low_control_effort": 2.6373509574644696,
-          "rank15_minus_raw": 0.2610629844628516,
-          "raw_score_rank1": 2.376287973001618
+          "previous_stage3c_rank1": 2.376287973001618,
+          "selected_boundary_rank1": 2.395962947436106,
+          "selected_minus_previous": 0.019674974434487957
         },
         "vane_command_rate_rms_deg_s": {
           "label": "Vane command-rate RMS (deg/s)",
-          "rank15_change_percent": -5.245534771557342,
-          "rank15_low_control_effort": 46.74581979767318,
-          "rank15_minus_raw": -2.587812854861049,
-          "raw_score_rank1": 49.33363265253423
+          "previous_stage3c_rank1": 49.33363265253423,
+          "selected_boundary_rank1": 53.1569535582842,
+          "selected_minus_previous": 3.8233209057499735
         },
         "vane_command_rms_deg": {
           "label": "Vane RMS (deg)",
-          "rank15_change_percent": -2.7683750201545765,
-          "rank15_low_control_effort": 0.7159066505256031,
-          "rank15_minus_raw": -0.02038326612857111,
-          "raw_score_rank1": 0.7362899166541742
+          "previous_stage3c_rank1": 0.7362899166541742,
+          "selected_boundary_rank1": 0.7622388818066952,
+          "selected_minus_previous": 0.025948965152520986
         },
         "vane_command_total_variation_deg": {
           "label": "Vane total variation (deg)",
-          "rank15_change_percent": -4.291454066226178,
-          "rank15_low_control_effort": 42.76321931592778,
-          "rank15_minus_raw": -1.9174504181188325,
-          "raw_score_rank1": 44.68066973404661
+          "previous_stage3c_rank1": 44.68066973404661,
+          "selected_boundary_rank1": 46.99119037105219,
+          "selected_minus_previous": 2.310520637005581
         },
         "vane_saturation_percent": {
           "label": "Vane saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "vane_total_variation_per_second_deg_s": {
           "label": "Vane variation rate (deg/s)",
-          "rank15_change_percent": -4.291454066226181,
-          "rank15_low_control_effort": 3.5636016096605068,
-          "rank15_minus_raw": -0.15978753484322983,
-          "raw_score_rank1": 3.7233891445037366
+          "previous_stage3c_rank1": 3.7233891445037366,
+          "selected_boundary_rank1": 3.915932530920861,
+          "selected_minus_previous": 0.1925433864171242
         },
         "vane_zero_crossing_frequency_hz": {
           "label": "Vane zero-crossing frequency (Hz)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.08333333333333003,
+          "selected_minus_previous": 0.08333333333333003
         }
       },
-      "rank15_low_control_effort_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 0,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 0.0006197243422061984,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 3.5636016096605068
+      "previous_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "0",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "8.111147393607076e-05",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "3.7233891445037366"
       },
-      "rank15_low_control_effort_rejected": false,
-      "raw_score_rank1_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 0,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 8.111147393607076e-05,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 3.7233891445037366
-      },
-      "raw_score_rank1_rejected": false
+      "selected_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "1",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0006836378904979885",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "3.915932530920861"
+      }
     },
     "loiter_negative_disturbance": {
       "metrics": {
         "final_abs_position_error_m": {
           "label": "Final absolute error (m)",
-          "rank15_change_percent": -61.688043712497205,
-          "rank15_low_control_effort": 0.007848101518836564,
-          "rank15_minus_raw": -0.01263663034904924,
-          "raw_score_rank1": 0.020484731867885804
+          "previous_stage3c_rank1": 0.020484731867885804,
+          "selected_boundary_rank1": 0.025501326378946143,
+          "selected_minus_previous": 0.005016594511060339
         },
         "meaningful_vane_sign_change_count": {
           "label": "Meaningful vane sign changes",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 1.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 1.0
+          "previous_stage3c_rank1": 1.0,
+          "selected_boundary_rank1": 1.0,
+          "selected_minus_previous": 0.0
         },
         "mixer_saturation_percent": {
           "label": "Mixer saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "position_overshoot_m": {
           "label": "Position overshoot (m)",
-          "rank15_change_percent": 1.1579367723798988,
-          "rank15_low_control_effort": 0.6954978412109062,
-          "rank15_minus_raw": 0.007961239138962295,
-          "raw_score_rank1": 0.6875366020719439
+          "previous_stage3c_rank1": 0.6875366020719439,
+          "selected_boundary_rank1": 0.6802783354622549,
+          "selected_minus_previous": -0.007258266609688979
         },
         "recovery_excursion_m": {
           "label": "Recovery excursion (m)",
-          "rank15_change_percent": 1.1579367723798988,
-          "rank15_low_control_effort": 0.6954978412109062,
-          "rank15_minus_raw": 0.007961239138962295,
-          "raw_score_rank1": 0.6875366020719439
+          "previous_stage3c_rank1": 0.6875366020719439,
+          "selected_boundary_rank1": 0.6802783354622549,
+          "selected_minus_previous": -0.007258266609688979
         },
         "servo_rate_saturation_percent": {
           "label": "Servo-rate saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "strict_settling_time_s": {
           "label": "Strict settling time (s)",
-          "rank15_change_percent": 4.996326230713076,
-          "rank15_low_control_effort": 7.1449999999998735,
-          "rank15_minus_raw": 0.3400000000000176,
-          "raw_score_rank1": 6.804999999999856
+          "previous_stage3c_rank1": 6.804999999999856,
+          "selected_boundary_rank1": 6.789999999999856,
+          "selected_minus_previous": -0.01499999999999968
         },
         "tail_high_frequency_vane_energy_deg2": {
           "label": "Tail high-frequency vane energy (deg^2)",
-          "rank15_change_percent": -85.70914373273853,
-          "rank15_low_control_effort": 8.457171069439462e-05,
-          "rank15_minus_raw": -0.00050721725640996,
-          "raw_score_rank1": 0.0005917889671043546
+          "previous_stage3c_rank1": 0.0005917889671043546,
+          "selected_boundary_rank1": 0.0006185873249945392,
+          "selected_minus_previous": 2.679835789018458e-05
         },
         "tail_path_length_m": {
           "label": "Tail path (m)",
-          "rank15_change_percent": 23.06073227358656,
-          "rank15_low_control_effort": 0.07850122598114113,
-          "rank15_minus_raw": 0.014710588195386273,
-          "raw_score_rank1": 0.06379063778575486
+          "previous_stage3c_rank1": 0.06379063778575486,
+          "selected_boundary_rank1": 0.0610801774581674,
+          "selected_minus_previous": -0.002710460327587462
         },
         "tail_rms_horizontal_velocity_m_s": {
           "label": "Tail RMS vx (m/s)",
-          "rank15_change_percent": 18.07295064879169,
-          "rank15_low_control_effort": 0.03694179621611781,
-          "rank15_minus_raw": 0.00565453184851402,
-          "raw_score_rank1": 0.03128726436760379
+          "previous_stage3c_rank1": 0.03128726436760379,
+          "selected_boundary_rank1": 0.02954469257706016,
+          "selected_minus_previous": -0.0017425717905436289
         },
         "tail_rms_pitch_deg": {
           "label": "Tail RMS pitch (deg)",
-          "rank15_change_percent": 18.159238941637902,
-          "rank15_low_control_effort": 0.6599487003460683,
-          "rank15_minus_raw": 0.10142386025968697,
-          "raw_score_rank1": 0.5585248400863814
+          "previous_stage3c_rank1": 0.5585248400863814,
+          "selected_boundary_rank1": 0.5118504110304715,
+          "selected_minus_previous": -0.046674429055909905
         },
         "tail_rms_pitch_rate_deg_s": {
           "label": "Tail RMS pitch rate (deg/s)",
-          "rank15_change_percent": -0.9689608279135276,
-          "rank15_low_control_effort": 2.5410331429493525,
-          "rank15_minus_raw": -0.024862523896870492,
-          "raw_score_rank1": 2.565895666846223
+          "previous_stage3c_rank1": 2.565895666846223,
+          "selected_boundary_rank1": 2.3978267832615665,
+          "selected_minus_previous": -0.16806888358465644
         },
         "vane_command_rate_rms_deg_s": {
           "label": "Vane command-rate RMS (deg/s)",
-          "rank15_change_percent": -5.387881777122759,
-          "rank15_low_control_effort": 12.168652509533192,
-          "rank15_minus_raw": -0.6929689593652899,
-          "raw_score_rank1": 12.861621468898482
+          "previous_stage3c_rank1": 12.861621468898482,
+          "selected_boundary_rank1": 13.779109616845203,
+          "selected_minus_previous": 0.9174881479467203
         },
         "vane_command_rms_deg": {
           "label": "Vane RMS (deg)",
-          "rank15_change_percent": -1.562959378189799,
-          "rank15_low_control_effort": 0.6026511781858246,
-          "rank15_minus_raw": -0.009568748763399637,
-          "raw_score_rank1": 0.6122199269492242
+          "previous_stage3c_rank1": 0.6122199269492242,
+          "selected_boundary_rank1": 0.6166639906429795,
+          "selected_minus_previous": 0.0044440636937552735
         },
         "vane_command_total_variation_deg": {
           "label": "Vane total variation (deg)",
-          "rank15_change_percent": -5.013947274514615,
-          "rank15_low_control_effort": 28.309535139162474,
-          "rank15_minus_raw": -1.4943511439937467,
-          "raw_score_rank1": 29.80388628315622
+          "previous_stage3c_rank1": 29.80388628315622,
+          "selected_boundary_rank1": 30.3027085720089,
+          "selected_minus_previous": 0.4988222888526792
         },
         "vane_saturation_percent": {
           "label": "Vane saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "vane_total_variation_per_second_deg_s": {
           "label": "Vane variation rate (deg/s)",
-          "rank15_change_percent": -5.0139472745146,
-          "rank15_low_control_effort": 2.359127928263446,
-          "rank15_minus_raw": -0.12452926199947356,
-          "raw_score_rank1": 2.4836571902629196
+          "previous_stage3c_rank1": 2.4836571902629196,
+          "selected_boundary_rank1": 2.525225714333975,
+          "selected_minus_previous": 0.04156852407105527
         },
         "vane_zero_crossing_frequency_hz": {
           "label": "Vane zero-crossing frequency (Hz)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.08333333333333003,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.08333333333333003
+          "previous_stage3c_rank1": 0.08333333333333003,
+          "selected_boundary_rank1": 0.08333333333333003,
+          "selected_minus_previous": 0.0
         }
       },
-      "rank15_low_control_effort_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 1,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 8.457171069439462e-05,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 2.359127928263446
+      "previous_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "1",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0005917889671043546",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "2.4836571902629196"
       },
-      "rank15_low_control_effort_rejected": false,
-      "raw_score_rank1_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 1,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 0.0005917889671043546,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 2.4836571902629196
-      },
-      "raw_score_rank1_rejected": false
+      "selected_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "1",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0006185873249945392",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "2.525225714333975"
+      }
     },
     "loiter_positive_disturbance": {
       "metrics": {
         "final_abs_position_error_m": {
           "label": "Final absolute error (m)",
-          "rank15_change_percent": -61.688043712497205,
-          "rank15_low_control_effort": 0.007848101518836564,
-          "rank15_minus_raw": -0.01263663034904924,
-          "raw_score_rank1": 0.020484731867885804
+          "previous_stage3c_rank1": 0.020484731867885804,
+          "selected_boundary_rank1": 0.025501326378946143,
+          "selected_minus_previous": 0.005016594511060339
         },
         "meaningful_vane_sign_change_count": {
           "label": "Meaningful vane sign changes",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 1.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 1.0
+          "previous_stage3c_rank1": 1.0,
+          "selected_boundary_rank1": 1.0,
+          "selected_minus_previous": 0.0
         },
         "mixer_saturation_percent": {
           "label": "Mixer saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "position_overshoot_m": {
           "label": "Position overshoot (m)",
-          "rank15_change_percent": 1.1579367723798988,
-          "rank15_low_control_effort": 0.6954978412109062,
-          "rank15_minus_raw": 0.007961239138962295,
-          "raw_score_rank1": 0.6875366020719439
+          "previous_stage3c_rank1": 0.6875366020719439,
+          "selected_boundary_rank1": 0.6802783354622549,
+          "selected_minus_previous": -0.007258266609688979
         },
         "recovery_excursion_m": {
           "label": "Recovery excursion (m)",
-          "rank15_change_percent": 1.1579367723798988,
-          "rank15_low_control_effort": 0.6954978412109062,
-          "rank15_minus_raw": 0.007961239138962295,
-          "raw_score_rank1": 0.6875366020719439
+          "previous_stage3c_rank1": 0.6875366020719439,
+          "selected_boundary_rank1": 0.6802783354622549,
+          "selected_minus_previous": -0.007258266609688979
         },
         "servo_rate_saturation_percent": {
           "label": "Servo-rate saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "strict_settling_time_s": {
           "label": "Strict settling time (s)",
-          "rank15_change_percent": 4.996326230713076,
-          "rank15_low_control_effort": 7.1449999999998735,
-          "rank15_minus_raw": 0.3400000000000176,
-          "raw_score_rank1": 6.804999999999856
+          "previous_stage3c_rank1": 6.804999999999856,
+          "selected_boundary_rank1": 6.789999999999856,
+          "selected_minus_previous": -0.01499999999999968
         },
         "tail_high_frequency_vane_energy_deg2": {
           "label": "Tail high-frequency vane energy (deg^2)",
-          "rank15_change_percent": -85.70914373273853,
-          "rank15_low_control_effort": 8.457171069439462e-05,
-          "rank15_minus_raw": -0.00050721725640996,
-          "raw_score_rank1": 0.0005917889671043546
+          "previous_stage3c_rank1": 0.0005917889671043546,
+          "selected_boundary_rank1": 0.0006185873249945392,
+          "selected_minus_previous": 2.679835789018458e-05
         },
         "tail_path_length_m": {
           "label": "Tail path (m)",
-          "rank15_change_percent": 23.06073227358656,
-          "rank15_low_control_effort": 0.07850122598114113,
-          "rank15_minus_raw": 0.014710588195386273,
-          "raw_score_rank1": 0.06379063778575486
+          "previous_stage3c_rank1": 0.06379063778575486,
+          "selected_boundary_rank1": 0.0610801774581674,
+          "selected_minus_previous": -0.002710460327587462
         },
         "tail_rms_horizontal_velocity_m_s": {
           "label": "Tail RMS vx (m/s)",
-          "rank15_change_percent": 18.07295064879169,
-          "rank15_low_control_effort": 0.03694179621611781,
-          "rank15_minus_raw": 0.00565453184851402,
-          "raw_score_rank1": 0.03128726436760379
+          "previous_stage3c_rank1": 0.03128726436760379,
+          "selected_boundary_rank1": 0.02954469257706016,
+          "selected_minus_previous": -0.0017425717905436289
         },
         "tail_rms_pitch_deg": {
           "label": "Tail RMS pitch (deg)",
-          "rank15_change_percent": 18.159238941637902,
-          "rank15_low_control_effort": 0.6599487003460683,
-          "rank15_minus_raw": 0.10142386025968697,
-          "raw_score_rank1": 0.5585248400863814
+          "previous_stage3c_rank1": 0.5585248400863814,
+          "selected_boundary_rank1": 0.5118504110304715,
+          "selected_minus_previous": -0.046674429055909905
         },
         "tail_rms_pitch_rate_deg_s": {
           "label": "Tail RMS pitch rate (deg/s)",
-          "rank15_change_percent": -0.9689608279135276,
-          "rank15_low_control_effort": 2.5410331429493525,
-          "rank15_minus_raw": -0.024862523896870492,
-          "raw_score_rank1": 2.565895666846223
+          "previous_stage3c_rank1": 2.565895666846223,
+          "selected_boundary_rank1": 2.3978267832615665,
+          "selected_minus_previous": -0.16806888358465644
         },
         "vane_command_rate_rms_deg_s": {
           "label": "Vane command-rate RMS (deg/s)",
-          "rank15_change_percent": -5.387881777122759,
-          "rank15_low_control_effort": 12.168652509533192,
-          "rank15_minus_raw": -0.6929689593652899,
-          "raw_score_rank1": 12.861621468898482
+          "previous_stage3c_rank1": 12.861621468898482,
+          "selected_boundary_rank1": 13.779109616845203,
+          "selected_minus_previous": 0.9174881479467203
         },
         "vane_command_rms_deg": {
           "label": "Vane RMS (deg)",
-          "rank15_change_percent": -1.562959378189799,
-          "rank15_low_control_effort": 0.6026511781858246,
-          "rank15_minus_raw": -0.009568748763399637,
-          "raw_score_rank1": 0.6122199269492242
+          "previous_stage3c_rank1": 0.6122199269492242,
+          "selected_boundary_rank1": 0.6166639906429795,
+          "selected_minus_previous": 0.0044440636937552735
         },
         "vane_command_total_variation_deg": {
           "label": "Vane total variation (deg)",
-          "rank15_change_percent": -5.013947274514615,
-          "rank15_low_control_effort": 28.309535139162474,
-          "rank15_minus_raw": -1.4943511439937467,
-          "raw_score_rank1": 29.80388628315622
+          "previous_stage3c_rank1": 29.80388628315622,
+          "selected_boundary_rank1": 30.3027085720089,
+          "selected_minus_previous": 0.4988222888526792
         },
         "vane_saturation_percent": {
           "label": "Vane saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "vane_total_variation_per_second_deg_s": {
           "label": "Vane variation rate (deg/s)",
-          "rank15_change_percent": -5.0139472745146,
-          "rank15_low_control_effort": 2.359127928263446,
-          "rank15_minus_raw": -0.12452926199947356,
-          "raw_score_rank1": 2.4836571902629196
+          "previous_stage3c_rank1": 2.4836571902629196,
+          "selected_boundary_rank1": 2.525225714333975,
+          "selected_minus_previous": 0.04156852407105527
         },
         "vane_zero_crossing_frequency_hz": {
           "label": "Vane zero-crossing frequency (Hz)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.08333333333333003,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.08333333333333003
+          "previous_stage3c_rank1": 0.08333333333333003,
+          "selected_boundary_rank1": 0.08333333333333003,
+          "selected_minus_previous": 0.0
         }
       },
-      "rank15_low_control_effort_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 1,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 8.457171069439462e-05,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 2.359127928263446
+      "previous_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "1",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0005917889671043546",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "2.4836571902629196"
       },
-      "rank15_low_control_effort_rejected": false,
-      "raw_score_rank1_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 1,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 0.0005917889671043546,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 2.4836571902629196
-      },
-      "raw_score_rank1_rejected": false
+      "selected_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "1",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0006185873249945392",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "2.525225714333975"
+      }
     },
     "pitch_negative_recovery": {
       "metrics": {
         "final_abs_position_error_m": {
           "label": "Final absolute error (m)",
-          "rank15_change_percent": -19.63320458774729,
-          "rank15_low_control_effort": 0.005987272174127213,
-          "rank15_minus_raw": -0.0014626605293166202,
-          "raw_score_rank1": 0.007449932703443833
+          "previous_stage3c_rank1": 0.007449932703443833,
+          "selected_boundary_rank1": 0.011422937368889375,
+          "selected_minus_previous": 0.003973004665445542
         },
         "meaningful_vane_sign_change_count": {
           "label": "Meaningful vane sign changes",
-          "rank15_change_percent": -100.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": -1.0,
-          "raw_score_rank1": 1.0
+          "previous_stage3c_rank1": 1.0,
+          "selected_boundary_rank1": 1.0,
+          "selected_minus_previous": 0.0
         },
         "mixer_saturation_percent": {
           "label": "Mixer saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "position_overshoot_m": {
           "label": "Position overshoot (m)",
-          "rank15_change_percent": 9.90628711936314,
-          "rank15_low_control_effort": 0.059778381352460434,
-          "rank15_minus_raw": 0.005388061272283001,
-          "raw_score_rank1": 0.05439032008017743
+          "previous_stage3c_rank1": 0.05439032008017743,
+          "selected_boundary_rank1": 0.05268104990236201,
+          "selected_minus_previous": -0.001709270177815421
         },
         "recovery_excursion_m": {
           "label": "Recovery excursion (m)",
-          "rank15_change_percent": 9.90628711936314,
-          "rank15_low_control_effort": 0.059778381352460434,
-          "rank15_minus_raw": 0.005388061272283001,
-          "raw_score_rank1": 0.05439032008017743
+          "previous_stage3c_rank1": 0.05439032008017743,
+          "selected_boundary_rank1": 0.05268104990236201,
+          "selected_minus_previous": -0.001709270177815421
         },
         "servo_rate_saturation_percent": {
           "label": "Servo-rate saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "strict_settling_time_s": {
           "label": "Strict settling time (s)",
-          "rank15_change_percent": 3.9603960396039612,
-          "rank15_low_control_effort": 0.5250000000000004,
-          "rank15_minus_raw": 0.020000000000000018,
-          "raw_score_rank1": 0.5050000000000003
+          "previous_stage3c_rank1": 0.5050000000000003,
+          "selected_boundary_rank1": 0.4800000000000003,
+          "selected_minus_previous": -0.025000000000000022
         },
         "tail_high_frequency_vane_energy_deg2": {
           "label": "Tail high-frequency vane energy (deg^2)",
-          "rank15_change_percent": -59.70253022787452,
-          "rank15_low_control_effort": 0.00025982451002369626,
-          "rank15_minus_raw": -0.0003849418028315634,
-          "raw_score_rank1": 0.0006447663128552597
+          "previous_stage3c_rank1": 0.0006447663128552597,
+          "selected_boundary_rank1": 0.0006321968211939072,
+          "selected_minus_previous": -1.2569491661352508e-05
         },
         "tail_path_length_m": {
           "label": "Tail path (m)",
-          "rank15_change_percent": 5.532701757779677,
-          "rank15_low_control_effort": 0.06499337639628346,
-          "rank15_minus_raw": 0.003407370055370021,
-          "raw_score_rank1": 0.061586006340913435
+          "previous_stage3c_rank1": 0.061586006340913435,
+          "selected_boundary_rank1": 0.05702361675543329,
+          "selected_minus_previous": -0.0045623895854801436
         },
         "tail_rms_horizontal_velocity_m_s": {
           "label": "Tail RMS vx (m/s)",
-          "rank15_change_percent": 6.492270326497676,
-          "rank15_low_control_effort": 0.02905090853341657,
-          "rank15_minus_raw": 0.0017710802000093055,
-          "raw_score_rank1": 0.027279828333407266
+          "previous_stage3c_rank1": 0.027279828333407266,
+          "selected_boundary_rank1": 0.025226300306294577,
+          "selected_minus_previous": -0.0020535280271126895
         },
         "tail_rms_pitch_deg": {
           "label": "Tail RMS pitch (deg)",
-          "rank15_change_percent": 11.726065888578432,
-          "rank15_low_control_effort": 0.6259052516117658,
-          "rank15_minus_raw": 0.06569108257804612,
-          "raw_score_rank1": 0.5602141690337197
+          "previous_stage3c_rank1": 0.5602141690337197,
+          "selected_boundary_rank1": 0.5156823008320215,
+          "selected_minus_previous": -0.04453186820169819
         },
         "tail_rms_pitch_rate_deg_s": {
           "label": "Tail RMS pitch rate (deg/s)",
-          "rank15_change_percent": 0.5488551777202488,
-          "rank15_low_control_effort": 2.6167321682865987,
-          "rank15_minus_raw": 0.014283673312169842,
-          "raw_score_rank1": 2.602448494974429
+          "previous_stage3c_rank1": 2.602448494974429,
+          "selected_boundary_rank1": 2.3991082334839327,
+          "selected_minus_previous": -0.20334026149049622
         },
         "vane_command_rate_rms_deg_s": {
           "label": "Vane command-rate RMS (deg/s)",
-          "rank15_change_percent": -5.695301372359527,
-          "rank15_low_control_effort": 32.69854817252451,
-          "rank15_minus_raw": -1.9747487558012295,
-          "raw_score_rank1": 34.67329692832574
+          "previous_stage3c_rank1": 34.67329692832574,
+          "selected_boundary_rank1": 37.63973964817958,
+          "selected_minus_previous": 2.9664427198538377
         },
         "vane_command_rms_deg": {
           "label": "Vane RMS (deg)",
-          "rank15_change_percent": -3.819324850326927,
-          "rank15_low_control_effort": 0.8599143016201609,
-          "rank15_minus_raw": -0.03414710965813561,
-          "raw_score_rank1": 0.8940614112782965
+          "previous_stage3c_rank1": 0.8940614112782965,
+          "selected_boundary_rank1": 0.9380810254589921,
+          "selected_minus_previous": 0.044019614180695554
         },
         "vane_command_total_variation_deg": {
           "label": "Vane total variation (deg)",
-          "rank15_change_percent": -4.529843613077726,
-          "rank15_low_control_effort": 29.015970557008053,
-          "rank15_minus_raw": -1.3767423651452084,
-          "raw_score_rank1": 30.39271292215326
+          "previous_stage3c_rank1": 30.39271292215326,
+          "selected_boundary_rank1": 31.54137328266173,
+          "selected_minus_previous": 1.1486603605084689
         },
         "vane_saturation_percent": {
           "label": "Vane saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "vane_total_variation_per_second_deg_s": {
           "label": "Vane variation rate (deg/s)",
-          "rank15_change_percent": -4.529843613077736,
-          "rank15_low_control_effort": 3.6269963196260737,
-          "rank15_minus_raw": -0.1720927956431546,
-          "raw_score_rank1": 3.7990891152692283
+          "previous_stage3c_rank1": 3.7990891152692283,
+          "selected_boundary_rank1": 3.9426716603327896,
+          "selected_minus_previous": 0.14358254506356127
         },
         "vane_zero_crossing_frequency_hz": {
           "label": "Vane zero-crossing frequency (Hz)",
-          "rank15_change_percent": -100.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": -0.12500000000000233,
-          "raw_score_rank1": 0.12500000000000233
+          "previous_stage3c_rank1": 0.12500000000000233,
+          "selected_boundary_rank1": 0.12500000000000233,
+          "selected_minus_previous": 0.0
         }
       },
-      "rank15_low_control_effort_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 0,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 0.00025982451002369626,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 3.6269963196260737
+      "previous_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "1",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0006447663128552597",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "3.7990891152692283"
       },
-      "rank15_low_control_effort_rejected": false,
-      "raw_score_rank1_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 1,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 0.0006447663128552597,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 3.7990891152692283
-      },
-      "raw_score_rank1_rejected": false
+      "selected_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "1",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0006321968211939072",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "3.9426716603327896"
+      }
     },
     "pitch_positive_recovery": {
       "metrics": {
         "final_abs_position_error_m": {
           "label": "Final absolute error (m)",
-          "rank15_change_percent": -19.63320458774729,
-          "rank15_low_control_effort": 0.005987272174127213,
-          "rank15_minus_raw": -0.0014626605293166202,
-          "raw_score_rank1": 0.007449932703443833
+          "previous_stage3c_rank1": 0.007449932703443833,
+          "selected_boundary_rank1": 0.011422937368889375,
+          "selected_minus_previous": 0.003973004665445542
         },
         "meaningful_vane_sign_change_count": {
           "label": "Meaningful vane sign changes",
-          "rank15_change_percent": -100.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": -1.0,
-          "raw_score_rank1": 1.0
+          "previous_stage3c_rank1": 1.0,
+          "selected_boundary_rank1": 1.0,
+          "selected_minus_previous": 0.0
         },
         "mixer_saturation_percent": {
           "label": "Mixer saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "position_overshoot_m": {
           "label": "Position overshoot (m)",
-          "rank15_change_percent": 9.90628711936314,
-          "rank15_low_control_effort": 0.059778381352460434,
-          "rank15_minus_raw": 0.005388061272283001,
-          "raw_score_rank1": 0.05439032008017743
+          "previous_stage3c_rank1": 0.05439032008017743,
+          "selected_boundary_rank1": 0.05268104990236201,
+          "selected_minus_previous": -0.001709270177815421
         },
         "recovery_excursion_m": {
           "label": "Recovery excursion (m)",
-          "rank15_change_percent": 9.90628711936314,
-          "rank15_low_control_effort": 0.059778381352460434,
-          "rank15_minus_raw": 0.005388061272283001,
-          "raw_score_rank1": 0.05439032008017743
+          "previous_stage3c_rank1": 0.05439032008017743,
+          "selected_boundary_rank1": 0.05268104990236201,
+          "selected_minus_previous": -0.001709270177815421
         },
         "servo_rate_saturation_percent": {
           "label": "Servo-rate saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "strict_settling_time_s": {
           "label": "Strict settling time (s)",
-          "rank15_change_percent": 3.9603960396039612,
-          "rank15_low_control_effort": 0.5250000000000004,
-          "rank15_minus_raw": 0.020000000000000018,
-          "raw_score_rank1": 0.5050000000000003
+          "previous_stage3c_rank1": 0.5050000000000003,
+          "selected_boundary_rank1": 0.4800000000000003,
+          "selected_minus_previous": -0.025000000000000022
         },
         "tail_high_frequency_vane_energy_deg2": {
           "label": "Tail high-frequency vane energy (deg^2)",
-          "rank15_change_percent": -59.70253022787452,
-          "rank15_low_control_effort": 0.00025982451002369626,
-          "rank15_minus_raw": -0.0003849418028315634,
-          "raw_score_rank1": 0.0006447663128552597
+          "previous_stage3c_rank1": 0.0006447663128552597,
+          "selected_boundary_rank1": 0.0006321968211939072,
+          "selected_minus_previous": -1.2569491661352508e-05
         },
         "tail_path_length_m": {
           "label": "Tail path (m)",
-          "rank15_change_percent": 5.532701757779677,
-          "rank15_low_control_effort": 0.06499337639628346,
-          "rank15_minus_raw": 0.003407370055370021,
-          "raw_score_rank1": 0.061586006340913435
+          "previous_stage3c_rank1": 0.061586006340913435,
+          "selected_boundary_rank1": 0.05702361675543329,
+          "selected_minus_previous": -0.0045623895854801436
         },
         "tail_rms_horizontal_velocity_m_s": {
           "label": "Tail RMS vx (m/s)",
-          "rank15_change_percent": 6.492270326497676,
-          "rank15_low_control_effort": 0.02905090853341657,
-          "rank15_minus_raw": 0.0017710802000093055,
-          "raw_score_rank1": 0.027279828333407266
+          "previous_stage3c_rank1": 0.027279828333407266,
+          "selected_boundary_rank1": 0.025226300306294577,
+          "selected_minus_previous": -0.0020535280271126895
         },
         "tail_rms_pitch_deg": {
           "label": "Tail RMS pitch (deg)",
-          "rank15_change_percent": 11.726065888578432,
-          "rank15_low_control_effort": 0.6259052516117658,
-          "rank15_minus_raw": 0.06569108257804612,
-          "raw_score_rank1": 0.5602141690337197
+          "previous_stage3c_rank1": 0.5602141690337197,
+          "selected_boundary_rank1": 0.5156823008320215,
+          "selected_minus_previous": -0.04453186820169819
         },
         "tail_rms_pitch_rate_deg_s": {
           "label": "Tail RMS pitch rate (deg/s)",
-          "rank15_change_percent": 0.5488551777202488,
-          "rank15_low_control_effort": 2.6167321682865987,
-          "rank15_minus_raw": 0.014283673312169842,
-          "raw_score_rank1": 2.602448494974429
+          "previous_stage3c_rank1": 2.602448494974429,
+          "selected_boundary_rank1": 2.3991082334839327,
+          "selected_minus_previous": -0.20334026149049622
         },
         "vane_command_rate_rms_deg_s": {
           "label": "Vane command-rate RMS (deg/s)",
-          "rank15_change_percent": -5.695301372359527,
-          "rank15_low_control_effort": 32.69854817252451,
-          "rank15_minus_raw": -1.9747487558012295,
-          "raw_score_rank1": 34.67329692832574
+          "previous_stage3c_rank1": 34.67329692832574,
+          "selected_boundary_rank1": 37.63973964817958,
+          "selected_minus_previous": 2.9664427198538377
         },
         "vane_command_rms_deg": {
           "label": "Vane RMS (deg)",
-          "rank15_change_percent": -3.819324850326927,
-          "rank15_low_control_effort": 0.8599143016201609,
-          "rank15_minus_raw": -0.03414710965813561,
-          "raw_score_rank1": 0.8940614112782965
+          "previous_stage3c_rank1": 0.8940614112782965,
+          "selected_boundary_rank1": 0.9380810254589921,
+          "selected_minus_previous": 0.044019614180695554
         },
         "vane_command_total_variation_deg": {
           "label": "Vane total variation (deg)",
-          "rank15_change_percent": -4.529843613077726,
-          "rank15_low_control_effort": 29.015970557008053,
-          "rank15_minus_raw": -1.3767423651452084,
-          "raw_score_rank1": 30.39271292215326
+          "previous_stage3c_rank1": 30.39271292215326,
+          "selected_boundary_rank1": 31.54137328266173,
+          "selected_minus_previous": 1.1486603605084689
         },
         "vane_saturation_percent": {
           "label": "Vane saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "vane_total_variation_per_second_deg_s": {
           "label": "Vane variation rate (deg/s)",
-          "rank15_change_percent": -4.529843613077736,
-          "rank15_low_control_effort": 3.6269963196260737,
-          "rank15_minus_raw": -0.1720927956431546,
-          "raw_score_rank1": 3.7990891152692283
+          "previous_stage3c_rank1": 3.7990891152692283,
+          "selected_boundary_rank1": 3.9426716603327896,
+          "selected_minus_previous": 0.14358254506356127
         },
         "vane_zero_crossing_frequency_hz": {
           "label": "Vane zero-crossing frequency (Hz)",
-          "rank15_change_percent": -100.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": -0.12500000000000233,
-          "raw_score_rank1": 0.12500000000000233
+          "previous_stage3c_rank1": 0.12500000000000233,
+          "selected_boundary_rank1": 0.12500000000000233,
+          "selected_minus_previous": 0.0
         }
       },
-      "rank15_low_control_effort_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 0,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 0.00025982451002369626,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 3.6269963196260737
+      "previous_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "1",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0006447663128552597",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "3.7990891152692283"
       },
-      "rank15_low_control_effort_rejected": false,
-      "raw_score_rank1_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 1,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 0.0006447663128552597,
-        "target_capture_count": 0,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 3.7990891152692283
-      },
-      "raw_score_rank1_rejected": false
+      "selected_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "1",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0006321968211939072",
+        "target_capture_count": "0",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "3.9426716603327896"
+      }
     },
     "stick_release": {
       "metrics": {
         "final_abs_position_error_m": {
           "label": "Final absolute error (m)",
-          "rank15_change_percent": -11.784922606778531,
-          "rank15_low_control_effort": 0.022300049785388687,
-          "rank15_minus_raw": -0.002979132010241914,
-          "raw_score_rank1": 0.0252791817956306
+          "previous_stage3c_rank1": 0.0252791817956306,
+          "selected_boundary_rank1": 0.0323989885241136,
+          "selected_minus_previous": 0.0071198067284830024
         },
         "meaningful_vane_sign_change_count": {
           "label": "Meaningful vane sign changes",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "mixer_saturation_percent": {
           "label": "Mixer saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "position_overshoot_m": {
           "label": "Position overshoot (m)",
-          "rank15_change_percent": 4.037106635004522,
-          "rank15_low_control_effort": 0.6560987737367292,
-          "rank15_minus_raw": 0.02545957686004774,
-          "raw_score_rank1": 0.6306391968766815
+          "previous_stage3c_rank1": 0.6306391968766815,
+          "selected_boundary_rank1": 0.6267651709430582,
+          "selected_minus_previous": -0.003874025933623293
         },
         "recovery_excursion_m": {
           "label": "Recovery excursion (m)",
-          "rank15_change_percent": 4.037106635004522,
-          "rank15_low_control_effort": 0.6560987737367292,
-          "rank15_minus_raw": 0.02545957686004774,
-          "raw_score_rank1": 0.6306391968766815
+          "previous_stage3c_rank1": 0.6306391968766815,
+          "selected_boundary_rank1": 0.6267651709430582,
+          "selected_minus_previous": -0.003874025933623293
         },
         "servo_rate_saturation_percent": {
           "label": "Servo-rate saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "strict_settling_time_s": {
           "label": "Strict settling time (s)",
-          "rank15_change_percent": 7.474747474748538,
-          "rank15_low_control_effort": 7.980000000000191,
-          "rank15_minus_raw": 0.5550000000000868,
-          "raw_score_rank1": 7.425000000000105
+          "previous_stage3c_rank1": 7.425000000000105,
+          "selected_boundary_rank1": 7.690000000000146,
+          "selected_minus_previous": 0.2650000000000414
         },
         "tail_high_frequency_vane_energy_deg2": {
           "label": "Tail high-frequency vane energy (deg^2)",
-          "rank15_change_percent": -2.1247234784738294,
-          "rank15_low_control_effort": 0.0003834096506197193,
-          "rank15_minus_raw": -8.323240715095177e-06,
-          "raw_score_rank1": 0.0003917328913348145
+          "previous_stage3c_rank1": 0.0003917328913348145,
+          "selected_boundary_rank1": 7.669961529093916e-05,
+          "selected_minus_previous": -0.0003150332760438753
         },
         "tail_path_length_m": {
           "label": "Tail path (m)",
-          "rank15_change_percent": 26.50220553011041,
-          "rank15_low_control_effort": 0.09951654904740692,
-          "rank15_minus_raw": 0.02084871188964313,
-          "raw_score_rank1": 0.07866783715776379
+          "previous_stage3c_rank1": 0.07866783715776379,
+          "selected_boundary_rank1": 0.0891607489690521,
+          "selected_minus_previous": 0.010492911811288308
         },
         "tail_rms_horizontal_velocity_m_s": {
           "label": "Tail RMS vx (m/s)",
-          "rank15_change_percent": 27.83280161793279,
-          "rank15_low_control_effort": 0.05003458890828992,
-          "rank15_minus_raw": 0.010893939344938014,
-          "raw_score_rank1": 0.039140649563351906
+          "previous_stage3c_rank1": 0.039140649563351906,
+          "selected_boundary_rank1": 0.045501433982966334,
+          "selected_minus_previous": 0.006360784419614428
         },
         "tail_rms_pitch_deg": {
           "label": "Tail RMS pitch (deg)",
-          "rank15_change_percent": 5.379835403185782,
-          "rank15_low_control_effort": 0.6630221416648191,
-          "rank15_minus_raw": 0.033848505999057754,
-          "raw_score_rank1": 0.6291736356657613
+          "previous_stage3c_rank1": 0.6291736356657613,
+          "selected_boundary_rank1": 0.6033269525313913,
+          "selected_minus_previous": -0.025846683134369997
         },
         "tail_rms_pitch_rate_deg_s": {
           "label": "Tail RMS pitch rate (deg/s)",
-          "rank15_change_percent": 7.6503695263496345,
-          "rank15_low_control_effort": 2.648382292076473,
-          "rank15_minus_raw": 0.18821210991260484,
-          "raw_score_rank1": 2.460170182163868
+          "previous_stage3c_rank1": 2.460170182163868,
+          "selected_boundary_rank1": 2.2197692129382185,
+          "selected_minus_previous": -0.24040096922564969
         },
         "vane_command_rate_rms_deg_s": {
           "label": "Vane command-rate RMS (deg/s)",
-          "rank15_change_percent": -3.5409103298627724,
-          "rank15_low_control_effort": 5.460673858891494,
-          "rank15_minus_raw": -0.20045551477920132,
-          "raw_score_rank1": 5.661129373670695
+          "previous_stage3c_rank1": 5.661129373670695,
+          "selected_boundary_rank1": 5.863332267427636,
+          "selected_minus_previous": 0.20220289375694112
         },
         "vane_command_rms_deg": {
           "label": "Vane RMS (deg)",
-          "rank15_change_percent": 0.16650693314735912,
-          "rank15_low_control_effort": 0.5024222539516232,
-          "rank15_minus_raw": 0.0008351772584652695,
-          "raw_score_rank1": 0.5015870766931579
+          "previous_stage3c_rank1": 0.5015870766931579,
+          "selected_boundary_rank1": 0.4929286564398622,
+          "selected_minus_previous": -0.008658420253295718
         },
         "vane_command_total_variation_deg": {
           "label": "Vane total variation (deg)",
-          "rank15_change_percent": -1.860440623090181,
-          "rank15_low_control_effort": 24.539141182283796,
-          "rank15_minus_raw": -0.4651907487777791,
-          "raw_score_rank1": 25.004331931061575
+          "previous_stage3c_rank1": 25.004331931061575,
+          "selected_boundary_rank1": 23.94859181548048,
+          "selected_minus_previous": -1.055740115581095
         },
         "vane_saturation_percent": {
           "label": "Vane saturation (%)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         },
         "vane_total_variation_per_second_deg_s": {
           "label": "Vane variation rate (deg/s)",
-          "rank15_change_percent": -1.8604406230901909,
-          "rank15_low_control_effort": 2.044928431856902,
-          "rank15_minus_raw": -0.03876589573148026,
-          "raw_score_rank1": 2.083694327588382
+          "previous_stage3c_rank1": 2.083694327588382,
+          "selected_boundary_rank1": 1.9957159846232941,
+          "selected_minus_previous": -0.087978342965088
         },
         "vane_zero_crossing_frequency_hz": {
           "label": "Vane zero-crossing frequency (Hz)",
-          "rank15_change_percent": 0.0,
-          "rank15_low_control_effort": 0.0,
-          "rank15_minus_raw": 0.0,
-          "raw_score_rank1": 0.0
+          "previous_stage3c_rank1": 0.0,
+          "selected_boundary_rank1": 0.0,
+          "selected_minus_previous": 0.0
         }
       },
-      "rank15_low_control_effort_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 0,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 0.0003834096506197193,
-        "target_capture_count": 1,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 2.044928431856902
+      "previous_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "0",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "0.0003917328913348145",
+        "target_capture_count": "1",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "2.083694327588382"
       },
-      "rank15_low_control_effort_rejected": false,
-      "raw_score_rank1_hard_gates": {
-        "capture_discontinuity": false,
-        "crash": false,
-        "early_velocity_reversal": false,
-        "finite": true,
-        "ground_contact": false,
-        "meaningful_vane_sign_change_count": 0,
-        "mixer_saturation_percent": 0.0,
-        "moving_mass_assist_gain_m_per_Nm": 0.0,
-        "moving_mass_max_abs_offset_m": 0.0,
-        "moving_mass_max_abs_target_m": 0.0,
-        "premature_pause": false,
-        "second_acceleration_lobe_after_full_pause": false,
-        "servo_rate_saturation_percent": 0.0,
-        "shaped_velocity_sign_reversal_after_release": false,
-        "tail_high_frequency_vane_energy_deg2": 0.0003917328913348145,
-        "target_capture_count": 1,
-        "vane_saturation_percent": 0.0,
-        "vane_total_variation_per_second_deg_s": 2.083694327588382
-      },
-      "raw_score_rank1_rejected": false
+      "selected_hard_gates": {
+        "capture_discontinuity": "False",
+        "crash": "False",
+        "early_velocity_reversal": "False",
+        "finite": "True",
+        "ground_contact": "False",
+        "meaningful_vane_sign_change_count": "0",
+        "mixer_saturation_percent": "0.0",
+        "moving_mass_assist_gain_m_per_Nm": "0.0",
+        "moving_mass_max_abs_offset_m": "0.0",
+        "moving_mass_max_abs_target_m": "0.0",
+        "premature_pause": "False",
+        "second_acceleration_lobe_after_full_pause": "False",
+        "servo_rate_saturation_percent": "0.0",
+        "shaped_velocity_sign_reversal_after_release": "False",
+        "tail_high_frequency_vane_energy_deg2": "7.669961529093916e-05",
+        "target_capture_count": "1",
+        "vane_saturation_percent": "0.0",
+        "vane_total_variation_per_second_deg_s": "1.9957159846232941"
+      }
     }
   },
-  "rank15_control_effort_reduction": {
-    "mean_vane_command_rate_rms_percent": 5.371921594136442,
-    "mean_vane_rms_percent": 2.554040070423181,
-    "mean_vane_total_variation_percent": 4.277699330990431
-  },
-  "rank15_low_control_effort": {
+  "previous_stage3c_rank1": {
     "all_hard_gates_pass": true,
-    "boundary_flags": {
-      "angle_p_at_max": false,
-      "angle_p_at_min": false,
-      "rate_d_at_max": false,
-      "rate_d_at_min": false,
-      "rate_p_at_max": false,
-      "rate_p_at_min": false
-    },
-    "candidate": {
-      "angle_p": 25.0,
-      "rate_d": 0.0185,
-      "rate_p": 0.085,
-      "stage": "rank15_validation"
-    },
-    "final_selected": false,
-    "raw_aggregate_score": 0.406150435755185,
-    "raw_score_rank": 15,
-    "scenario_mean_score": 0.2683824515473136,
-    "symmetry": {
-      "forward_1m__backward_1m__peak_abs_pitch_deg": 0.0,
-      "forward_1m__backward_1m__position_overshoot_m": 0.0,
-      "forward_1m__backward_1m__tail_path_length_m": 0.0,
-      "forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s": 0.0,
-      "forward_1m__backward_1m__tail_rms_pitch_deg": 0.0,
-      "forward_1m__backward_1m__tail_rms_pitch_rate_deg_s": 0.0,
-      "forward_1m__backward_1m__vane_command_rms_deg": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__peak_abs_pitch_deg": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__peak_abs_pitch_deg": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg": 0.0
-    },
-    "worst_scenario_score": 0.27760151433224084
-  },
-  "rank15_score_penalty": {
-    "absolute": 0.009247867295571255,
-    "relative_percent": 2.3300094356815073
-  },
-  "raw_score_rank1": {
-    "all_hard_gates_pass": true,
-    "boundary_flags": {
-      "angle_p_at_max": false,
-      "angle_p_at_min": false,
-      "rate_d_at_max": true,
-      "rate_d_at_min": false,
-      "rate_p_at_max": true,
-      "rate_p_at_min": false
-    },
-    "candidate": {
-      "angle_p": 25.0,
-      "rate_d": 0.0195,
-      "rate_p": 0.09,
-      "stage": "raw_score_validation"
-    },
-    "final_selected": true,
+    "angle_p": 25.0,
+    "rate_d": 0.0195,
+    "rate_p": 0.09,
     "raw_aggregate_score": 0.39690256845961375,
-    "raw_score_rank": 1,
     "scenario_mean_score": 0.26221490868808434,
-    "symmetry": {
-      "forward_1m__backward_1m__peak_abs_pitch_deg": 0.0,
-      "forward_1m__backward_1m__position_overshoot_m": 0.0,
-      "forward_1m__backward_1m__tail_path_length_m": 0.0,
-      "forward_1m__backward_1m__tail_rms_horizontal_velocity_m_s": 0.0,
-      "forward_1m__backward_1m__tail_rms_pitch_deg": 0.0,
-      "forward_1m__backward_1m__tail_rms_pitch_rate_deg_s": 0.0,
-      "forward_1m__backward_1m__vane_command_rms_deg": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__peak_abs_pitch_deg": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__position_overshoot_m": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__tail_path_length_m": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_horizontal_velocity_m_s": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_deg": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__tail_rms_pitch_rate_deg_s": 0.0,
-      "loiter_positive_disturbance__loiter_negative_disturbance__vane_command_rms_deg": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__peak_abs_pitch_deg": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__position_overshoot_m": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__tail_path_length_m": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_horizontal_velocity_m_s": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_deg": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__tail_rms_pitch_rate_deg_s": 0.0,
-      "pitch_positive_recovery__pitch_negative_recovery__vane_command_rms_deg": 0.0
-    },
     "worst_scenario_score": 0.268866157393353
   },
-  "selection_description": "raw-score rank-1 controller selected for final use",
-  "selection_reason": "This task prioritizes pitch damping, residual velocity, and tail-path performance; raw-score rank 1 passes every hard gate with zero saturation."
+  "score_improvement": {
+    "absolute": 0.005392844018603515,
+    "relative_percent": 1.3587324565656613
+  },
+  "selected_boundary_rank1": {
+    "all_hard_gates_pass": true,
+    "angle_p": 25.0,
+    "rate_d": 0.021,
+    "rate_p": 0.09375,
+    "raw_aggregate_score": 0.39150972444101023,
+    "raw_score_rank": 1,
+    "scenario_mean_score": 0.25841498196570534,
+    "upper_boundary_flags": {
+      "angle_p": false,
+      "rate_d": false,
+      "rate_p": false
+    },
+    "worst_scenario_score": 0.2653220618984009
+  },
+  "selection_description": "true local raw-score rank-1 candidate from the targeted upper-boundary extension",
+  "selection_reason": "The specified compact audit found a lower valid raw aggregate score and continued at the same step size until the best point was not on an upper boundary."
 }

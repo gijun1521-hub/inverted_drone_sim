@@ -1,28 +1,17 @@
 # Vane-only pitch damping retune
 
-The final selected controller is **raw-score rank 1**: Rate P/I/D `0.09000000 / 0.00000000 / 0.01950000` with Angle P `25.00000000`. It is selected because this task prioritizes pitch damping, residual velocity, and tail-path performance; it passes every hard gate with zero saturation. All outer-loop, braking, capture, physics, actuator, geometry, and scenario settings were fixed. Moving-mass assist remained exactly `0.0 m/Nm`, and the physical moving mass remained centered.
+The final selected controller is the **valid raw-score local rank 1** from the targeted boundary extension: Rate P/I/D `0.09375000 / 0.00000000 / 0.02100000`, Angle P `25.00000000`. Its raw aggregate score is `0.391509724441`, improving the previous Stage 3C rank-1 score `0.396902568460` by `0.005392844019` (1.359%). No near-equivalent lower-effort tie-break was used.
 
-The predeclared inclusive near-equivalence set remains documented as `valid raw aggregate score <= raw-score best + 0.010000`. The raw-score best and final selected score are both `0.396902568` with zero accepted score penalty. `19` of `120` valid Stage 3C candidates are inside the band. The previous rank-15 alternative scored `0.406150436` (penalty `0.009247867`, `2.330%`) and reduced mean vane RMS by `2.554%`, vane total variation by `4.278%`, and vane command-rate RMS by `5.372%`; it is retained for comparison only and is not the final selected controller.
+**Stage 0 status: FAILED / NON-ACCEPTABLE; normalization and comparison only.** Its absolute metrics and both early-reversal failures remain preserved. Stage 0 is not a validated controller.
 
-## Baseline comparison
-
-**Stage 0 status: FAILED / NON-ACCEPTABLE baseline used for normalization only.** It failed `forward_1m:early_velocity_reversal` and `backward_1m:early_velocity_reversal`. Stage 0 is not a validated or acceptable controller; its absolute metrics and detector failures are preserved in the baseline artifacts.
-
-| metric | baseline mean | selected mean | improvement |
+| metric | Stage 0 mean | selected mean | improvement |
 | --- | ---: | ---: | ---: |
-| tail RMS pitch (deg) | 4.09193152 | 0.58004762 | 85.825% |
-| tail RMS pitch rate (deg/s) | 12.05265143 | 2.50706206 | 79.199% |
-| tail RMS horizontal velocity (m/s) | 0.26294265 | 0.03070911 | 88.321% |
+| tail RMS pitch (deg) | 4.09193152 | 0.52554642 | 87.157% |
+| tail RMS pitch rate (deg/s) | 12.05265143 | 2.37222359 | 80.318% |
+| tail RMS horizontal velocity (m/s) | 0.26294265 | 0.03023909 | 88.500% |
 
-## Search and validation
+All 25 targeted candidates passed all seven full-duration physical, behavioral, symmetry, chatter, saturation, and early-reversal gates. The selected controller eliminates early velocity reversal in both +1 m and -1 m cases, records exactly one stick-release capture, has no capture discontinuity or shaped-vx reversal, and keeps moving-mass gain, actual displacement, and target displacement exactly zero. Two fresh deterministic seven-scenario reruns were byte-identical at the metrics level (`9647cd26cf9f98fbe6a8c15a0f3f695b01697b45c5e0f7efd50a54f781b60601`).
 
-Both the final raw-score rank-1 controller and the previous rank-15 alternative pass every physical and hard gate in all seven full-duration scenarios. The final selected controller eliminates early velocity reversal in both +1 m and -1 m cases, records exactly one monotonic controller capture-count increment in stick release, has no capture discontinuity or shaped-vx reversal, and has zero vane/servo-rate/mixer saturation. Detailed side-by-side metrics, chatter, symmetry, and hard-gate results are in `selection_comparison.md`, `selection_comparison.csv`, and `selection_comparison.json`.
+The initial audit best was on the Rate D upper boundary at `0.02100`; one same-step extension to `0.02150` made the selected `D=0.02100` point interior. Rate P `0.09375` was already interior. This validates that the prior Stage 3C upper bounds did not conceal a better continuing-edge point.
 
-- Candidate counts: `{"stage1_rate_pd":180,"stage2_angle_p":57,"stage3a_local_rate_pd":81,"stage3b_local_angle_p":9,"stage3c_crosscheck":120}`.
-- Total unique scenario rows: `3136`.
-- Rejected candidates: `122`.
-- Boundary flags: `{"angle_p_at_max":false,"angle_p_at_min":false,"rate_d_at_max":true,"rate_d_at_min":false,"rate_p_at_max":true,"rate_p_at_min":false}`.
-- Deterministic selected-candidate reruns: `["b11df587239e289047b65fb09ef55a0ed16259ed578f5ec66bf0a80c61e149bf","b11df587239e289047b65fb09ef55a0ed16259ed578f5ec66bf0a80c61e149bf"]`.
-- Stage 0 mismatch override record: `["forward_1m:early_velocity_reversal","backward_1m:early_velocity_reversal"]`.
-
-These results apply only to the same deterministic 2D analytical Single Fan Drone-inspired model. They do not establish real-flight stability, 3D stability, validated ArduPilot/Pixhawk behavior, HIL validity, hardware safety, or commercial-aircraft equivalence.
+These results apply only to the same deterministic 2D analytical model and do not establish real-flight, 3D, HIL, or hardware safety.

@@ -12,7 +12,8 @@ rejected_candidate_count,122
 runtime_s,1310.5461680000008
 seed,0
 baseline_mismatch_override_reasons,"[""forward_1m:early_velocity_reversal"",""backward_1m:early_velocity_reversal""]"
-selected,"{""angle_p"":25.0,""rate_d"":0.0195,""rate_p"":0.09,""stage"":""selected_validation""}"
-boundary_flags,"{""angle_p_at_max"":false,""angle_p_at_min"":false,""rate_d_at_max"":true,""rate_d_at_min"":false,""rate_p_at_max"":true,""rate_p_at_min"":false}"
-deterministic_rerun_digests,"[""b11df587239e289047b65fb09ef55a0ed16259ed578f5ec66bf0a80c61e149bf"",""b11df587239e289047b65fb09ef55a0ed16259ed578f5ec66bf0a80c61e149bf""]"
-selection,"{""absolute_margin"":0.01,""audit_passed"":true,""description"":""raw-score rank-1 controller selected for final use"",""near_equivalent_candidate_count"":19,""rank15_comparison_raw_score"":0.406150435755185,""raw_score_best"":0.39690256845961375,""raw_score_rank"":1,""reason"":""This task prioritizes pitch damping, residual velocity, and tail-path performance; raw-score rank 1 passes every hard gate with zero saturation."",""selected_raw_score"":0.39690256845961375}"
+selected,"{""angle_p"":25.0,""rate_d"":0.021,""rate_p"":0.09375,""stage"":""boundary_extension_audit""}"
+boundary_flags,"{""angle_p_at_max"":false,""rate_d_at_max"":false,""rate_p_at_max"":false}"
+deterministic_rerun_digests,"[""9647cd26cf9f98fbe6a8c15a0f3f695b01697b45c5e0f7efd50a54f781b60601"",""9647cd26cf9f98fbe6a8c15a0f3f695b01697b45c5e0f7efd50a54f781b60601""]"
+selection,"{""audit_passed"":true,""description"":""true local raw-score rank-1 candidate from the targeted upper-boundary extension"",""near_equivalent_tiebreak_used"":false,""raw_score_best"":0.39150972444101023,""raw_score_rank"":1,""reason"":""The specified compact audit found a lower valid raw aggregate score and continued at the same step size until the best point was not on an upper boundary."",""score_improvement_vs_previous"":{""absolute"":0.005392844018603515,""relative_percent"":1.3587324565656613},""selected_raw_score"":0.39150972444101023}"
+boundary_extension_audit,"{""candidate_count"":25,""extension_round_count"":1,""near_equivalent_tiebreak_used"":false,""previous_raw_score"":0.39690256845961375,""scenario_run_count"":175,""selected_raw_score"":0.39150972444101023,""status"":""boundary-validated interior raw-score local rank 1""}"
