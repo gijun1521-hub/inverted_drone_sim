@@ -79,9 +79,16 @@ def _audit(run):
             # motion peak; otherwise its initial near-zero samples precede the
             # normal shaped response and create a false second-lobe report.
             post=np.flatnonzero(t>=end)
-            if completed and post.size:
-                peak=post[int(np.argmax(np.abs(vx[post])))]
-                if second_acceleration_lobe_after_full_pause(rows,release_time_s=float(t[peak])): failures.append(f"second_acceleration_lobe@{end:.2f}"); metrics["second_acceleration_lobe"]=True
+            if completed:
+                window=(t>=end)&(t<next_start)
+                normalized=[{**row,"vx":float(row["vx"])*(1 if command>0 else -1)} for row in np.asarray(rows,dtype=object)[window]]
+                if normalized:
+                    nt=_arr(normalized,"time"); nv=_arr(normalized,"vx")
+                    peak=int(np.argmax(nv))
+                    # Do not let pre-response near-zero samples count as a
+                    # pause: start after the first same-direction motion peak.
+                    if nv[peak]>=0.10 and second_acceleration_lobe_after_full_pause(normalized,release_time_s=float(nt[peak])):
+                        failures.append(f"second_acceleration_lobe@{end:.2f}"); metrics["second_acceleration_lobe"]=True
     if not metrics["capture_count_monotonic"]: failures.append("capture_count_non_monotonic")
     if np.any(np.abs(np.diff(target))>0.02): failures.append("target_jump"); metrics["target_jump"]=True
     if np.any(~np.isfinite(_arr(rows,"x"))) or any(str(r.get("crash_reason","")) for r in rows): failures.append("invalid_or_crash")
@@ -108,8 +115,9 @@ def run(output_dir: Path=OUT):
                 if executed_gain != gain: failures.append("executed_gain_mismatch")
                 if gain == 0.0 and any(abs(_arr(result.rows,key)).max() != 0.0 for key in ("moving_mass_offset_m","moving_mass_target_m","moving_mass_velocity_m_s")): failures.append("vane_only_not_locked")
                 if gain > 0.0 and not any(abs(_arr(result.rows,key)).max() > 0.0 for key in ("moving_mass_offset_m","moving_mass_target_m")): failures.append("assist_no_moving_mass_response")
-                row={"pattern":pattern,"direction":"positive" if direction>0 else "negative","variant":variant,"gain":executed_gain,"passed":not failures,"failures":"; ".join(failures),**metrics}; rows_out.append(row)
-                event_out.extend({"pattern":pattern,"direction":direction,"variant":variant,**e} for e in events)
+                metric_direction=metrics.pop("direction", None)
+                row={"pattern":pattern,"variant":variant,"gain":executed_gain,"metric_direction":metric_direction,"passed":not failures,"failures":"; ".join(failures),**metrics,"direction":"positive" if direction>0 else "negative"}; rows_out.append(row)
+                event_out.extend({"pattern":pattern,"direction":"positive" if direction>0 else "negative","variant":variant,"final_cumulative_capture_count":metrics["final_cumulative_capture_count"],**e} for e in events)
                 if rerun==0 and (not row["passed"] or pattern in ("medium_pulse","commanded_reversal")): save_loiter_timeseries(result.rows,output_dir/"timeseries"/f"{pattern}_{direction}_{variant}.csv")
                 if rerun == 0 and direction > 0 and variant == "vane_only":
                     import matplotlib
