@@ -11,6 +11,7 @@ import numpy as np
 from .headless_loiter import LoiterScenarioConfig, run_headless_loiter, save_loiter_timeseries
 from .moving_mass_gain_resweep import FIXED_CONTROLLER, MOVING_MASS_LIMITER_HARD_GATES, _moving_mass_metrics
 from .pitch_damping_retune import CHATTER_THRESHOLDS, HARD_GATE_THRESHOLDS, ScenarioDefinition, _canonical_json, _sha256_bytes, compute_metrics
+from .loiter_transient_diagnosis import detect_premature_pause, second_acceleration_lobe_after_full_pause
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = ROOT / "params" / "moving_mass_gain_resweep_provisional.json"
@@ -50,6 +51,7 @@ def _audit(run):
     metrics.update(_moving_mass_metrics(run))
     events=[]; failures=[]
     segments=list(scenario.stick_timeline)
+    metrics.update({"premature_pause":False,"second_acceleration_lobe":False,"shaped_sign_reversal":False,"early_velocity_reversal":False,"target_jump":False,"capture_count_monotonic":bool(np.all(np.diff(count)>=0.0)),"final_cumulative_capture_count":int(count[-1])})
     for i, (start,end,command) in enumerate(segments):
         # An intentional direct reversal has no release boundary.
         next_start=segments[i+1][0] if i+1<len(segments) else math.inf
@@ -58,7 +60,10 @@ def _audit(run):
         # A segment that starts immediately after an opposite-sign segment is
         # an intentional commanded reversal, not a release overshoot.
         previous = segments[i-1][2] if i else 0.0
-        if previous * command >= 0.0 and np.any(active) and np.any(vx[active]*command < -0.03): failures.append(f"early_actual_velocity_reversal@{start:.2f}")
+        if previous * command >= 0.0 and np.any(active) and np.any(vx[active]*command < -0.03): failures.append(f"early_actual_velocity_reversal@{start:.2f}"); metrics["early_velocity_reversal"]=True
+        if previous * command >= 0.0:
+            normalized=[{**row,"vx":float(row["vx"])*(1 if command>0 else -1),"x_error":float(row["x_error"])*(1 if command>0 else -1),"x":float(row["x"])*(1 if command>0 else -1)} for row in np.asarray(rows,dtype=object)[active]]
+            if detect_premature_pause(normalized) is not None: failures.append(f"premature_pause@{start:.2f}"); metrics["premature_pause"]=True
         if release:
             later=(t>=end)&(t<next_start)
             increments=int(count[np.flatnonzero(later)[-1]]-count[np.flatnonzero(t<end)[-1]]) if np.any(later) and np.any(t<end) else 0
@@ -69,8 +74,10 @@ def _audit(run):
             completed = math.isinf(next_start) or next_start - end >= 1.5
             if completed and increments != 1: failures.append(f"capture_increment@{end:.2f}:{increments}")
             shaped=_arr(rows,"shaped_desired_vx")[later]
-            if shaped.size>1 and np.any(shaped*command < -1e-4): failures.append(f"shaped_sign_reversal@{end:.2f}")
-    if np.any(np.abs(np.diff(target))>0.02): failures.append("target_jump")
+            if shaped.size>1 and np.any(shaped*command < -1e-4): failures.append(f"shaped_sign_reversal@{end:.2f}"); metrics["shaped_sign_reversal"]=True
+            if completed and second_acceleration_lobe_after_full_pause(rows,release_time_s=end): failures.append(f"second_acceleration_lobe@{end:.2f}"); metrics["second_acceleration_lobe"]=True
+    if not metrics["capture_count_monotonic"]: failures.append("capture_count_non_monotonic")
+    if np.any(np.abs(np.diff(target))>0.02): failures.append("target_jump"); metrics["target_jump"]=True
     if np.any(~np.isfinite(_arr(rows,"x"))) or any(str(r.get("crash_reason","")) for r in rows): failures.append("invalid_or_crash")
     if metrics["meaningful_vane_sign_change_count"]>CHATTER_THRESHOLDS["max_meaningful_sign_changes"] or metrics["vane_total_variation_per_second_deg_s"]>CHATTER_THRESHOLDS["max_total_variation_per_second_deg_s"] or metrics["tail_high_frequency_vane_energy_deg2"]>CHATTER_THRESHOLDS["max_tail_high_frequency_energy_deg2"]: failures.append("vane_chatter")
     for key,reason in (("vane_saturation_percent","vane_saturation"),("servo_rate_saturation_percent","servo_rate_saturation"),("mixer_saturation_percent","mixer_saturation")):
