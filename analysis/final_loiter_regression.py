@@ -43,6 +43,92 @@ def _scenarios():
             timeline=tuple((a,b,sign*x) for a,b,x in pattern.timeline)
             yield pattern.key, sign, LoiterScenarioConfig(name=f"{pattern.key}_{direction}",duration_s=10.0,initial_z=1,target_z=1,capture_current_target=True,stick_timeline=timeline,notes="final event-aware LOITER regression")
 
+def _second_lobe_in_release_window(rows, release_time_s: float, next_start_s: float, command: float) -> bool:
+    """Apply the second-lobe detector in command-relative release coordinates."""
+    window = [
+        {**row, "vx": float(row["vx"]) * (1 if command > 0 else -1)}
+        for row in rows
+        if release_time_s <= float(row["time"]) < next_start_s
+    ]
+    if not window:
+        return False
+    normalized_vx = _arr(window, "vx")
+    peak = int(np.argmax(normalized_vx))
+    if normalized_vx[peak] < 0.10:
+        return False
+    return second_acceleration_lobe_after_full_pause(
+        window, release_time_s=float(window[peak]["time"])
+    )
+
+def _case_row(pattern: str, direction: int, variant: str, gain: float, metrics: dict, failures: list[str]) -> dict:
+    """Build a result row without allowing metric metadata to replace case direction."""
+    reported_metrics = dict(metrics)
+    metric_direction = reported_metrics.pop("direction", None)
+    return {
+        "pattern": pattern,
+        "variant": variant,
+        "gain": gain,
+        "metric_direction": metric_direction,
+        "passed": not failures,
+        "failures": "; ".join(failures),
+        **reported_metrics,
+        "direction": "positive" if direction > 0 else "negative",
+    }
+
+def _required_capture_count(row: dict) -> int:
+    key = "final_cumulative_capture_count"
+    if key not in row or row[key] in (None, ""):
+        raise KeyError(f"missing required capture metric: {key}")
+    value = float(row[key])
+    if not math.isfinite(value) or value < 0 or not value.is_integer():
+        raise ValueError(f"invalid {key}: {row[key]!r}")
+    return int(value)
+
+def _case_key(row: dict) -> tuple[str, str, str]:
+    return str(row["pattern"]), str(row["direction"]), str(row["variant"])
+
+def build_summary_markdown(summaries: list[dict], event_audit: list[dict]) -> str:
+    """Render the summary and require exact agreement with the event audit."""
+    audit_counts: dict[tuple[str, str, str], int] = {}
+    audit_increment_sums: dict[tuple[str, str, str], int] = {}
+    for event in event_audit:
+        key = _case_key(event)
+        count = _required_capture_count(event)
+        if key in audit_counts and audit_counts[key] != count:
+            raise ValueError(f"inconsistent event-audit capture count for {key}")
+        audit_counts[key] = count
+        audit_increment_sums[key] = audit_increment_sums.get(key, 0) + int(float(event["capture_increments"]))
+
+    passed = all(r["passed"] is True or str(r["passed"]).lower() == "true" for r in summaries)
+    lines=["# Final LOITER regression", "", f"Passed: **{passed}**. Cases: {len(summaries)}.", "", "| pattern | direction | variant | executed gain | capture count | pause / second lobe / shaped sign / early reversal | vane RMS | mass max offset/rate/accel |", "| --- | --- | --- | ---: | ---: | --- | ---: | --- |"]
+    for row in summaries:
+        key = _case_key(row)
+        capture_count = _required_capture_count(row)
+        if key not in audit_counts:
+            raise ValueError(f"missing event-audit row for {key}")
+        if capture_count != audit_counts[key] or capture_count != audit_increment_sums[key]:
+            raise ValueError(
+                f"capture count mismatch for {key}: summary={capture_count}, "
+                f"audit={audit_counts[key]}, increments={audit_increment_sums[key]}"
+            )
+        lines.append(f"| {row['pattern']} | {row['direction']} | {row['variant']} | {float(row['gain']):.5f} | {capture_count} | {row['failures'] or 'pass'} | {float(row.get('vane_command_rms_deg',0)):.4f} | {float(row['moving_mass_max_abs_offset_m']):.5f} / {float(row['moving_mass_max_abs_velocity_m_s']):.5f} / {float(row['moving_mass_max_abs_acceleration_m_s2']):.5f} |")
+    return "\n".join(lines) + "\n"
+
+def _write_manifest(output_dir: Path, passed: bool) -> None:
+    artifacts={p.relative_to(output_dir).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in output_dir.rglob("*") if p.is_file() and p.name!="manifest.json"}
+    (output_dir/"manifest.json").write_text(json.dumps({"passed":passed,"artifacts":artifacts},indent=2),encoding="utf-8")
+
+def regenerate_reporting(output_dir: Path=OUT) -> None:
+    """Regenerate only the summary and manifest from preserved result records."""
+    with (output_dir/"scenario_metrics.csv").open(newline="", encoding="utf-8") as handle:
+        summaries = list(csv.DictReader(handle))
+    with (output_dir/"event_capture_audit.csv").open(newline="", encoding="utf-8") as handle:
+        event_audit = list(csv.DictReader(handle))
+    summary = build_summary_markdown(summaries, event_audit)
+    (output_dir/"summary.md").write_text(summary, encoding="utf-8")
+    passed = all(str(row["passed"]).lower() == "true" for row in summaries)
+    _write_manifest(output_dir, passed)
+
 def _audit(run):
     rows, scenario = run.rows, run.scenario
     t,vx,target,count=_arr(rows,"time"),_arr(rows,"vx"),_arr(rows,"target_x"),_arr(rows,"target_capture_count")
@@ -75,20 +161,11 @@ def _audit(run):
             if completed and increments != 1: failures.append(f"capture_increment@{end:.2f}:{increments}")
             shaped=_arr(rows,"shaped_desired_vx")[later]
             if shaped.size>1 and np.any(shaped*command < -1e-4): failures.append(f"shaped_sign_reversal@{end:.2f}"); metrics["shaped_sign_reversal"]=True
-            # Start the validated detector only after the first post-release
-            # motion peak; otherwise its initial near-zero samples precede the
-            # normal shaped response and create a false second-lobe report.
-            post=np.flatnonzero(t>=end)
             if completed:
-                window=(t>=end)&(t<next_start)
-                normalized=[{**row,"vx":float(row["vx"])*(1 if command>0 else -1)} for row in np.asarray(rows,dtype=object)[window]]
-                if normalized:
-                    nt=_arr(normalized,"time"); nv=_arr(normalized,"vx")
-                    peak=int(np.argmax(nv))
-                    # Do not let pre-response near-zero samples count as a
-                    # pause: start after the first same-direction motion peak.
-                    if nv[peak]>=0.10 and second_acceleration_lobe_after_full_pause(normalized,release_time_s=float(nt[peak])):
-                        failures.append(f"second_acceleration_lobe@{end:.2f}"); metrics["second_acceleration_lobe"]=True
+                # Start after the first same-direction post-release peak so
+                # normal pre-response samples cannot count as a full pause.
+                if _second_lobe_in_release_window(rows, end, next_start, command):
+                    failures.append(f"second_acceleration_lobe@{end:.2f}"); metrics["second_acceleration_lobe"]=True
     if not metrics["capture_count_monotonic"]: failures.append("capture_count_non_monotonic")
     if np.any(np.abs(np.diff(target))>0.02): failures.append("target_jump"); metrics["target_jump"]=True
     if np.any(~np.isfinite(_arr(rows,"x"))) or any(str(r.get("crash_reason","")) for r in rows): failures.append("invalid_or_crash")
@@ -115,8 +192,7 @@ def run(output_dir: Path=OUT):
                 if executed_gain != gain: failures.append("executed_gain_mismatch")
                 if gain == 0.0 and any(abs(_arr(result.rows,key)).max() != 0.0 for key in ("moving_mass_offset_m","moving_mass_target_m","moving_mass_velocity_m_s")): failures.append("vane_only_not_locked")
                 if gain > 0.0 and not any(abs(_arr(result.rows,key)).max() > 0.0 for key in ("moving_mass_offset_m","moving_mass_target_m")): failures.append("assist_no_moving_mass_response")
-                metric_direction=metrics.pop("direction", None)
-                row={"pattern":pattern,"variant":variant,"gain":executed_gain,"metric_direction":metric_direction,"passed":not failures,"failures":"; ".join(failures),**metrics,"direction":"positive" if direction>0 else "negative"}; rows_out.append(row)
+                row=_case_row(pattern,direction,variant,executed_gain,metrics,failures); rows_out.append(row)
                 event_out.extend({"pattern":pattern,"direction":"positive" if direction>0 else "negative","variant":variant,"final_cumulative_capture_count":metrics["final_cumulative_capture_count"],**e} for e in events)
                 if rerun==0 and (not row["passed"] or pattern in ("medium_pulse","commanded_reversal")): save_loiter_timeseries(result.rows,output_dir/"timeseries"/f"{pattern}_{direction}_{variant}.csv")
                 if rerun == 0 and direction > 0 and variant == "vane_only":
@@ -134,13 +210,9 @@ def run(output_dir: Path=OUT):
     _write(output_dir/"scenario_metrics.csv",summaries); _write(output_dir/"event_capture_audit.csv",event_audit)
     (output_dir/"scenario_specification.json").write_text(json.dumps({"patterns":[asdict(p) for p in PATTERNS],"variants":VARIANTS,"controller":FIXED_CONTROLLER},indent=2),encoding="utf-8")
     passed=all(r["passed"] for r in summaries)
-    lines=["# Final LOITER regression", "", f"Passed: **{passed}**. Cases: {len(summaries)}.", "", "| pattern | direction | variant | executed gain | capture count | pause / second lobe / shaped sign / early reversal | vane RMS | mass max offset/rate/accel |", "| --- | --- | --- | ---: | ---: | --- | ---: | --- |"]
-    for row in summaries:
-        lines.append(f"| {row['pattern']} | {row['direction']} | {row['variant']} | {float(row['gain']):.5f} | {int(float(row.get('target_capture_count',0)))} | {row['failures'] or 'pass'} | {float(row.get('vane_command_rms_deg',0)):.4f} | {float(row['moving_mass_max_abs_offset_m']):.5f} / {float(row['moving_mass_max_abs_velocity_m_s']):.5f} / {float(row['moving_mass_max_abs_acceleration_m_s2']):.5f} |")
-    (output_dir/"summary.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
+    (output_dir/"summary.md").write_text(build_summary_markdown(summaries,event_audit),encoding="utf-8")
     (output_dir/"deterministic.json").write_text(json.dumps({"digests":digests,"passed":passed},indent=2),encoding="utf-8")
-    artifacts={p.relative_to(output_dir).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in output_dir.rglob("*") if p.is_file() and p.name!="manifest.json"}
-    (output_dir/"manifest.json").write_text(json.dumps({"passed":passed,"artifacts":artifacts},indent=2),encoding="utf-8")
+    _write_manifest(output_dir, passed)
     return passed,summaries
 
 if __name__ == "__main__":
