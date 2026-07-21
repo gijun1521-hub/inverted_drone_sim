@@ -1,11 +1,11 @@
 {
   "passed": true,
   "artifacts": {
-    "deterministic.json": "0464830adf7f071c160c78109b2681639162e3b3416a1d364b1b6b20d9f2a3e1",
+    "deterministic.json": "b08d0deaf90c7190af233927f01056a268098c40f4635d5f73f4e5e9fcb8c841",
     "event_capture_audit.csv": "a9b38cf6422db0331c95cec7ea04ba4291bc18972031cd77b307f49049ae2e83",
-    "scenario_metrics.csv": "ff41402a918840049f64305e30ebc650b982175017a9e885413d64b414a0eae8",
+    "scenario_metrics.csv": "173b09ef5c51208708e2bd7f69d0308f52fd9c71ec78e60388a08fa901c66316",
     "scenario_specification.json": "593af9f4c560a319b012e9c95ea4e647065f9ae27dcc0138cd4a28cc9fa7f3ce",
-    "summary.md": "826a5c5abad0f73ac1b29967b98fbdb49b78e7a52f83d7bdc222e1c65b980780",
+    "summary.md": "428845d5c25162fa0ccf54a25f2aba69c14838943acc33fb3ebf17085912b591",
     "plots/commanded_reversal.png": "d836a9bee3a31f7952d5b00b9dcba6da19679a028aae99380ad67722230e4ae3",
     "plots/full_long_hold.png": "97d92113fb076799c2e6937f68184b4e2c7a0e6cc0ac1d9da20b4d1856969745",
     "plots/gradual_taper.png": "53a42412c28a99c45a2f63b3cf09a27ac59d8d84fbffff6a9b7be4a1d5f811a0",

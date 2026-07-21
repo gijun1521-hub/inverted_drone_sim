@@ -10,7 +10,7 @@ import numpy as np
 
 from .headless_loiter import LoiterScenarioConfig, run_headless_loiter, save_loiter_timeseries
 from .moving_mass_gain_resweep import FIXED_CONTROLLER, MOVING_MASS_LIMITER_HARD_GATES, _moving_mass_metrics
-from .pitch_damping_retune import _canonical_json, _sha256_bytes
+from .pitch_damping_retune import CHATTER_THRESHOLDS, HARD_GATE_THRESHOLDS, ScenarioDefinition, _canonical_json, _sha256_bytes, compute_metrics
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = ROOT / "params" / "moving_mass_gain_resweep_provisional.json"
@@ -42,9 +42,12 @@ def _scenarios():
             timeline=tuple((a,b,sign*x) for a,b,x in pattern.timeline)
             yield pattern.key, sign, LoiterScenarioConfig(name=f"{pattern.key}_{direction}",duration_s=10.0,initial_z=1,target_z=1,capture_current_target=True,stick_timeline=timeline,notes="final event-aware LOITER regression")
 
-def _audit(rows, scenario):
+def _audit(run):
+    rows, scenario = run.rows, run.scenario
     t,vx,target,count=_arr(rows,"time"),_arr(rows,"vx"),_arr(rows,"target_x"),_arr(rows,"target_capture_count")
-    metrics=_moving_mass_metrics(type("R",(),{"rows":rows,"scenario":scenario})())
+    definition=ScenarioDefinition(scenario.name,scenario,"loiter",1,0.5,False,False)
+    metrics=compute_metrics(definition,run,quick=False)
+    metrics.update(_moving_mass_metrics(run))
     events=[]; failures=[]
     segments=list(scenario.stick_timeline)
     for i, (start,end,command) in enumerate(segments):
@@ -69,6 +72,12 @@ def _audit(rows, scenario):
             if shaped.size>1 and np.any(shaped*command < -1e-4): failures.append(f"shaped_sign_reversal@{end:.2f}")
     if np.any(np.abs(np.diff(target))>0.02): failures.append("target_jump")
     if np.any(~np.isfinite(_arr(rows,"x"))) or any(str(r.get("crash_reason","")) for r in rows): failures.append("invalid_or_crash")
+    if metrics["meaningful_vane_sign_change_count"]>CHATTER_THRESHOLDS["max_meaningful_sign_changes"] or metrics["vane_total_variation_per_second_deg_s"]>CHATTER_THRESHOLDS["max_total_variation_per_second_deg_s"] or metrics["tail_high_frequency_vane_energy_deg2"]>CHATTER_THRESHOLDS["max_tail_high_frequency_energy_deg2"]: failures.append("vane_chatter")
+    for key,reason in (("vane_saturation_percent","vane_saturation"),("servo_rate_saturation_percent","servo_rate_saturation"),("mixer_saturation_percent","mixer_saturation")):
+        if metrics[key]>HARD_GATE_THRESHOLDS[key]: failures.append(reason)
+    if metrics["meaningful_moving_mass_direction_change_count"]>30 or metrics["moving_mass_total_travel_per_second_m_s"]>0.5 or metrics["tail_high_frequency_moving_mass_energy_m2"]>2.5e-5: failures.append("moving_mass_chatter")
+    for observed,limit,reason in ((metrics["moving_mass_max_abs_offset_m"],0.05,"moving_mass_offset_limit"),(metrics["moving_mass_max_abs_velocity_m_s"],0.2,"moving_mass_rate_limit"),(metrics["moving_mass_max_abs_acceleration_m_s2"],1.0,"moving_mass_acceleration_limit")):
+        if observed>limit+1e-9: failures.append(reason)
     for name, limits in MOVING_MASS_LIMITER_HARD_GATES.items():
         if metrics[f"moving_mass_{name}_duty_percent"]>limits["max_duty_percent"] or metrics[f"moving_mass_{name}_longest_continuous_duration_s"]>limits["max_continuous_duration_s"]: failures.append(f"excessive_{name}")
     return metrics, events, failures
@@ -81,7 +90,7 @@ def run(output_dir: Path=OUT):
             for variant,gain in VARIANTS:
                 effective=replace(scenario,moving_mass_enabled=True,moving_mass_target_m=0.0,moving_mass_assist_gain_m_per_Nm=gain)
                 result=run_headless_loiter(PROFILE,effective,controller_overrides={**FIXED_CONTROLLER,"enable_noise":False,"random_seed":0})
-                metrics,events,failures=_audit(result.rows,result.scenario)
+                metrics,events,failures=_audit(result)
                 executed_gain=float(result.scenario.moving_mass_assist_gain_m_per_Nm)
                 if executed_gain != gain: failures.append("executed_gain_mismatch")
                 if gain == 0.0 and any(abs(_arr(result.rows,key)).max() != 0.0 for key in ("moving_mass_offset_m","moving_mass_target_m","moving_mass_velocity_m_s")): failures.append("vane_only_not_locked")
