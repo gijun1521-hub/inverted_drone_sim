@@ -17,12 +17,12 @@
       "size_bytes": 797
     },
     "moving_mass_gain_resweep.xlsx": {
-      "sha256": "b390daf08fb1201b3448fdbf0d456cf88226c0290691504e1818b2c1ff4d63a1",
-      "size_bytes": 26308
+      "sha256": "5f20868d848a0490aaa192864011edc49f86b342706685a7c612babc95cf008f",
+      "size_bytes": 26407
     },
     "moving_mass_gain_resweep.xlsx.inspect.ndjson": {
-      "sha256": "560439421f2f80e8f09b71722cde092d48d697fe9dc40c0a33dc41b24e4a3779",
-      "size_bytes": 540081
+      "sha256": "6a1864ce6349ac35b96cf77a3803434ceef97fbc7985973290cf4a1a8096b254",
+      "size_bytes": 540781
     },
     "plots/baseline_vs_selected_forward_1m.png": {
       "sha256": "720917f542810c5a8e17d76509144da1802596893df665ce3e36920f9d5182a4",
