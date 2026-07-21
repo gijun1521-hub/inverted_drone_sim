@@ -1,4 +1,4 @@
-scope,scenario,metric,label,raw_score_rank1,selected_rank15,selected_minus_raw,selected_change_percent
+scope,scenario,metric,label,raw_score_rank1,rank15_low_control_effort,rank15_minus_raw,rank15_change_percent
 all_scenarios_mean,all,tail_rms_pitch_deg,Tail RMS pitch (deg),0.5800476163631348,0.6463501724871469,0.06630255612401204,11.43053677898467
 all_scenarios_mean,all,tail_rms_pitch_rate_deg_s,Tail RMS pitch rate (deg/s),2.5070620645440584,2.6055164042110452,0.0984543396669868,3.9270802689478685
 all_scenarios_mean,all,tail_rms_horizontal_velocity_m_s,Tail RMS vx (m/s),0.030709111408352103,0.03559766522592468,0.004888553817572579,15.918903522044003

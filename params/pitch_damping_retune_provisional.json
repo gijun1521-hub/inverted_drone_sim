@@ -607,20 +607,20 @@
         "scenario_row_count": 840
       }
     },
-    "base_sha": "43ab34cb716059fd6485d463b2b6dbd715c0b9cb",
+    "base_sha": "11ed20b5ec9bde37aa6b36ada6660e23180ab59b",
     "boundary_flags": {
       "angle_p_at_max": false,
       "angle_p_at_min": false,
-      "rate_d_at_max": false,
+      "rate_d_at_max": true,
       "rate_d_at_min": false,
-      "rate_p_at_max": false,
+      "rate_p_at_max": true,
       "rate_p_at_min": false
     },
     "controller_timestep_s": 0.01,
     "deterministic_rerun": {
       "digests": [
-        "f3ce803930fd40e4c583d7cbd5710a8aa224a5ec37908d65ec2d1faa0a85d59c",
-        "f3ce803930fd40e4c583d7cbd5710a8aa224a5ec37908d65ec2d1faa0a85d59c"
+        "b11df587239e289047b65fb09ef55a0ed16259ed578f5ec66bf0a80c61e149bf",
+        "b11df587239e289047b65fb09ef55a0ed16259ed578f5ec66bf0a80c61e149bf"
       ],
       "passed": true
     },
@@ -646,7 +646,7 @@
     "profile_notes": "Vane-only pitch damping retune; does not replace a canonical profile.",
     "profile_status": "provisional",
     "scenario_fingerprint": "3626d7036371e47ece76c2af70ef9f14baf879debd4986f2d0e5b5023afb2c75",
-    "search_fingerprint": "4af595f9316a91cde6c5ced61814e3986c94395c19666f4a2c772a263901c9e4",
+    "search_fingerprint": "e45d188a0aa495948528a01227abd437a9f112156587d8746c08e3cb55711c11",
     "search_ranges": {
       "boundary_extension_policy": {
         "maximum_rounds_per_stage": 12,
@@ -828,17 +828,12 @@
     },
     "seed": 0,
     "selected_angle_p": 25.0,
-    "selected_rate_d": 0.0185,
+    "selected_rate_d": 0.0195,
     "selected_rate_i": 0.0,
-    "selected_rate_p": 0.085,
+    "selected_rate_p": 0.09,
     "selection": {
       "audit_passed": true,
-      "control_effort_reduction": {
-        "mean_vane_command_rate_rms_percent": 5.371921594136442,
-        "mean_vane_rms_percent": 2.554040070423181,
-        "mean_vane_total_variation_percent": 4.277699330990431
-      },
-      "description": "the selected robust low-control-effort candidate under the predeclared near-equivalence rule",
+      "description": "raw-score rank-1 controller selected for final use",
       "near_equivalence_rule": {
         "absolute_margin": 0.01,
         "declared_before_final_ranking": true,
@@ -848,23 +843,40 @@
         "upper_bound_inclusive": 0.40690256845961376,
         "valid_candidate_count": 120
       },
-      "raw_aggregate_score": 0.406150435755185,
+      "rank15_comparison": {
+        "all_hard_gates_pass": true,
+        "control_effort_reduction": {
+          "mean_vane_command_rate_rms_percent": 5.371921594136442,
+          "mean_vane_rms_percent": 2.554040070423181,
+          "mean_vane_total_variation_percent": 4.277699330990431
+        },
+        "description": "previous low-control-effort alternative; not final selected controller",
+        "final_selected": false,
+        "raw_aggregate_score": 0.406150435755185,
+        "raw_score_rank": 15,
+        "score_penalty": {
+          "absolute": 0.009247867295571255,
+          "relative_percent": 2.3300094356815073
+        }
+      },
+      "raw_aggregate_score": 0.39690256845961375,
       "raw_score_best": 0.39690256845961375,
-      "raw_score_rank": 15,
+      "raw_score_rank": 1,
+      "reason": "This task prioritizes pitch damping, residual velocity, and tail-path performance; raw-score rank 1 passes every hard gate with zero saturation.",
       "score_penalty": {
-        "absolute": 0.009247867295571255,
-        "relative_percent": 2.3300094356815073
+        "absolute": 0.0,
+        "relative_percent": 0.0
       }
     },
     "source_profile": "params/loiter_transient_provisional.json",
     "source_profile_hash": "c661d75e942485abbbec4ad895463374c44ab980f4cc298a5dbc9679cbdd41b9",
-    "validation_date": "2026-07-16"
+    "validation_date": "2026-07-21"
   },
   "controller": {
     "atc_ang_pit_p": 25.0,
-    "atc_rat_pit_d": 0.0185,
+    "atc_rat_pit_d": 0.0195,
     "atc_rat_pit_i": 0.0,
-    "atc_rat_pit_p": 0.085,
+    "atc_rat_pit_p": 0.09,
     "loit_acc_max_mss": 0.8,
     "loit_angle_max_deg": 15.0,
     "loit_brk_acc_mss": 1.0,

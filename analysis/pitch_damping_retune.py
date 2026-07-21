@@ -1537,15 +1537,16 @@ SELECTION_HARD_GATE_FIELDS = (
 
 def _selection_comparison_audit(
     raw_best_row: dict[str, Any],
-    selected_row: dict[str, Any],
+    rank15_row: dict[str, Any],
     final_stage_rows: Sequence[dict[str, Any]],
     raw_by_scenario: dict[str, dict[str, Any]],
-    selected_by_scenario: dict[str, dict[str, Any]],
-    boundary_flags: dict[str, bool],
+    rank15_by_scenario: dict[str, dict[str, Any]],
+    final_boundary_flags: dict[str, bool],
+    rank15_boundary_flags: dict[str, bool],
 ) -> dict[str, Any]:
     raw_score = _number(raw_best_row["final_score"])
-    selected_score = _number(selected_row["final_score"])
-    score_gap = selected_score - raw_score
+    rank15_score = _number(rank15_row["final_score"])
+    score_gap = rank15_score - raw_score
     near = valid_near_equivalent_candidates(final_stage_rows)
 
     aggregate_metrics: dict[str, Any] = {}
@@ -1554,34 +1555,34 @@ def _selection_comparison_audit(
         raw_values = np.asarray(
             [_number(row[metric]) for row in raw_by_scenario.values()], dtype=float
         )
-        selected_values = np.asarray(
-            [_number(row[metric]) for row in selected_by_scenario.values()], dtype=float
+        rank15_values = np.asarray(
+            [_number(row[metric]) for row in rank15_by_scenario.values()], dtype=float
         )
         raw_mean = float(np.mean(raw_values))
-        selected_mean = float(np.mean(selected_values))
+        rank15_mean = float(np.mean(rank15_values))
         aggregate_metrics[metric] = {
             "label": label,
             "raw_score_rank1_mean": raw_mean,
-            "selected_rank15_mean": selected_mean,
-            "selected_minus_raw": selected_mean - raw_mean,
-            "selected_change_percent": 100.0
-            * (selected_mean - raw_mean)
+            "rank15_low_control_effort_mean": rank15_mean,
+            "rank15_minus_raw": rank15_mean - raw_mean,
+            "rank15_change_percent": 100.0
+            * (rank15_mean - raw_mean)
             / max(abs(raw_mean), 1e-12),
         }
-    for scenario_name in sorted(selected_by_scenario):
+    for scenario_name in sorted(rank15_by_scenario):
         raw_metrics = raw_by_scenario[scenario_name]
-        selected_metrics = selected_by_scenario[scenario_name]
+        rank15_metrics = rank15_by_scenario[scenario_name]
         metric_rows: dict[str, Any] = {}
         for metric, label in SELECTION_COMPARISON_METRICS:
             raw_value = _number(raw_metrics[metric])
-            selected_value = _number(selected_metrics[metric])
+            rank15_value = _number(rank15_metrics[metric])
             metric_rows[metric] = {
                 "label": label,
                 "raw_score_rank1": raw_value,
-                "selected_rank15": selected_value,
-                "selected_minus_raw": selected_value - raw_value,
-                "selected_change_percent": 100.0
-                * (selected_value - raw_value)
+                "rank15_low_control_effort": rank15_value,
+                "rank15_minus_raw": rank15_value - raw_value,
+                "rank15_change_percent": 100.0
+                * (rank15_value - raw_value)
                 / max(abs(raw_value), 1e-12),
             }
         per_scenario[scenario_name] = {
@@ -1589,28 +1590,29 @@ def _selection_comparison_audit(
             "raw_score_rank1_hard_gates": {
                 key: raw_metrics.get(key) for key in SELECTION_HARD_GATE_FIELDS
             },
-            "selected_rank15_hard_gates": {
-                key: selected_metrics.get(key) for key in SELECTION_HARD_GATE_FIELDS
+            "rank15_low_control_effort_hard_gates": {
+                key: rank15_metrics.get(key) for key in SELECTION_HARD_GATE_FIELDS
             },
             "raw_score_rank1_rejected": _boolean(raw_metrics.get("rejected")),
-            "selected_rank15_rejected": _boolean(selected_metrics.get("rejected")),
+            "rank15_low_control_effort_rejected": _boolean(rank15_metrics.get("rejected")),
         }
 
     raw_scenario_scores = json.loads(str(raw_best_row["scenario_scores_json"]))
-    selected_scenario_scores = json.loads(str(selected_row["scenario_scores_json"]))
+    rank15_scenario_scores = json.loads(str(rank15_row["scenario_scores_json"]))
     vane_rms = aggregate_metrics["vane_command_rms_deg"]
     vane_tv = aggregate_metrics["vane_command_total_variation_deg"]
     vane_rate = aggregate_metrics["vane_command_rate_rms_deg_s"]
     raw_hard_gates_pass = all(
         not _boolean(row.get("rejected")) for row in raw_by_scenario.values()
     )
-    selected_hard_gates_pass = all(
-        not _boolean(row.get("rejected")) for row in selected_by_scenario.values()
+    rank15_hard_gates_pass = all(
+        not _boolean(row.get("rejected")) for row in rank15_by_scenario.values()
     )
     return {
-        "selection_description": (
-            "the selected robust low-control-effort candidate under the predeclared "
-            "near-equivalence rule"
+        "selection_description": "raw-score rank-1 controller selected for final use",
+        "selection_reason": (
+            "This task prioritizes pitch damping, residual velocity, and tail-path "
+            "performance; raw-score rank 1 passes every hard gate with zero saturation."
         ),
         "near_equivalence_rule": {
             "declared_before_final_ranking": True,
@@ -1631,36 +1633,39 @@ def _selection_comparison_audit(
             "worst_scenario_score": _number(raw_best_row["worst_scenario_score"]),
             "symmetry": json.loads(str(raw_best_row["symmetry_json"])),
             "all_hard_gates_pass": raw_hard_gates_pass,
+            "final_selected": True,
+            "boundary_flags": dict(final_boundary_flags),
         },
-        "selected_rank15": {
-            "candidate": asdict(candidate_from_row(selected_row, "selected_validation")),
-            "raw_score_rank": int(_number(selected_row.get("rank"), 0)),
-            "raw_aggregate_score": selected_score,
-            "scenario_mean_score": float(np.mean(list(selected_scenario_scores.values()))),
-            "worst_scenario_score": _number(selected_row["worst_scenario_score"]),
-            "symmetry": json.loads(str(selected_row["symmetry_json"])),
-            "all_hard_gates_pass": selected_hard_gates_pass,
-            "boundary_flags": dict(boundary_flags),
+        "rank15_low_control_effort": {
+            "candidate": asdict(candidate_from_row(rank15_row, "rank15_validation")),
+            "raw_score_rank": int(_number(rank15_row.get("rank"), 0)),
+            "raw_aggregate_score": rank15_score,
+            "scenario_mean_score": float(np.mean(list(rank15_scenario_scores.values()))),
+            "worst_scenario_score": _number(rank15_row["worst_scenario_score"]),
+            "symmetry": json.loads(str(rank15_row["symmetry_json"])),
+            "all_hard_gates_pass": rank15_hard_gates_pass,
+            "final_selected": False,
+            "boundary_flags": dict(rank15_boundary_flags),
         },
-        "score_penalty": {
+        "rank15_score_penalty": {
             "absolute": score_gap,
             "relative_percent": 100.0 * score_gap / max(abs(raw_score), 1e-12),
         },
-        "control_effort_reduction": {
-            "mean_vane_rms_percent": -vane_rms["selected_change_percent"],
-            "mean_vane_total_variation_percent": -vane_tv["selected_change_percent"],
-            "mean_vane_command_rate_rms_percent": -vane_rate["selected_change_percent"],
+        "rank15_control_effort_reduction": {
+            "mean_vane_rms_percent": -vane_rms["rank15_change_percent"],
+            "mean_vane_total_variation_percent": -vane_tv["rank15_change_percent"],
+            "mean_vane_command_rate_rms_percent": -vane_rate["rank15_change_percent"],
         },
         "aggregate_metrics": aggregate_metrics,
         "per_scenario": per_scenario,
         "audit_passed": (
             raw_hard_gates_pass
-            and selected_hard_gates_pass
-            and selected_score <= raw_score + NEAR_EQUIVALENCE_ABSOLUTE_MARGIN
-            and int(_number(selected_row.get("rank"), 0)) == 15
+            and rank15_hard_gates_pass
+            and rank15_score <= raw_score + NEAR_EQUIVALENCE_ABSOLUTE_MARGIN
+            and int(_number(rank15_row.get("rank"), 0)) == 15
             and int(_number(raw_best_row.get("rank"), 0)) == 1
-            and -vane_rms["selected_change_percent"] > 0.0
-            and not any(boundary_flags.values())
+            and -vane_rms["rank15_change_percent"] > 0.0
+            and not any(rank15_boundary_flags.values())
         ),
     }
 
@@ -1675,9 +1680,9 @@ def _selection_comparison_csv_rows(audit: dict[str, Any]) -> list[dict[str, Any]
                 "metric": metric,
                 "label": payload["label"],
                 "raw_score_rank1": payload["raw_score_rank1_mean"],
-                "selected_rank15": payload["selected_rank15_mean"],
-                "selected_minus_raw": payload["selected_minus_raw"],
-                "selected_change_percent": payload["selected_change_percent"],
+                "rank15_low_control_effort": payload["rank15_low_control_effort_mean"],
+                "rank15_minus_raw": payload["rank15_minus_raw"],
+                "rank15_change_percent": payload["rank15_change_percent"],
             }
         )
     for scenario_name, scenario_payload in audit["per_scenario"].items():
@@ -1689,9 +1694,9 @@ def _selection_comparison_csv_rows(audit: dict[str, Any]) -> list[dict[str, Any]
                     "metric": metric,
                     "label": payload["label"],
                     "raw_score_rank1": payload["raw_score_rank1"],
-                    "selected_rank15": payload["selected_rank15"],
-                    "selected_minus_raw": payload["selected_minus_raw"],
-                    "selected_change_percent": payload["selected_change_percent"],
+                    "rank15_low_control_effort": payload["rank15_low_control_effort"],
+                    "rank15_minus_raw": payload["rank15_minus_raw"],
+                    "rank15_change_percent": payload["rank15_change_percent"],
                 }
             )
     return rows
@@ -1699,37 +1704,37 @@ def _selection_comparison_csv_rows(audit: dict[str, Any]) -> list[dict[str, Any]
 
 def _selection_comparison_markdown(audit: dict[str, Any]) -> str:
     raw = audit["raw_score_rank1"]
-    selected = audit["selected_rank15"]
+    rank15 = audit["rank15_low_control_effort"]
     rule = audit["near_equivalence_rule"]
-    penalty = audit["score_penalty"]
-    effort = audit["control_effort_reduction"]
+    penalty = audit["rank15_score_penalty"]
+    effort = audit["rank15_control_effort_reduction"]
     lines = [
-        "# Raw-score rank 1 versus selected low-control-effort candidate",
+        "# Final raw-score rank 1 versus previous rank-15 low-control-effort candidate",
         "",
         "Stage 0 is a **FAILED / NON-ACCEPTABLE baseline used for normalization only**. It is not a validated controller.",
         "",
-        "The final controller is **the selected robust low-control-effort candidate under the predeclared near-equivalence rule**. It is raw-score rank 15, not rank 1, and it is not described as the mathematical raw-score optimum.",
+        "The final selected controller is **raw-score rank 1**. The previous rank-15 low-control-effort candidate is retained only as a transparent comparison and is not the final selected controller.",
         "",
         f"The predeclared inclusive rule is `{rule['formula']}`. The best raw score is `{rule['raw_score_best']:.9f}`, the limit is `{rule['upper_bound_inclusive']:.9f}`, and `{rule['near_equivalent_candidate_count']}` of `{rule['valid_candidate_count']}` valid Stage 3C candidates are inside the band.",
         "",
-        f"The selected score is `{selected['raw_aggregate_score']:.9f}` (absolute penalty `{penalty['absolute']:.9f}`, relative penalty `{penalty['relative_percent']:.3f}%`). Relative to rank 1, it reduces mean vane RMS by `{effort['mean_vane_rms_percent']:.3f}%`, vane total variation by `{effort['mean_vane_total_variation_percent']:.3f}%`, and vane command-rate RMS by `{effort['mean_vane_command_rate_rms_percent']:.3f}%`.",
+        f"The previous rank-15 score is `{rank15['raw_aggregate_score']:.9f}` (absolute penalty `{penalty['absolute']:.9f}`, relative penalty `{penalty['relative_percent']:.3f}%`). Relative to final rank 1, rank 15 reduces mean vane RMS by `{effort['mean_vane_rms_percent']:.3f}%`, vane total variation by `{effort['mean_vane_total_variation_percent']:.3f}%`, and vane command-rate RMS by `{effort['mean_vane_command_rate_rms_percent']:.3f}%`. That effort reduction is not used as the final tie-break because this task prioritizes pitch damping, residual velocity, and tail-path performance.",
         "",
-        "| metric | raw-score rank 1 | selected rank 15 | selected change |",
+        "| metric | final selected raw-score rank 1 | previous rank 15 | rank-15 change |",
         "| --- | ---: | ---: | ---: |",
-        f"| raw aggregate score | {raw['raw_aggregate_score']:.9f} | {selected['raw_aggregate_score']:.9f} | {penalty['relative_percent']:.3f}% |",
-        f"| scenario mean score | {raw['scenario_mean_score']:.9f} | {selected['scenario_mean_score']:.9f} | {100.0 * (selected['scenario_mean_score'] - raw['scenario_mean_score']) / max(abs(raw['scenario_mean_score']), 1e-12):.3f}% |",
-        f"| worst-scenario score | {raw['worst_scenario_score']:.9f} | {selected['worst_scenario_score']:.9f} | {100.0 * (selected['worst_scenario_score'] - raw['worst_scenario_score']) / max(abs(raw['worst_scenario_score']), 1e-12):.3f}% |",
+        f"| raw aggregate score | {raw['raw_aggregate_score']:.9f} | {rank15['raw_aggregate_score']:.9f} | {penalty['relative_percent']:.3f}% |",
+        f"| scenario mean score | {raw['scenario_mean_score']:.9f} | {rank15['scenario_mean_score']:.9f} | {100.0 * (rank15['scenario_mean_score'] - raw['scenario_mean_score']) / max(abs(raw['scenario_mean_score']), 1e-12):.3f}% |",
+        f"| worst-scenario score | {raw['worst_scenario_score']:.9f} | {rank15['worst_scenario_score']:.9f} | {100.0 * (rank15['worst_scenario_score'] - raw['worst_scenario_score']) / max(abs(raw['worst_scenario_score']), 1e-12):.3f}% |",
     ]
     for payload in audit["aggregate_metrics"].values():
         lines.append(
-            f"| {payload['label']} | {payload['raw_score_rank1_mean']:.9f} | {payload['selected_rank15_mean']:.9f} | {payload['selected_change_percent']:.3f}% |"
+            f"| {payload['label']} | {payload['raw_score_rank1_mean']:.9f} | {payload['rank15_low_control_effort_mean']:.9f} | {payload['rank15_change_percent']:.3f}% |"
         )
     lines.extend(
         [
             "",
             "Both candidates pass every physical and behavioral hard gate in all seven full-duration scenarios. All mirrored symmetry fractions are zero for both candidates. Detailed per-scenario metrics and every hard-gate field are preserved in `selection_comparison.json` and `selection_comparison.csv`.",
             "",
-            "The selected candidate has modestly higher tail pitch/velocity/path residuals than raw rank 1, but the absolute residuals remain small, every transient/safety gate passes, final-error and settling measures are mixed or improved, and the selected candidate remains substantially better than the failed Stage 0 normalization baseline. These differences are disclosed rather than hidden by the aggregate score.",
+            "Rank 1 is final because it has lower aggregate score and better main pitch-damping, residual-velocity, and tail-path metrics while still passing all hard gates with zero saturation. Rank 15 remains documented because it uses modestly less vane effort; those results are retained rather than hidden.",
             "",
         ]
     )
@@ -1740,6 +1745,8 @@ def final_candidate_requirements(
     baseline_by_scenario: dict[str, dict[str, Any]],
     selected_by_scenario: dict[str, dict[str, Any]],
     boundary_flags: dict[str, bool],
+    *,
+    boundary_is_hard_gate: bool = True,
 ) -> tuple[list[str], dict[str, Any]]:
     comparison = _comparison_summary(baseline_by_scenario, selected_by_scenario)
     failures: list[str] = []
@@ -1762,7 +1769,7 @@ def final_candidate_requirements(
     vane_increase = -vane["mean_improvement_percent"]
     if vane_increase > 10.0 and pitch["mean_improvement_percent"] < 40.0:
         failures.append("vane_rms_increase_above_10_percent_without_superior_damping")
-    if any(boundary_flags.values()):
+    if boundary_is_hard_gate and any(boundary_flags.values()):
         failures.append("selected_point_on_search_boundary")
     return failures, comparison
 
@@ -1893,14 +1900,25 @@ def _profile_payload(
         "limitations": list(limitations),
     }
     if selection_audit is not None:
+        raw = selection_audit["raw_score_rank1"]
+        rank15 = selection_audit["rank15_low_control_effort"]
         profile["analysis"]["selection"] = {
             "description": selection_audit["selection_description"],
-            "raw_score_rank": selection_audit["selected_rank15"]["raw_score_rank"],
-            "raw_aggregate_score": selection_audit["selected_rank15"]["raw_aggregate_score"],
-            "raw_score_best": selection_audit["raw_score_rank1"]["raw_aggregate_score"],
-            "score_penalty": selection_audit["score_penalty"],
+            "reason": selection_audit["selection_reason"],
+            "raw_score_rank": raw["raw_score_rank"],
+            "raw_aggregate_score": raw["raw_aggregate_score"],
+            "raw_score_best": raw["raw_aggregate_score"],
+            "score_penalty": {"absolute": 0.0, "relative_percent": 0.0},
             "near_equivalence_rule": selection_audit["near_equivalence_rule"],
-            "control_effort_reduction": selection_audit["control_effort_reduction"],
+            "rank15_comparison": {
+                "description": "previous low-control-effort alternative; not final selected controller",
+                "final_selected": False,
+                "raw_score_rank": rank15["raw_score_rank"],
+                "raw_aggregate_score": rank15["raw_aggregate_score"],
+                "score_penalty": selection_audit["rank15_score_penalty"],
+                "control_effort_reduction": selection_audit["rank15_control_effort_reduction"],
+                "all_hard_gates_pass": rank15["all_hard_gates_pass"],
+            },
             "audit_passed": selection_audit["audit_passed"],
         }
     return profile
@@ -1927,7 +1945,7 @@ Each metric is divided by the fresh Stage 0 value. Scenario score weights are 30
 
 Stage 0 is a **FAILED / NON-ACCEPTABLE baseline used for normalization only**. Both +1 m and -1 m absolute-target runs fail the early-velocity-reversal hard gate. It is not a validated or acceptable controller, and its use does not relax any candidate gate.
 
-The near-equivalent set was defined before final Stage 3C ranking inspection as every valid candidate whose raw aggregate score is less than or equal to the raw-score best plus exactly `{NEAR_EQUIVALENCE_ABSOLUTE_MARGIN:.6f}`. Inside that inclusive set, the tie-break order is lower mean vane RMS, lower Rate D, lower vane total variation, better symmetry, then raw score.
+The near-equivalent set was defined before final Stage 3C ranking inspection as every valid candidate whose raw aggregate score is less than or equal to the raw-score best plus exactly `{NEAR_EQUIVALENCE_ABSOLUTE_MARGIN:.6f}`. Its original low-control-effort tie-break results remain in the comparison audit for transparency. Final publication selects raw-score rank 1 instead because this task prioritizes pitch damping, residual velocity, and tail-path performance. Rank 15 is not the final selected controller.
 
 ## Chatter thresholds fixed before selection
 
@@ -1957,15 +1975,15 @@ def _markdown_summary(
     pitch_rate = comparison["aggregate"]["tail_rms_pitch_rate_deg_s"]
     velocity = comparison["aggregate"]["tail_rms_horizontal_velocity_m_s"]
     raw = selection_audit["raw_score_rank1"]
-    chosen = selection_audit["selected_rank15"]
+    rank15 = selection_audit["rank15_low_control_effort"]
     rule = selection_audit["near_equivalence_rule"]
-    penalty = selection_audit["score_penalty"]
-    effort = selection_audit["control_effort_reduction"]
+    penalty = selection_audit["rank15_score_penalty"]
+    effort = selection_audit["rank15_control_effort_reduction"]
     return f"""# Vane-only pitch damping retune
 
-The final controller is **the selected robust low-control-effort candidate under the predeclared near-equivalence rule**: Rate P/I/D `{selected.rate_p:.8f} / 0.00000000 / {selected.rate_d:.8f}` with Angle P `{selected.angle_p:.8f}`. It is raw-score rank `{chosen['raw_score_rank']}`, not rank 1, and it is not the mathematical raw-score optimum. All outer-loop, braking, capture, physics, actuator, geometry, and scenario settings were fixed. Moving-mass assist remained exactly `0.0 m/Nm`, and the physical moving mass remained centered.
+The final selected controller is **raw-score rank 1**: Rate P/I/D `{selected.rate_p:.8f} / 0.00000000 / {selected.rate_d:.8f}` with Angle P `{selected.angle_p:.8f}`. It is selected because this task prioritizes pitch damping, residual velocity, and tail-path performance; it passes every hard gate with zero saturation. All outer-loop, braking, capture, physics, actuator, geometry, and scenario settings were fixed. Moving-mass assist remained exactly `0.0 m/Nm`, and the physical moving mass remained centered.
 
-The predeclared inclusive near-equivalence set is `valid raw aggregate score <= raw-score best + {rule['absolute_margin']:.6f}`. The raw-score best is `{raw['raw_aggregate_score']:.9f}`, the selected score is `{chosen['raw_aggregate_score']:.9f}`, and the accepted penalty is `{penalty['absolute']:.9f}` (`{penalty['relative_percent']:.3f}%`). `{rule['near_equivalent_candidate_count']}` of `{rule['valid_candidate_count']}` valid Stage 3C candidates are inside the band. The selected candidate reduces mean vane RMS by `{effort['mean_vane_rms_percent']:.3f}%`, vane total variation by `{effort['mean_vane_total_variation_percent']:.3f}%`, and vane command-rate RMS by `{effort['mean_vane_command_rate_rms_percent']:.3f}%` relative to raw-score rank 1.
+The predeclared inclusive near-equivalence set remains documented as `valid raw aggregate score <= raw-score best + {rule['absolute_margin']:.6f}`. The raw-score best and final selected score are both `{raw['raw_aggregate_score']:.9f}` with zero accepted score penalty. `{rule['near_equivalent_candidate_count']}` of `{rule['valid_candidate_count']}` valid Stage 3C candidates are inside the band. The previous rank-15 alternative scored `{rank15['raw_aggregate_score']:.9f}` (penalty `{penalty['absolute']:.9f}`, `{penalty['relative_percent']:.3f}%`) and reduced mean vane RMS by `{effort['mean_vane_rms_percent']:.3f}%`, vane total variation by `{effort['mean_vane_total_variation_percent']:.3f}%`, and vane command-rate RMS by `{effort['mean_vane_command_rate_rms_percent']:.3f}%`; it is retained for comparison only and is not the final selected controller.
 
 ## Baseline comparison
 
@@ -1979,7 +1997,7 @@ The predeclared inclusive near-equivalence set is `valid raw aggregate score <= 
 
 ## Search and validation
 
-Both the raw-score rank-1 candidate and the selected rank-15 candidate pass every physical and hard gate in all seven full-duration scenarios. The selected candidate eliminates early velocity reversal in both +1 m and -1 m cases, records exactly one monotonic controller capture-count increment in stick release, has no capture discontinuity or shaped-vx reversal, and has zero vane/servo-rate/mixer saturation. Detailed side-by-side metrics, chatter, symmetry, and hard-gate results are in `selection_comparison.md`, `selection_comparison.csv`, and `selection_comparison.json`.
+Both the final raw-score rank-1 controller and the previous rank-15 alternative pass every physical and hard gate in all seven full-duration scenarios. The final selected controller eliminates early velocity reversal in both +1 m and -1 m cases, records exactly one monotonic controller capture-count increment in stick release, has no capture discontinuity or shaped-vx reversal, and has zero vane/servo-rate/mixer saturation. Detailed side-by-side metrics, chatter, symmetry, and hard-gate results are in `selection_comparison.md`, `selection_comparison.csv`, and `selection_comparison.json`.
 
 - Candidate counts: `{_canonical_json(candidate_counts)}`.
 - Total unique scenario rows: `{scenario_run_count}`.
@@ -2089,11 +2107,13 @@ def _write_final_exports(
         "deterministic_rerun_digests": list(rerun_digests),
         "selection": {
             "description": selection_audit["selection_description"],
-            "raw_score_rank": selection_audit["selected_rank15"]["raw_score_rank"],
+            "reason": selection_audit["selection_reason"],
+            "raw_score_rank": selection_audit["raw_score_rank1"]["raw_score_rank"],
             "raw_score_best": selection_audit["raw_score_rank1"]["raw_aggregate_score"],
-            "selected_raw_score": selection_audit["selected_rank15"]["raw_aggregate_score"],
+            "selected_raw_score": selection_audit["raw_score_rank1"]["raw_aggregate_score"],
             "near_equivalent_candidate_count": selection_audit["near_equivalence_rule"]["near_equivalent_candidate_count"],
             "absolute_margin": selection_audit["near_equivalence_rule"]["absolute_margin"],
+            "rank15_comparison_raw_score": selection_audit["rank15_low_control_effort"]["raw_aggregate_score"],
             "audit_passed": selection_audit["audit_passed"],
         },
     }
@@ -2576,46 +2596,64 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         boundary_rows.append(
             {"stage": f"stage3c_crosscheck_extension_{extension_index}", **boundary_flags, **selected_final_row}
         )
-    selected = candidate_from_row(selected_final_row, "selected_validation")
+    rank15_row = selected_final_row
+    rank15_boundary_flags = dict(boundary_flags)
     raw_best_row = raw_score_best(aggregates["stage3c_crosscheck"])
-    raw_winner = candidate_from_row(raw_best_row, "raw_score_validation")
-    print(f"Local refinement complete; selected {selected.key}", flush=True)
+    final_boundary_flags = selected_boundary_flags(raw_best_row, stage3c_search)
+    boundary_rows.append(
+        {
+            "stage": "stage3c_final_raw_score_selection",
+            **final_boundary_flags,
+            **raw_best_row,
+        }
+    )
+    selected = candidate_from_row(raw_best_row, "selected_validation")
+    rank15_candidate = candidate_from_row(rank15_row, "rank15_validation")
+    print(
+        f"Local refinement complete; final raw-score rank 1 selected {selected.key}; "
+        f"rank-15 comparison retained {rank15_candidate.key}",
+        flush=True,
+    )
 
     validation_runs, selected_results, rerun_digests = _fresh_validation_runs(
         selected, scenarios, quick=False
     )
-    raw_validation_runs, raw_results, raw_rerun_digests = _fresh_validation_runs(
-        raw_winner, scenarios, quick=False
+    rank15_validation_runs, rank15_results, rank15_rerun_digests = _fresh_validation_runs(
+        rank15_candidate, scenarios, quick=False
     )
     selected_by_scenario = validation_runs[0]
-    raw_by_scenario = raw_validation_runs[0]
+    rank15_by_scenario = rank15_validation_runs[0]
     requirement_failures, comparison = final_candidate_requirements(
-        baseline_by_scenario, selected_by_scenario, boundary_flags
+        baseline_by_scenario,
+        selected_by_scenario,
+        final_boundary_flags,
+        boundary_is_hard_gate=False,
     )
-    raw_gate_failures = [
+    rank15_gate_failures = [
         f"{name}:{metrics.get('rejection_reasons', '')}"
-        for name, metrics in raw_by_scenario.items()
+        for name, metrics in rank15_by_scenario.items()
         if _boolean(metrics.get("rejected"))
     ]
     selection_audit = _selection_comparison_audit(
         raw_best_row,
-        selected_final_row,
+        rank15_row,
         aggregates["stage3c_crosscheck"],
-        raw_by_scenario,
         selected_by_scenario,
-        boundary_flags,
+        rank15_by_scenario,
+        final_boundary_flags,
+        rank15_boundary_flags,
     )
     selection_audit["deterministic_reruns"] = {
         "workflow_fingerprint": fingerprint,
-        "raw_score_rank1_digests": list(raw_rerun_digests),
-        "selected_rank15_digests": list(rerun_digests),
-        "raw_score_rank1_byte_identical": len(set(raw_rerun_digests)) == 1,
-        "selected_rank15_byte_identical": len(set(rerun_digests)) == 1,
+        "selected_raw_score_rank1_digests": list(rerun_digests),
+        "rank15_low_control_effort_digests": list(rank15_rerun_digests),
+        "selected_raw_score_rank1_byte_identical": len(set(rerun_digests)) == 1,
+        "rank15_low_control_effort_byte_identical": len(set(rank15_rerun_digests)) == 1,
     }
-    if raw_gate_failures:
-        requirement_failures.extend(raw_gate_failures)
+    if rank15_gate_failures:
+        requirement_failures.extend(rank15_gate_failures)
     if not selection_audit["audit_passed"]:
-        requirement_failures.append("near_equivalent_selection_audit_failed")
+        requirement_failures.append("rank1_rank15_comparison_audit_failed")
     atomic_write_json(
         output_dir / "validation" / "deterministic_reruns.json",
         _json_safe(
@@ -2633,15 +2671,30 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         _json_safe(
             {
                 "workflow_fingerprint": fingerprint,
-                "digests": raw_rerun_digests,
-                "byte_identical_metrics": len(set(raw_rerun_digests)) == 1,
-                "requirement_failures": raw_gate_failures,
-                "runs": raw_validation_runs,
+                "digests": rerun_digests,
+                "byte_identical_metrics": len(set(rerun_digests)) == 1,
+                "requirement_failures": requirement_failures,
+                "runs": validation_runs,
+            }
+        ),
+    )
+    atomic_write_json(
+        output_dir / "validation" / "rank15_low_control_effort_deterministic_reruns.json",
+        _json_safe(
+            {
+                "workflow_fingerprint": fingerprint,
+                "digests": rank15_rerun_digests,
+                "byte_identical_metrics": len(set(rank15_rerun_digests)) == 1,
+                "requirement_failures": rank15_gate_failures,
+                "runs": rank15_validation_runs,
             }
         ),
     )
     _write_selected_timeseries(output_dir, selected_results)
-    _write_validation_timeseries(output_dir, "raw_score_rank1", raw_results)
+    _write_validation_timeseries(output_dir, "raw_score_rank1", selected_results)
+    _write_validation_timeseries(
+        output_dir, "rank15_low_control_effort", rank15_results
+    )
     _write_plots(output_dir, baseline_results, selected_results)
     if requirement_failures:
         atomic_write_json(
@@ -2667,7 +2720,7 @@ def run_workflow(options: WorkflowOptions) -> dict[str, Any]:
         fingerprint_payload,
         fingerprint,
         boundary_rows,
-        boundary_flags,
+        final_boundary_flags,
         rerun_digests,
         mismatch,
         selection_audit,

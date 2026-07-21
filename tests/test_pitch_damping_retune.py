@@ -27,6 +27,7 @@ from analysis.pitch_damping_retune import (
     capture_gate_metrics,
     hard_gate_reasons,
     required_scenarios,
+    raw_score_best,
     run_workflow,
     selected_boundary_flags,
     select_near_equivalent,
@@ -191,6 +192,22 @@ class PitchDampingStaticTests(unittest.TestCase):
             select_near_equivalent([raw_best, lower_effort, outside])["candidate_key"],
             "lower_effort",
         )
+        self.assertEqual(
+            raw_score_best([raw_best, lower_effort, outside])["candidate_key"],
+            "raw_best",
+        )
+
+    def test_provisional_profile_uses_final_raw_score_rank1_controller(self):
+        profile = json.loads(PROVISIONAL_PROFILE.read_text(encoding="utf-8"))
+        controller = profile["controller"]
+        selection = profile["analysis"]["selection"]
+        self.assertEqual(controller["atc_rat_pit_p"], 0.090)
+        self.assertEqual(controller["atc_rat_pit_i"], 0.0)
+        self.assertEqual(controller["atc_rat_pit_d"], 0.0195)
+        self.assertEqual(controller["atc_ang_pit_p"], 25.0)
+        self.assertEqual(selection["raw_score_rank"], 1)
+        self.assertEqual(selection["score_penalty"]["absolute"], 0.0)
+        self.assertFalse(selection["rank15_comparison"].get("final_selected", False))
 
     def test_resume_boundary_ranges_include_cached_extension_candidates(self):
         cached = stage_candidates_from_rows(

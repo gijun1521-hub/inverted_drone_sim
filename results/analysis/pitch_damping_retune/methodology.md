@@ -18,7 +18,7 @@ Each metric is divided by the fresh Stage 0 value. Scenario score weights are 30
 
 Stage 0 is a **FAILED / NON-ACCEPTABLE baseline used for normalization only**. Both +1 m and -1 m absolute-target runs fail the early-velocity-reversal hard gate. It is not a validated or acceptable controller, and its use does not relax any candidate gate.
 
-The near-equivalent set was defined before final Stage 3C ranking inspection as every valid candidate whose raw aggregate score is less than or equal to the raw-score best plus exactly `0.010000`. Inside that inclusive set, the tie-break order is lower mean vane RMS, lower Rate D, lower vane total variation, better symmetry, then raw score.
+The near-equivalent set was defined before final Stage 3C ranking inspection as every valid candidate whose raw aggregate score is less than or equal to the raw-score best plus exactly `0.010000`. Its original low-control-effort tie-break results remain in the comparison audit for transparency. Final publication selects raw-score rank 1 instead because this task prioritizes pitch damping, residual velocity, and tail-path performance. Rank 15 is not the final selected controller.
 
 ## Chatter thresholds fixed before selection
 

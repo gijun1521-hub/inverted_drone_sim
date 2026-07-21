@@ -1,14 +1,14 @@
-# Raw-score rank 1 versus selected low-control-effort candidate
+# Final raw-score rank 1 versus previous rank-15 low-control-effort candidate
 
 Stage 0 is a **FAILED / NON-ACCEPTABLE baseline used for normalization only**. It is not a validated controller.
 
-The final controller is **the selected robust low-control-effort candidate under the predeclared near-equivalence rule**. It is raw-score rank 15, not rank 1, and it is not described as the mathematical raw-score optimum.
+The final selected controller is **raw-score rank 1**. The previous rank-15 low-control-effort candidate is retained only as a transparent comparison and is not the final selected controller.
 
 The predeclared inclusive rule is `valid raw aggregate score <= raw-score best + 0.010000`. The best raw score is `0.396902568`, the limit is `0.406902568`, and `19` of `120` valid Stage 3C candidates are inside the band.
 
-The selected score is `0.406150436` (absolute penalty `0.009247867`, relative penalty `2.330%`). Relative to rank 1, it reduces mean vane RMS by `2.554%`, vane total variation by `4.278%`, and vane command-rate RMS by `5.372%`.
+The previous rank-15 score is `0.406150436` (absolute penalty `0.009247867`, relative penalty `2.330%`). Relative to final rank 1, rank 15 reduces mean vane RMS by `2.554%`, vane total variation by `4.278%`, and vane command-rate RMS by `5.372%`. That effort reduction is not used as the final tie-break because this task prioritizes pitch damping, residual velocity, and tail-path performance.
 
-| metric | raw-score rank 1 | selected rank 15 | selected change |
+| metric | final selected raw-score rank 1 | previous rank 15 | rank-15 change |
 | --- | ---: | ---: | ---: |
 | raw aggregate score | 0.396902568 | 0.406150436 | 2.330% |
 | scenario mean score | 0.262214909 | 0.268382452 | 2.352% |
@@ -34,4 +34,4 @@ The selected score is `0.406150436` (absolute penalty `0.009247867`, relative pe
 
 Both candidates pass every physical and behavioral hard gate in all seven full-duration scenarios. All mirrored symmetry fractions are zero for both candidates. Detailed per-scenario metrics and every hard-gate field are preserved in `selection_comparison.json` and `selection_comparison.csv`.
 
-The selected candidate has modestly higher tail pitch/velocity/path residuals than raw rank 1, but the absolute residuals remain small, every transient/safety gate passes, final-error and settling measures are mixed or improved, and the selected candidate remains substantially better than the failed Stage 0 normalization baseline. These differences are disclosed rather than hidden by the aggregate score.
+Rank 1 is final because it has lower aggregate score and better main pitch-damping, residual-velocity, and tail-path metrics while still passing all hard gates with zero saturation. Rank 15 remains documented because it uses modestly less vane effort; those results are retained rather than hidden.
