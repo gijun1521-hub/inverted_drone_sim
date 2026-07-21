@@ -1,0 +1,3 @@
+round,candidate_count,valid_candidate_count,best_rate_p,best_rate_d,best_score,rate_p_at_upper_boundary,rate_d_at_upper_boundary
+0,25,25,0.09375,0.021,0.39150972444101023,False,True
+1,25,25,0.09375,0.021,0.39150972444101023,False,False

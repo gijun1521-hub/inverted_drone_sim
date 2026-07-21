@@ -1,0 +1,30 @@
+{
+  "controller": {
+    "atc_ang_pit_p": 10.0,
+    "atc_rat_pit_d": 0.008,
+    "atc_rat_pit_i": 0.0,
+    "atc_rat_pit_p": 0.07
+  },
+  "physical_configuration": {
+    "H": 0.5,
+    "m": 2.0,
+    "moving_mass": {
+      "enabled": true,
+      "initial_offset_m": 0.0,
+      "mass_kg": 0.5,
+      "max_accel_m_s2": 1.0,
+      "max_offset_m": 0.05,
+      "max_rate_m_s": 0.2,
+      "moving_mass_body_up_offset_m": 0.12,
+      "use_legacy_gravity_offset_moment": false,
+      "use_total_com_geometry": true
+    }
+  },
+  "reasons": [
+    "forward_1m:early_velocity_reversal",
+    "backward_1m:early_velocity_reversal"
+  ],
+  "source_profile": "params/loiter_transient_provisional.json",
+  "source_profile_sha256": "c661d75e942485abbbec4ad895463374c44ab980f4cc298a5dbc9679cbdd41b9",
+  "status": "mismatch"
+}
