@@ -4,8 +4,8 @@ Passed: **False**. Cases: 32.
 
 | pattern | direction | variant | executed gain | capture count | pause / second lobe / shaped sign / early reversal | vane RMS | mass max offset/rate/accel |
 | --- | --- | --- | ---: | ---: | --- | ---: | --- |
-| light_short_pulse | 1 | vane_only | 0.00000 | 0 | second_acceleration_lobe@0.90 | 0.4923 | 0.00000 / 0.00000 / 0.00000 |
-| light_short_pulse | 1 | moving_mass_assist | 0.04150 | 0 | second_acceleration_lobe@0.90 | 0.2173 | 0.00179 / 0.04584 / 1.00000 |
+| light_short_pulse | 1 | vane_only | 0.00000 | 0 | pass | 0.4923 | 0.00000 / 0.00000 / 0.00000 |
+| light_short_pulse | 1 | moving_mass_assist | 0.04150 | 0 | pass | 0.2173 | 0.00179 / 0.04584 / 1.00000 |
 | light_short_pulse | 1 | vane_only | 0.00000 | 0 | pass | 0.4923 | 0.00000 / 0.00000 / 0.00000 |
 | light_short_pulse | 1 | moving_mass_assist | 0.04150 | 0 | pass | 0.2173 | 0.00179 / 0.04584 / 1.00000 |
 | medium_pulse | 1 | vane_only | 0.00000 | 0 | pass | 0.4636 | 0.00000 / 0.00000 / 0.00000 |

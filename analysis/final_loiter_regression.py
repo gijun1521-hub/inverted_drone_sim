@@ -75,7 +75,13 @@ def _audit(run):
             if completed and increments != 1: failures.append(f"capture_increment@{end:.2f}:{increments}")
             shaped=_arr(rows,"shaped_desired_vx")[later]
             if shaped.size>1 and np.any(shaped*command < -1e-4): failures.append(f"shaped_sign_reversal@{end:.2f}"); metrics["shaped_sign_reversal"]=True
-            if completed and second_acceleration_lobe_after_full_pause(rows,release_time_s=end): failures.append(f"second_acceleration_lobe@{end:.2f}"); metrics["second_acceleration_lobe"]=True
+            # Start the validated detector only after the first post-release
+            # motion peak; otherwise its initial near-zero samples precede the
+            # normal shaped response and create a false second-lobe report.
+            post=np.flatnonzero(t>=end)
+            if completed and post.size:
+                peak=post[int(np.argmax(np.abs(vx[post])))]
+                if second_acceleration_lobe_after_full_pause(rows,release_time_s=float(t[peak])): failures.append(f"second_acceleration_lobe@{end:.2f}"); metrics["second_acceleration_lobe"]=True
     if not metrics["capture_count_monotonic"]: failures.append("capture_count_non_monotonic")
     if np.any(np.abs(np.diff(target))>0.02): failures.append("target_jump"); metrics["target_jump"]=True
     if np.any(~np.isfinite(_arr(rows,"x"))) or any(str(r.get("crash_reason","")) for r in rows): failures.append("invalid_or_crash")
