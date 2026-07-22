@@ -1,2 +1,4 @@
 # Generated optimization artifacts are SHA-256-addressed byte-for-byte.
 results/analysis/variant_controller_optimization/** -text
+# Final optimized-controller media and manifests are byte-addressed artifacts.
+results/analysis/final_optimized_controller_videos/** -text

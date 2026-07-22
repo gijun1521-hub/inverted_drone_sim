@@ -1,0 +1,1583 @@
+{
+  "schema_version": 1,
+  "generator": "generate_optimized_variant_videos.py",
+  "deterministic": true,
+  "simulation_only": true,
+  "real_flight_claim": false,
+  "primary_settling_definition": {
+    "label": "PR #25 strict settling",
+    "detector": "analysis.variant_controller_optimizer.detect_settling_time",
+    "position_error_band_m": 0.025,
+    "horizontal_speed_band_m_s": 0.03,
+    "required_continuous_duration_s": 0.75,
+    "event_reference": "command step or disturbance onset",
+    "requires_final_in_band_suffix": true
+  },
+  "profiles": {
+    "vane_only": {
+      "path": "results/analysis/variant_controller_optimization/profiles/vane_only.json",
+      "sha256": "ddbfe044be85cacd137465893ac9f6f058a4340526d58f45365411817b617ef3",
+      "controller": {
+        "atc_rat_pit_p": 0.1394708251953125,
+        "atc_rat_pit_i": 0.0,
+        "atc_rat_pit_d": 0.017193449702789215,
+        "atc_ang_pit_p": 28.831536800000002,
+        "psc_ne_pos_p": 0.6286206268221575,
+        "psc_ne_vel_p": 0.984955860255447
+      },
+      "assist_gain_m_per_Nm": 0.0
+    },
+    "moving_mass_assist": {
+      "path": "results/analysis/variant_controller_optimization/profiles/moving_mass_assist.json",
+      "sha256": "91cc400bf3dd9e07e56a714b403f4364fb1d1f246cdae8c5cbae0d741bfb93c0",
+      "controller": {
+        "atc_rat_pit_p": 0.13995564270019534,
+        "atc_rat_pit_i": 0.0,
+        "atc_rat_pit_d": 0.01662736211133974,
+        "atc_ang_pit_p": 28.296658700000002,
+        "psc_ne_pos_p": 0.6253285805393588,
+        "psc_ne_vel_p": 0.9891142702854996
+      },
+      "assist_gain_m_per_Nm": 0.018680405097860724
+    }
+  },
+  "scenarios": [
+    {
+      "key": "loiter",
+      "display_name": "LOITER: 8 N world-frame disturbance",
+      "config": {
+        "name": "final_optimized_loiter_horizontal_disturbance",
+        "mode": "LOITER",
+        "duration_s": 10.0,
+        "settle_time_s": 2.0,
+        "stick_start_s": 0.5,
+        "stick_end_s": 2.0,
+        "stick_x": 0.0,
+        "stick_z": 0.0,
+        "stick_timeline": [],
+        "disturbance_start_s": 1.5,
+        "disturbance_duration_s": 0.2,
+        "disturbance_force_x": 8.0,
+        "disturbance_force_z": 0.0,
+        "disturbance_moment": 0.0,
+        "initial_x": 0.0,
+        "initial_z": 1.0,
+        "initial_theta_deg": 0.0,
+        "initial_vx": 0.0,
+        "initial_vz": 0.0,
+        "initial_omega_deg_s": 0.0,
+        "target_x": 0.0,
+        "target_z": 1.0,
+        "target_step_time_s": null,
+        "target_step_x": null,
+        "target_step_z": null,
+        "capture_current_target": false,
+        "max_final_x_error": 0.45,
+        "max_final_z_error": 0.35,
+        "max_rms_x_error": 1.0,
+        "max_rms_z_error": 0.8,
+        "max_theta_deg_limit": 55.0,
+        "max_saturation_percent": 85.0,
+        "vane_angle_max_deg": null,
+        "vane_rate_limit_deg_s": null,
+        "T_max_factor": null,
+        "moving_mass_enabled": false,
+        "moving_mass_target_m": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "notes": "PR #24 seminar timing and initialization: 8 N world-frame horizontal disturbance from 1.5 s through 1.7 s."
+      },
+      "settling_reference_time_s": 1.7
+    },
+    {
+      "key": "forward_1m",
+      "display_name": "LOITER: absolute +1 m command",
+      "config": {
+        "name": "final_optimized_forward_1m_step",
+        "mode": "LOITER",
+        "duration_s": 10.0,
+        "settle_time_s": 2.0,
+        "stick_start_s": 0.5,
+        "stick_end_s": 2.0,
+        "stick_x": 0.0,
+        "stick_z": 0.0,
+        "stick_timeline": [],
+        "disturbance_start_s": 0.0,
+        "disturbance_duration_s": 0.0,
+        "disturbance_force_x": 0.0,
+        "disturbance_force_z": 0.0,
+        "disturbance_moment": 0.0,
+        "initial_x": 0.0,
+        "initial_z": 1.0,
+        "initial_theta_deg": 0.0,
+        "initial_vx": 0.0,
+        "initial_vz": 0.0,
+        "initial_omega_deg_s": 0.0,
+        "target_x": 0.0,
+        "target_z": 1.0,
+        "target_step_time_s": 1.0,
+        "target_step_x": 1.0,
+        "target_step_z": null,
+        "capture_current_target": false,
+        "max_final_x_error": 0.45,
+        "max_final_z_error": 0.35,
+        "max_rms_x_error": 1.0,
+        "max_rms_z_error": 0.8,
+        "max_theta_deg_limit": 55.0,
+        "max_saturation_percent": 85.0,
+        "vane_angle_max_deg": null,
+        "vane_rate_limit_deg_s": null,
+        "T_max_factor": null,
+        "moving_mass_enabled": false,
+        "moving_mass_target_m": 0.0,
+        "moving_mass_assist_gain_m_per_Nm": 0.0,
+        "notes": "Absolute x target changes from 0 m to +1 m at t=1.0 s and is held."
+      },
+      "settling_reference_time_s": 1.0
+    }
+  ],
+  "variants": [
+    {
+      "key": "vane_only",
+      "display_name": "Independently optimized Vane-only",
+      "hud_mass_label": "Physical moving mass locked at center",
+      "profile_path": "results/analysis/variant_controller_optimization/profiles/vane_only.json",
+      "profile_source": "results/analysis/variant_controller_optimization/profiles/vane_only.json",
+      "assist_gain_m_per_Nm": 0.0
+    },
+    {
+      "key": "moving_mass_assist",
+      "display_name": "Independently optimized moving-mass assist",
+      "hud_mass_label": "Optimized moving-mass assist",
+      "profile_path": "results/analysis/variant_controller_optimization/profiles/moving_mass_assist.json",
+      "profile_source": "results/analysis/variant_controller_optimization/profiles/moving_mass_assist.json",
+      "assist_gain_m_per_Nm": 0.018680405097860724
+    }
+  ],
+  "validation": {
+    "result_count": 4,
+    "unique_key_count": 4,
+    "simulation_sample_count": 2000,
+    "controllers_are_distinct": true,
+    "vane_only_mass_state_exact_zero": true,
+    "assist_gain_verified": true
+  },
+  "pr25_selected_result_comparison": {
+    "source": "results/analysis/variant_controller_optimization/validation/selected_scenario_results.csv",
+    "note": "Video events use PR #24 timing; tolerances cover time translation and the 10 s video horizon.",
+    "dynamic_metrics_skipped_for_short_horizon": false,
+    "passed": true,
+    "comparison_count": 50,
+    "tolerances": {
+      "peak_abs_theta_deg": 0.25,
+      "position_overshoot_m": 0.02,
+      "final_abs_x_error_m": 0.03,
+      "moving_mass_max_target_m": 0.002,
+      "moving_mass_max_offset_m": 0.002
+    },
+    "comparisons": [
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "peak_abs_theta_deg",
+        "actual": 7.637633381542291,
+        "pr25_committed": 7.795473415847932,
+        "absolute_tolerance": 0.25,
+        "absolute_delta": 0.1578400343056412,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "position_overshoot_m",
+        "actual": 0.496378351764911,
+        "pr25_committed": 0.5095770554028934,
+        "absolute_tolerance": 0.02,
+        "absolute_delta": 0.013198703637982423,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "final_abs_x_error_m",
+        "actual": 0.01956205743894921,
+        "pr25_committed": 0.003923337881540123,
+        "absolute_tolerance": 0.03,
+        "absolute_delta": 0.015638719557409086,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "moving_mass_max_target_m",
+        "actual": 0.0,
+        "pr25_committed": 0.0,
+        "absolute_tolerance": 0.002,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "moving_mass_max_offset_m",
+        "actual": 0.0,
+        "pr25_committed": 0.0,
+        "absolute_tolerance": 0.002,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "atc_rat_pit_p",
+        "actual": 0.1394708251953125,
+        "pr25_committed": 0.1394708251953125,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "atc_rat_pit_i",
+        "actual": 0.0,
+        "pr25_committed": 0.0,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "atc_rat_pit_d",
+        "actual": 0.017193449702789215,
+        "pr25_committed": 0.017193449702789215,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "atc_ang_pit_p",
+        "actual": 28.831536800000002,
+        "pr25_committed": 28.831536800000002,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "psc_ne_pos_p",
+        "actual": 0.6286206268221575,
+        "pr25_committed": 0.6286206268221575,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "psc_ne_vel_p",
+        "actual": 0.984955860255447,
+        "pr25_committed": 0.984955860255447,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "vane_only",
+        "metric": "assist_gain_m_per_Nm",
+        "actual": 0.0,
+        "pr25_committed": 0.0,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "peak_abs_theta_deg",
+        "actual": 7.43412490445673,
+        "pr25_committed": 7.601907549154931,
+        "absolute_tolerance": 0.25,
+        "absolute_delta": 0.16778264469820137,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "position_overshoot_m",
+        "actual": 0.49589433732867805,
+        "pr25_committed": 0.5084075203327774,
+        "absolute_tolerance": 0.02,
+        "absolute_delta": 0.012513183004099315,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "final_abs_x_error_m",
+        "actual": 0.01755895463735244,
+        "pr25_committed": 0.003266027751169004,
+        "absolute_tolerance": 0.03,
+        "absolute_delta": 0.014292926886183437,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "moving_mass_max_target_m",
+        "actual": 0.00701971851878965,
+        "pr25_committed": 0.007156293472127169,
+        "absolute_tolerance": 0.002,
+        "absolute_delta": 0.0001365749533375196,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "moving_mass_max_offset_m",
+        "actual": 0.00689595008922355,
+        "pr25_committed": 0.0070278090411509345,
+        "absolute_tolerance": 0.002,
+        "absolute_delta": 0.00013185895192738446,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "atc_rat_pit_p",
+        "actual": 0.13995564270019534,
+        "pr25_committed": 0.13995564270019534,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "atc_rat_pit_i",
+        "actual": 0.0,
+        "pr25_committed": 0.0,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "atc_rat_pit_d",
+        "actual": 0.01662736211133974,
+        "pr25_committed": 0.01662736211133974,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "atc_ang_pit_p",
+        "actual": 28.296658700000002,
+        "pr25_committed": 28.296658700000002,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "psc_ne_pos_p",
+        "actual": 0.6253285805393588,
+        "pr25_committed": 0.6253285805393588,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "psc_ne_vel_p",
+        "actual": 0.9891142702854996,
+        "pr25_committed": 0.9891142702854996,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "loiter",
+        "variant": "moving_mass_assist",
+        "metric": "assist_gain_m_per_Nm",
+        "actual": 0.018680405097860724,
+        "pr25_committed": 0.018680405097860724,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "peak_abs_theta_deg",
+        "actual": 5.911937679993733,
+        "pr25_committed": 5.911937679993733,
+        "absolute_tolerance": 0.25,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "position_overshoot_m",
+        "actual": 0.06996803494175063,
+        "pr25_committed": 0.06996803494175063,
+        "absolute_tolerance": 0.02,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "final_abs_x_error_m",
+        "actual": 0.0033445164047297693,
+        "pr25_committed": 0.002319816234257366,
+        "absolute_tolerance": 0.03,
+        "absolute_delta": 0.0010247001704724035,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "moving_mass_max_target_m",
+        "actual": 0.0,
+        "pr25_committed": 0.0,
+        "absolute_tolerance": 0.002,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "moving_mass_max_offset_m",
+        "actual": 0.0,
+        "pr25_committed": 0.0,
+        "absolute_tolerance": 0.002,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "atc_rat_pit_p",
+        "actual": 0.1394708251953125,
+        "pr25_committed": 0.1394708251953125,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "atc_rat_pit_i",
+        "actual": 0.0,
+        "pr25_committed": 0.0,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "atc_rat_pit_d",
+        "actual": 0.017193449702789215,
+        "pr25_committed": 0.017193449702789215,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "atc_ang_pit_p",
+        "actual": 28.831536800000002,
+        "pr25_committed": 28.831536800000002,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "psc_ne_pos_p",
+        "actual": 0.6286206268221575,
+        "pr25_committed": 0.6286206268221575,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "psc_ne_vel_p",
+        "actual": 0.984955860255447,
+        "pr25_committed": 0.984955860255447,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "assist_gain_m_per_Nm",
+        "actual": 0.0,
+        "pr25_committed": 0.0,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "vane_only",
+        "metric": "pr25_strict_settling_time_s",
+        "actual": 7.8999999999999915,
+        "pr25_committed": 7.899999999999913,
+        "absolute_tolerance": 0.005,
+        "absolute_delta": 7.815970093361102e-14,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "peak_abs_theta_deg",
+        "actual": 5.920211424404704,
+        "pr25_committed": 5.920211424404704,
+        "absolute_tolerance": 0.25,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "position_overshoot_m",
+        "actual": 0.07076742288534499,
+        "pr25_committed": 0.07076742288534499,
+        "absolute_tolerance": 0.02,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "final_abs_x_error_m",
+        "actual": 5.264076238020721e-06,
+        "pr25_committed": 0.002675671772293997,
+        "absolute_tolerance": 0.03,
+        "absolute_delta": 0.0026704076960559764,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "moving_mass_max_target_m",
+        "actual": 0.01268705473577893,
+        "pr25_committed": 0.01268705473577893,
+        "absolute_tolerance": 0.002,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "moving_mass_max_offset_m",
+        "actual": 0.006727777096714067,
+        "pr25_committed": 0.006727777096714067,
+        "absolute_tolerance": 0.002,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "atc_rat_pit_p",
+        "actual": 0.13995564270019534,
+        "pr25_committed": 0.13995564270019534,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "atc_rat_pit_i",
+        "actual": 0.0,
+        "pr25_committed": 0.0,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "atc_rat_pit_d",
+        "actual": 0.01662736211133974,
+        "pr25_committed": 0.01662736211133974,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "atc_ang_pit_p",
+        "actual": 28.296658700000002,
+        "pr25_committed": 28.296658700000002,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "psc_ne_pos_p",
+        "actual": 0.6253285805393588,
+        "pr25_committed": 0.6253285805393588,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "psc_ne_vel_p",
+        "actual": 0.9891142702854996,
+        "pr25_committed": 0.9891142702854996,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "assist_gain_m_per_Nm",
+        "actual": 0.018680405097860724,
+        "pr25_committed": 0.018680405097860724,
+        "absolute_tolerance": 1e-15,
+        "absolute_delta": 0.0,
+        "passed": true
+      },
+      {
+        "scenario": "forward_1m",
+        "variant": "moving_mass_assist",
+        "metric": "pr25_strict_settling_time_s",
+        "actual": 7.559999999999938,
+        "pr25_committed": 7.55999999999986,
+        "absolute_tolerance": 0.005,
+        "absolute_delta": 7.815970093361102e-14,
+        "passed": true
+      }
+    ]
+  },
+  "pr24_artifacts_preserved": true,
+  "pr24_artifact_hashes": {
+    "forward_1m_assist.mp4": "7f5f2cd20c0736e16cacea1608b37d6ff69ae4424c7d606b9a054a694d4cca20",
+    "forward_1m_locked.mp4": "f071cc67772cb3102e704ae0e131c4b7d029c29e820d8ace2270f4cd6e5edbfa",
+    "loiter_assist.mp4": "3de11c69c41229722aeb4aaf870ec771e60b8a574e19b722df1a1a3b48431e12",
+    "loiter_locked.mp4": "afbf6684610d8225e473fb37827ec22f29ed80fc4ba93a1ccd9ae9943f3b064d",
+    "manifest.json": "40a0d47e46c8986b325f81fc93c9f5edadabfd266c5691e5085abfa0d3304dca",
+    "media_verification.json": "e867c26b6840f991ddffef4b1e54bfa7d0eac38a3c9aae01674fb590ee047cf3",
+    "scenario_metrics.csv": "ae2ea45aa0932a9a10c5be147f5cd38389f709d76cc0dce7e1d5aaec5b793635",
+    "scenario_summary.md": "93e83b7bbaf9ab2cb71a93dbc54c1f3209ac0bb747d0079c3770e50f8b65ef02",
+    "seminar_scenario_comparison.gif": "5b737dcdd7559fd13b4cfaff27ea24ba1beb30f92a7435470f903ffeb5781855",
+    "seminar_scenario_comparison.mp4": "ee45f616486f2128018c284c1ec25e93a6407c0a9445d4b5eb56801236c12eed",
+    "seminar_video_thumbnail.png": "f8662263a244c02d85a49c6f7cd339e985dc5de7208d268edff75e9b54b49592"
+  },
+  "render": {
+    "fps": 30,
+    "gif_fps": 10,
+    "duration_s": 10.0,
+    "frame_count": 300,
+    "panel_count": 4,
+    "panel_order": [
+      "loiter/vane_only",
+      "loiter/moving_mass_assist",
+      "forward_1m/vane_only",
+      "forward_1m/moving_mass_assist"
+    ],
+    "world_bounds_m": {
+      "x": [
+        -1.5,
+        2.0
+      ],
+      "z": [
+        0.0,
+        2.5
+      ]
+    },
+    "individual_size_px": [
+      960,
+      540
+    ],
+    "composite_size_px": [
+      1920,
+      1080
+    ],
+    "encoder": {
+      "available": true,
+      "source": "imageio-ffmpeg",
+      "executable": "ffmpeg-win-x86_64-v7.1.exe",
+      "version": "ffmpeg version 7.1-essentials_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers"
+    },
+    "mp4_created": true,
+    "frame_timestamps": {
+      "first_s": 0.0,
+      "last_s": 9.966666666666667,
+      "count": 300
+    },
+    "video_frame_counts": {
+      "loiter_vane_only.mp4": 300,
+      "loiter_moving_mass_assist.mp4": 300,
+      "forward_1m_vane_only.mp4": 300,
+      "forward_1m_moving_mass_assist.mp4": 300,
+      "final_optimized_comparison_2x2.mp4": 300
+    },
+    "warnings": [],
+    "artifacts": [
+      "final_optimized_comparison.gif",
+      "final_optimized_comparison_2x2.mp4",
+      "final_optimized_thumbnail.png",
+      "forward_1m_moving_mass_assist.mp4",
+      "forward_1m_vane_only.mp4",
+      "loiter_moving_mass_assist.mp4",
+      "loiter_vane_only.mp4",
+      "scenario_metrics.csv",
+      "scenario_summary.md"
+    ],
+    "simulation_validation": {
+      "result_count": 4,
+      "unique_key_count": 4,
+      "simulation_sample_count": 2000,
+      "controllers_are_distinct": true,
+      "vane_only_mass_state_exact_zero": true,
+      "assist_gain_verified": true
+    },
+    "pr25_selected_result_comparison": {
+      "source": "results/analysis/variant_controller_optimization/validation/selected_scenario_results.csv",
+      "note": "Video events use PR #24 timing; tolerances cover time translation and the 10 s video horizon.",
+      "dynamic_metrics_skipped_for_short_horizon": false,
+      "passed": true,
+      "comparison_count": 50,
+      "tolerances": {
+        "peak_abs_theta_deg": 0.25,
+        "position_overshoot_m": 0.02,
+        "final_abs_x_error_m": 0.03,
+        "moving_mass_max_target_m": 0.002,
+        "moving_mass_max_offset_m": 0.002
+      },
+      "comparisons": [
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "peak_abs_theta_deg",
+          "actual": 7.637633381542291,
+          "pr25_committed": 7.795473415847932,
+          "absolute_tolerance": 0.25,
+          "absolute_delta": 0.1578400343056412,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "position_overshoot_m",
+          "actual": 0.496378351764911,
+          "pr25_committed": 0.5095770554028934,
+          "absolute_tolerance": 0.02,
+          "absolute_delta": 0.013198703637982423,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "final_abs_x_error_m",
+          "actual": 0.01956205743894921,
+          "pr25_committed": 0.003923337881540123,
+          "absolute_tolerance": 0.03,
+          "absolute_delta": 0.015638719557409086,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "moving_mass_max_target_m",
+          "actual": 0.0,
+          "pr25_committed": 0.0,
+          "absolute_tolerance": 0.002,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "moving_mass_max_offset_m",
+          "actual": 0.0,
+          "pr25_committed": 0.0,
+          "absolute_tolerance": 0.002,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "atc_rat_pit_p",
+          "actual": 0.1394708251953125,
+          "pr25_committed": 0.1394708251953125,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "atc_rat_pit_i",
+          "actual": 0.0,
+          "pr25_committed": 0.0,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "atc_rat_pit_d",
+          "actual": 0.017193449702789215,
+          "pr25_committed": 0.017193449702789215,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "atc_ang_pit_p",
+          "actual": 28.831536800000002,
+          "pr25_committed": 28.831536800000002,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "psc_ne_pos_p",
+          "actual": 0.6286206268221575,
+          "pr25_committed": 0.6286206268221575,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "psc_ne_vel_p",
+          "actual": 0.984955860255447,
+          "pr25_committed": 0.984955860255447,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "vane_only",
+          "metric": "assist_gain_m_per_Nm",
+          "actual": 0.0,
+          "pr25_committed": 0.0,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "peak_abs_theta_deg",
+          "actual": 7.43412490445673,
+          "pr25_committed": 7.601907549154931,
+          "absolute_tolerance": 0.25,
+          "absolute_delta": 0.16778264469820137,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "position_overshoot_m",
+          "actual": 0.49589433732867805,
+          "pr25_committed": 0.5084075203327774,
+          "absolute_tolerance": 0.02,
+          "absolute_delta": 0.012513183004099315,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "final_abs_x_error_m",
+          "actual": 0.01755895463735244,
+          "pr25_committed": 0.003266027751169004,
+          "absolute_tolerance": 0.03,
+          "absolute_delta": 0.014292926886183437,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "moving_mass_max_target_m",
+          "actual": 0.00701971851878965,
+          "pr25_committed": 0.007156293472127169,
+          "absolute_tolerance": 0.002,
+          "absolute_delta": 0.0001365749533375196,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "moving_mass_max_offset_m",
+          "actual": 0.00689595008922355,
+          "pr25_committed": 0.0070278090411509345,
+          "absolute_tolerance": 0.002,
+          "absolute_delta": 0.00013185895192738446,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "atc_rat_pit_p",
+          "actual": 0.13995564270019534,
+          "pr25_committed": 0.13995564270019534,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "atc_rat_pit_i",
+          "actual": 0.0,
+          "pr25_committed": 0.0,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "atc_rat_pit_d",
+          "actual": 0.01662736211133974,
+          "pr25_committed": 0.01662736211133974,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "atc_ang_pit_p",
+          "actual": 28.296658700000002,
+          "pr25_committed": 28.296658700000002,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "psc_ne_pos_p",
+          "actual": 0.6253285805393588,
+          "pr25_committed": 0.6253285805393588,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "psc_ne_vel_p",
+          "actual": 0.9891142702854996,
+          "pr25_committed": 0.9891142702854996,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "loiter",
+          "variant": "moving_mass_assist",
+          "metric": "assist_gain_m_per_Nm",
+          "actual": 0.018680405097860724,
+          "pr25_committed": 0.018680405097860724,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "peak_abs_theta_deg",
+          "actual": 5.911937679993733,
+          "pr25_committed": 5.911937679993733,
+          "absolute_tolerance": 0.25,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "position_overshoot_m",
+          "actual": 0.06996803494175063,
+          "pr25_committed": 0.06996803494175063,
+          "absolute_tolerance": 0.02,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "final_abs_x_error_m",
+          "actual": 0.0033445164047297693,
+          "pr25_committed": 0.002319816234257366,
+          "absolute_tolerance": 0.03,
+          "absolute_delta": 0.0010247001704724035,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "moving_mass_max_target_m",
+          "actual": 0.0,
+          "pr25_committed": 0.0,
+          "absolute_tolerance": 0.002,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "moving_mass_max_offset_m",
+          "actual": 0.0,
+          "pr25_committed": 0.0,
+          "absolute_tolerance": 0.002,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "atc_rat_pit_p",
+          "actual": 0.1394708251953125,
+          "pr25_committed": 0.1394708251953125,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "atc_rat_pit_i",
+          "actual": 0.0,
+          "pr25_committed": 0.0,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "atc_rat_pit_d",
+          "actual": 0.017193449702789215,
+          "pr25_committed": 0.017193449702789215,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "atc_ang_pit_p",
+          "actual": 28.831536800000002,
+          "pr25_committed": 28.831536800000002,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "psc_ne_pos_p",
+          "actual": 0.6286206268221575,
+          "pr25_committed": 0.6286206268221575,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "psc_ne_vel_p",
+          "actual": 0.984955860255447,
+          "pr25_committed": 0.984955860255447,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "assist_gain_m_per_Nm",
+          "actual": 0.0,
+          "pr25_committed": 0.0,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "vane_only",
+          "metric": "pr25_strict_settling_time_s",
+          "actual": 7.8999999999999915,
+          "pr25_committed": 7.899999999999913,
+          "absolute_tolerance": 0.005,
+          "absolute_delta": 7.815970093361102e-14,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "peak_abs_theta_deg",
+          "actual": 5.920211424404704,
+          "pr25_committed": 5.920211424404704,
+          "absolute_tolerance": 0.25,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "position_overshoot_m",
+          "actual": 0.07076742288534499,
+          "pr25_committed": 0.07076742288534499,
+          "absolute_tolerance": 0.02,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "final_abs_x_error_m",
+          "actual": 5.264076238020721e-06,
+          "pr25_committed": 0.002675671772293997,
+          "absolute_tolerance": 0.03,
+          "absolute_delta": 0.0026704076960559764,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "moving_mass_max_target_m",
+          "actual": 0.01268705473577893,
+          "pr25_committed": 0.01268705473577893,
+          "absolute_tolerance": 0.002,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "moving_mass_max_offset_m",
+          "actual": 0.006727777096714067,
+          "pr25_committed": 0.006727777096714067,
+          "absolute_tolerance": 0.002,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "atc_rat_pit_p",
+          "actual": 0.13995564270019534,
+          "pr25_committed": 0.13995564270019534,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "atc_rat_pit_i",
+          "actual": 0.0,
+          "pr25_committed": 0.0,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "atc_rat_pit_d",
+          "actual": 0.01662736211133974,
+          "pr25_committed": 0.01662736211133974,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "atc_ang_pit_p",
+          "actual": 28.296658700000002,
+          "pr25_committed": 28.296658700000002,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "psc_ne_pos_p",
+          "actual": 0.6253285805393588,
+          "pr25_committed": 0.6253285805393588,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "psc_ne_vel_p",
+          "actual": 0.9891142702854996,
+          "pr25_committed": 0.9891142702854996,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "assist_gain_m_per_Nm",
+          "actual": 0.018680405097860724,
+          "pr25_committed": 0.018680405097860724,
+          "absolute_tolerance": 1e-15,
+          "absolute_delta": 0.0,
+          "passed": true
+        },
+        {
+          "scenario": "forward_1m",
+          "variant": "moving_mass_assist",
+          "metric": "pr25_strict_settling_time_s",
+          "actual": 7.559999999999938,
+          "pr25_committed": 7.55999999999986,
+          "absolute_tolerance": 0.005,
+          "absolute_delta": 7.815970093361102e-14,
+          "passed": true
+        }
+      ]
+    },
+    "media_verification": {
+      "passed": true,
+      "file_count": 5,
+      "files": [
+        {
+          "name": "final_optimized_comparison_2x2.mp4",
+          "size_px": [
+            1920,
+            1080
+          ],
+          "fps": 30.0,
+          "duration_s": 10.0,
+          "codec": "h264",
+          "pixel_format": "yuv420p",
+          "decoded_frame_count": 300,
+          "size_bytes": 882240,
+          "checks": {
+            "opens_and_decodes": true,
+            "nonzero_file": true,
+            "dimensions": true,
+            "fps": true,
+            "duration": true,
+            "codec_h264": true,
+            "pixel_format_yuv420p": true,
+            "nonzero_frames": true,
+            "frame_count": true
+          }
+        },
+        {
+          "name": "forward_1m_moving_mass_assist.mp4",
+          "size_px": [
+            960,
+            540
+          ],
+          "fps": 30.0,
+          "duration_s": 10.0,
+          "codec": "h264",
+          "pixel_format": "yuv420p",
+          "decoded_frame_count": 300,
+          "size_bytes": 249871,
+          "checks": {
+            "opens_and_decodes": true,
+            "nonzero_file": true,
+            "dimensions": true,
+            "fps": true,
+            "duration": true,
+            "codec_h264": true,
+            "pixel_format_yuv420p": true,
+            "nonzero_frames": true,
+            "frame_count": true
+          }
+        },
+        {
+          "name": "forward_1m_vane_only.mp4",
+          "size_px": [
+            960,
+            540
+          ],
+          "fps": 30.0,
+          "duration_s": 10.0,
+          "codec": "h264",
+          "pixel_format": "yuv420p",
+          "decoded_frame_count": 300,
+          "size_bytes": 212360,
+          "checks": {
+            "opens_and_decodes": true,
+            "nonzero_file": true,
+            "dimensions": true,
+            "fps": true,
+            "duration": true,
+            "codec_h264": true,
+            "pixel_format_yuv420p": true,
+            "nonzero_frames": true,
+            "frame_count": true
+          }
+        },
+        {
+          "name": "loiter_moving_mass_assist.mp4",
+          "size_px": [
+            960,
+            540
+          ],
+          "fps": 30.0,
+          "duration_s": 10.0,
+          "codec": "h264",
+          "pixel_format": "yuv420p",
+          "decoded_frame_count": 300,
+          "size_bytes": 246501,
+          "checks": {
+            "opens_and_decodes": true,
+            "nonzero_file": true,
+            "dimensions": true,
+            "fps": true,
+            "duration": true,
+            "codec_h264": true,
+            "pixel_format_yuv420p": true,
+            "nonzero_frames": true,
+            "frame_count": true
+          }
+        },
+        {
+          "name": "loiter_vane_only.mp4",
+          "size_px": [
+            960,
+            540
+          ],
+          "fps": 30.0,
+          "duration_s": 10.0,
+          "codec": "h264",
+          "pixel_format": "yuv420p",
+          "decoded_frame_count": 300,
+          "size_bytes": 209382,
+          "checks": {
+            "opens_and_decodes": true,
+            "nonzero_file": true,
+            "dimensions": true,
+            "fps": true,
+            "duration": true,
+            "codec_h264": true,
+            "pixel_format_yuv420p": true,
+            "nonzero_frames": true,
+            "frame_count": true
+          }
+        }
+      ]
+    }
+  },
+  "metrics": [
+    {
+      "scenario": "loiter",
+      "variant": "vane_only",
+      "profile_source": "results/analysis/variant_controller_optimization/profiles/vane_only.json",
+      "assist_gain_m_per_Nm": 0.0,
+      "atc_rat_pit_p": 0.1394708251953125,
+      "atc_rat_pit_i": 0.0,
+      "atc_rat_pit_d": 0.017193449702789215,
+      "atc_ang_pit_p": 28.831536800000002,
+      "psc_ne_pos_p": 0.6286206268221575,
+      "psc_ne_vel_p": 0.984955860255447,
+      "tail_rms_x_m": 0.030118820439069816,
+      "tail_rms_vx_m_s": 0.01703933156160602,
+      "final_abs_x_error_m": 0.01956205743894921,
+      "position_overshoot_m": 0.496378351764911,
+      "pr25_strict_event_time_s": 1.5,
+      "pr25_strict_settling_time_s": null,
+      "pr25_strict_continuous_duration_s": 0.5700000000000891,
+      "pr25_strict_settled": false,
+      "peak_abs_theta_deg": 7.637633381542291,
+      "vane_command_rms_deg": 1.3058037641582112,
+      "vane_command_max_deg": 6.232054988318609,
+      "moving_mass_max_target_m": 0.0,
+      "moving_mass_max_offset_m": 0.0,
+      "moving_mass_max_rate_m_s": 0.0,
+      "moving_mass_max_acceleration_m_s2": 0.0,
+      "ground_contact": false,
+      "duration_s": 10.0,
+      "physics_dt_s": 0.005,
+      "controller_dt_s": 0.01,
+      "simulation_sample_count": 2000
+    },
+    {
+      "scenario": "loiter",
+      "variant": "moving_mass_assist",
+      "profile_source": "results/analysis/variant_controller_optimization/profiles/moving_mass_assist.json",
+      "assist_gain_m_per_Nm": 0.018680405097860724,
+      "atc_rat_pit_p": 0.13995564270019534,
+      "atc_rat_pit_i": 0.0,
+      "atc_rat_pit_d": 0.01662736211133974,
+      "atc_ang_pit_p": 28.296658700000002,
+      "psc_ne_pos_p": 0.6253285805393588,
+      "psc_ne_vel_p": 0.9891142702854996,
+      "tail_rms_x_m": 0.02876107699982057,
+      "tail_rms_vx_m_s": 0.01522767099301152,
+      "final_abs_x_error_m": 0.01755895463735244,
+      "position_overshoot_m": 0.49589433732867805,
+      "pr25_strict_event_time_s": 1.5,
+      "pr25_strict_settling_time_s": 7.6750000000000345,
+      "pr25_strict_continuous_duration_s": 0.825000000000129,
+      "pr25_strict_settled": true,
+      "peak_abs_theta_deg": 7.43412490445673,
+      "vane_command_rms_deg": 1.0901120123138142,
+      "vane_command_max_deg": 5.833604408841062,
+      "moving_mass_max_target_m": 0.00701971851878965,
+      "moving_mass_max_offset_m": 0.00689595008922355,
+      "moving_mass_max_rate_m_s": 0.0973910140316831,
+      "moving_mass_max_acceleration_m_s2": 1.0000000000000009,
+      "ground_contact": false,
+      "duration_s": 10.0,
+      "physics_dt_s": 0.005,
+      "controller_dt_s": 0.01,
+      "simulation_sample_count": 2000
+    },
+    {
+      "scenario": "forward_1m",
+      "variant": "vane_only",
+      "profile_source": "results/analysis/variant_controller_optimization/profiles/vane_only.json",
+      "assist_gain_m_per_Nm": 0.0,
+      "atc_rat_pit_p": 0.1394708251953125,
+      "atc_rat_pit_i": 0.0,
+      "atc_rat_pit_d": 0.017193449702789215,
+      "atc_ang_pit_p": 28.831536800000002,
+      "psc_ne_pos_p": 0.6286206268221575,
+      "psc_ne_vel_p": 0.984955860255447,
+      "tail_rms_x_m": 0.015103564255076347,
+      "tail_rms_vx_m_s": 0.020783593121028086,
+      "final_abs_x_error_m": 0.0033445164047297693,
+      "position_overshoot_m": 0.06996803494175063,
+      "pr25_strict_event_time_s": 1.0,
+      "pr25_strict_settling_time_s": 7.8999999999999915,
+      "pr25_strict_continuous_duration_s": 1.100000000000172,
+      "pr25_strict_settled": true,
+      "peak_abs_theta_deg": 5.911937679993733,
+      "vane_command_rms_deg": 1.3914488905079594,
+      "vane_command_max_deg": 11.094882334721056,
+      "moving_mass_max_target_m": 0.0,
+      "moving_mass_max_offset_m": 0.0,
+      "moving_mass_max_rate_m_s": 0.0,
+      "moving_mass_max_acceleration_m_s2": 0.0,
+      "ground_contact": false,
+      "duration_s": 10.0,
+      "physics_dt_s": 0.005,
+      "controller_dt_s": 0.01,
+      "simulation_sample_count": 2000
+    },
+    {
+      "scenario": "forward_1m",
+      "variant": "moving_mass_assist",
+      "profile_source": "results/analysis/variant_controller_optimization/profiles/moving_mass_assist.json",
+      "assist_gain_m_per_Nm": 0.018680405097860724,
+      "atc_rat_pit_p": 0.13995564270019534,
+      "atc_rat_pit_i": 0.0,
+      "atc_rat_pit_d": 0.01662736211133974,
+      "atc_ang_pit_p": 28.296658700000002,
+      "psc_ne_pos_p": 0.6253285805393588,
+      "psc_ne_vel_p": 0.9891142702854996,
+      "tail_rms_x_m": 0.01578078079518311,
+      "tail_rms_vx_m_s": 0.022029668640534836,
+      "final_abs_x_error_m": 5.264076238020721e-06,
+      "position_overshoot_m": 0.07076742288534499,
+      "pr25_strict_event_time_s": 1.0,
+      "pr25_strict_settling_time_s": 7.559999999999938,
+      "pr25_strict_continuous_duration_s": 1.440000000000225,
+      "pr25_strict_settled": true,
+      "peak_abs_theta_deg": 5.920211424404704,
+      "vane_command_rms_deg": 1.2598914215405492,
+      "vane_command_max_deg": 10.577834609919458,
+      "moving_mass_max_target_m": 0.01268705473577893,
+      "moving_mass_max_offset_m": 0.006727777096714067,
+      "moving_mass_max_rate_m_s": 0.10000000000000002,
+      "moving_mass_max_acceleration_m_s2": 1.0000000000000009,
+      "ground_contact": false,
+      "duration_s": 10.0,
+      "physics_dt_s": 0.005,
+      "controller_dt_s": 0.01,
+      "simulation_sample_count": 2000
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "final_optimized_comparison.gif",
+      "size_bytes": 7748098,
+      "sha256": "fd6d75dbc00015ba5a0d3e4d9ac6d88dfddd07798ad3893df2473c79187363d5"
+    },
+    {
+      "name": "final_optimized_comparison_2x2.mp4",
+      "size_bytes": 882240,
+      "sha256": "bce1dc8a8abe1034de36aa12aae086b51d8f23af45213141eb7db1391f66f6a1"
+    },
+    {
+      "name": "final_optimized_thumbnail.png",
+      "size_bytes": 82392,
+      "sha256": "29df8a3e8b1c8e4e40ea1e8748dcb940f5a26d315e64d3aa7e753a55c67cfb89"
+    },
+    {
+      "name": "forward_1m_moving_mass_assist.mp4",
+      "size_bytes": 249871,
+      "sha256": "35c9815bbfee50aac4ebd32575ffdf98fb201c00e1934f3ab503bd0ccd53e308"
+    },
+    {
+      "name": "forward_1m_vane_only.mp4",
+      "size_bytes": 212360,
+      "sha256": "249f5f18247edf724fd6e973e60cc7a1015013968a76c6e3d63f352d92af7993"
+    },
+    {
+      "name": "loiter_moving_mass_assist.mp4",
+      "size_bytes": 246501,
+      "sha256": "18ac58ca6986cf1972d6a0968ebb7a7a6b4b949ee7e884f2fab6f3e76a8fbfac"
+    },
+    {
+      "name": "loiter_vane_only.mp4",
+      "size_bytes": 209382,
+      "sha256": "7e831c4fe5bc12f7b57e96f0585311a06f62fde7781f5e36b9e5a1f692f1b236"
+    },
+    {
+      "name": "scenario_metrics.csv",
+      "size_bytes": 2429,
+      "sha256": "d944f17b1e102e549dd85ca92e4292fd36c30012af412a4dc3e222631ec97ef6"
+    },
+    {
+      "name": "scenario_summary.md",
+      "size_bytes": 2274,
+      "sha256": "601a9d92a07f6d79f8fc0a3c0bdc59281b50f0ce2540db9041672386fb3fb8f4"
+    }
+  ]
+}

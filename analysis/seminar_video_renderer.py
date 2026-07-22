@@ -4,7 +4,7 @@ import math
 import shutil
 import subprocess
 import warnings
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace as dataclass_replace
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -27,6 +27,7 @@ class RenderConfig:
     gif_height: int = 540
     x_bounds_m: tuple[float, float] = (-1.5, 2.0)
     z_bounds_m: tuple[float, float] = (0.0, 2.5)
+    optimized_hud: bool = False
 
     def validate(self) -> None:
         if self.fps <= 0 or self.gif_fps <= 0:
@@ -48,7 +49,7 @@ class EncoderInfo:
 
 @dataclass(frozen=True)
 class PreparedRun:
-    result: SeminarRunResult
+    result: Any
     timestamps: np.ndarray
     values: dict[str, np.ndarray]
 
@@ -88,9 +89,7 @@ def frame_timestamps(duration_s: float, fps: int) -> np.ndarray:
     return np.arange(frame_count, dtype=float) / float(fps)
 
 
-def synchronized_frame_timestamps(
-    results: Iterable[SeminarRunResult], fps: int
-) -> np.ndarray:
+def synchronized_frame_timestamps(results: Iterable[Any], fps: int) -> np.ndarray:
     results = list(results)
     if not results:
         raise ValueError("at least one result is required")
@@ -111,7 +110,7 @@ def _prepend_initial(
     return np.concatenate(([0.0], row_times)), np.concatenate(([initial_value], values))
 
 
-def prepare_run(result: SeminarRunResult, timestamps: np.ndarray) -> PreparedRun:
+def prepare_run(result: Any, timestamps: np.ndarray) -> PreparedRun:
     rows = result.run.rows
     row_times = np.asarray([float(row["sim_time"]) for row in rows], dtype=float)
     scenario = result.scenario.config
@@ -120,6 +119,8 @@ def prepare_run(result: SeminarRunResult, timestamps: np.ndarray) -> PreparedRun
         "x_cg": scenario.initial_x,
         "z_cg": scenario.initial_z,
         "theta": math.radians(scenario.initial_theta_deg),
+        "vx": 0.0,
+        "omega": 0.0,
         "vane_angle_actual": 0.0,
         "vane_angle_cmd": 0.0,
         "moving_mass_offset_m": 0.0,
@@ -146,6 +147,15 @@ def prepare_run(result: SeminarRunResult, timestamps: np.ndarray) -> PreparedRun
     sampled["target_x"] = target_x
     sampled["target_z"] = target_z
     sampled["x_error"] = target_x - sampled["x_cg"]
+    strict_time = result.metrics.get("pr25_strict_settling_time_s")
+    strict_settled = bool(result.metrics.get("pr25_strict_settled", False))
+    if strict_settled and strict_time is not None:
+        strict_entry_time = float(result.metrics["pr25_strict_event_time_s"]) + float(strict_time)
+        sampled["pr25_strict_settling_satisfied"] = (
+            timestamps >= strict_entry_time - 1e-12
+        ).astype(float)
+    else:
+        sampled["pr25_strict_settling_satisfied"] = np.zeros(timestamps.shape, dtype=float)
     return PreparedRun(result=result, timestamps=timestamps, values=sampled)
 
 
@@ -341,17 +351,34 @@ def render_panel(
 
     title = f"{result.scenario.display_name} - {result.variant.display_name}"
     draw.text((left, 7 * scale), title, fill=(24, 32, 45), font=title_font)
-    locked_offset = result.variant.key == "locked"
-    offset_mm = 0.0 if locked_offset else 1000.0 * float(values["moving_mass_offset_m"][frame_index])
-    status = (
-        f"t={time_s:4.2f} s    x error={values['x_error'][frame_index]:+6.3f} m    "
-        f"pitch={math.degrees(theta):+6.2f} deg"
-    )
-    actuator = (
-        f"actual vane={math.degrees(vane):+6.2f} deg    moving-mass offset={offset_mm:+6.1f} mm"
-    )
-    draw.text((left, 33 * scale), status, fill=(45, 54, 68), font=normal)
-    draw.text((left, 55 * scale), actuator, fill=(45, 54, 68), font=normal)
+    if config.optimized_hud:
+        profile_source = result.variant.profile_source
+        if profile_source.startswith("results/analysis/variant_controller_optimization/profiles/"):
+            profile_source = f"profiles/{Path(profile_source).name}"
+        mass_target_mm = 1000.0 * float(values["moving_mass_target_m"][frame_index])
+        mass_offset_mm = 1000.0 * float(values["moving_mass_offset_m"][frame_index])
+        lines = (
+            f"SIMULATION ONLY | variant={result.variant.key} | source={profile_source}",
+            f"t={time_s:4.2f}s | target x={target[0]:+.3f}m | current x={x:+.3f}m | vx={values['vx'][frame_index]:+.3f}m/s",
+            f"pitch={math.degrees(theta):+.2f}deg | rate={math.degrees(values['omega'][frame_index]):+.2f}deg/s | vane cmd={math.degrees(values['vane_angle_cmd'][frame_index]):+.2f}deg",
+            f"mass target={mass_target_mm:+.2f}mm | offset={mass_offset_mm:+.2f}mm | gain={result.variant.assist_gain_m_per_Nm:.17g}m/Nm",
+            f"position error={values['x_error'][frame_index]:+.3f}m | PR #25 strict settling={'YES' if values['pr25_strict_settling_satisfied'][frame_index] else 'NO'} | {result.variant.hud_mass_label}",
+        )
+        hud_font = _font(int(12 * scale))
+        for line_index, line in enumerate(lines):
+            draw.text((left, (31 + 14 * line_index) * scale), line, fill=(45, 54, 68), font=hud_font)
+    else:
+        locked_offset = result.variant.key == "locked"
+        offset_mm = 0.0 if locked_offset else 1000.0 * float(values["moving_mass_offset_m"][frame_index])
+        status = (
+            f"t={time_s:4.2f} s    x error={values['x_error'][frame_index]:+6.3f} m    "
+            f"pitch={math.degrees(theta):+6.2f} deg"
+        )
+        actuator = (
+            f"actual vane={math.degrees(vane):+6.2f} deg    moving-mass offset={offset_mm:+6.1f} mm"
+        )
+        draw.text((left, 33 * scale), status, fill=(45, 54, 68), font=normal)
+        draw.text((left, 55 * scale), actuator, fill=(45, 54, 68), font=normal)
 
     legend = [
         ((255, 220, 55), "target"),
@@ -634,5 +661,129 @@ def render_seminar_comparison(
         "video_frame_counts": {name: len(timestamps) for name in individual_names.values()}
         | {"seminar_scenario_comparison.mp4": len(timestamps)},
         "warnings": render_warnings,
+        "artifacts": artifacts,
+    }
+
+
+def render_optimized_comparison(
+    results: Iterable[Any],
+    output_dir: str | Path,
+    *,
+    config: RenderConfig | None = None,
+    write_mp4: bool = True,
+) -> dict[str, Any]:
+    """Render the independently optimized PR #25 profile comparison."""
+    config = config or RenderConfig(optimized_hud=True)
+    if not config.optimized_hud:
+        config = dataclass_replace(config, optimized_hud=True)
+    config.validate()
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    result_map = {result.key: result for result in results}
+    ordered_keys = [
+        ("loiter", "vane_only"),
+        ("loiter", "moving_mass_assist"),
+        ("forward_1m", "vane_only"),
+        ("forward_1m", "moving_mass_assist"),
+    ]
+    missing = [key for key in ordered_keys if key not in result_map]
+    if missing:
+        raise ValueError(f"missing optimized composite panels: {missing!r}")
+    ordered = [result_map[key] for key in ordered_keys]
+    timestamps = synchronized_frame_timestamps(ordered, config.fps)
+    prepared = [prepare_run(result, timestamps) for result in ordered]
+    encoder = detect_ffmpeg()
+    warnings_out: list[str] = []
+    writers: dict[str, _RawH264Writer] = {}
+    individual_names = {
+        ("loiter", "vane_only"): "loiter_vane_only.mp4",
+        ("loiter", "moving_mass_assist"): "loiter_moving_mass_assist.mp4",
+        ("forward_1m", "vane_only"): "forward_1m_vane_only.mp4",
+        ("forward_1m", "moving_mass_assist"): "forward_1m_moving_mass_assist.mp4",
+    }
+    composite_name = "final_optimized_comparison_2x2.mp4"
+    if write_mp4 and encoder.available:
+        for result in ordered:
+            name = individual_names[result.key]
+            writers[name] = _RawH264Writer(
+                encoder, output_dir / name, (config.panel_width, config.panel_height), config.fps
+            )
+        writers[composite_name] = _RawH264Writer(
+            encoder,
+            output_dir / composite_name,
+            (2 * config.panel_width, 2 * config.panel_height),
+            config.fps,
+        )
+    elif write_mp4:
+        message = "FFmpeg unavailable; MP4 files were not created. GIF and PNG remain available."
+        warnings.warn(message)
+        warnings_out.append(message)
+    else:
+        warnings_out.append("MP4 generation was explicitly disabled.")
+
+    gif_frames: list[Image.Image] = []
+    gif_indices = _gif_indices(timestamps, config.gif_fps, config.fps)
+    thumbnail_time = min(2.0, 0.5 * ordered[0].scenario.config.duration_s)
+    thumbnail_index = min(len(timestamps) - 1, int(round(thumbnail_time * config.fps)))
+    composite_size = (2 * config.panel_width, 2 * config.panel_height)
+    try:
+        for index in range(len(timestamps)):
+            panels = [render_panel(run, index, config) for run in prepared]
+            composite = Image.new("RGB", composite_size, (235, 238, 243))
+            composite.paste(panels[0], (0, 0))
+            composite.paste(panels[1], (config.panel_width, 0))
+            composite.paste(panels[2], (0, config.panel_height))
+            composite.paste(panels[3], (config.panel_width, config.panel_height))
+            divider = ImageDraw.Draw(composite)
+            divider.line([(config.panel_width, 0), (config.panel_width, composite_size[1])], fill=(64, 72, 84), width=2)
+            divider.line([(0, config.panel_height), (composite_size[0], config.panel_height)], fill=(64, 72, 84), width=2)
+            for result, panel in zip(ordered, panels):
+                name = individual_names[result.key]
+                if name in writers:
+                    writers[name].write(panel)
+            if composite_name in writers:
+                writers[composite_name].write(composite)
+            if index in gif_indices:
+                gif_frames.append(composite.resize((config.gif_width, config.gif_height), Image.Resampling.LANCZOS))
+            if index == thumbnail_index:
+                composite.save(output_dir / "final_optimized_thumbnail.png")
+    finally:
+        close_errors = []
+        for name, writer in writers.items():
+            try:
+                writer.close()
+            except Exception as exc:
+                close_errors.append(f"{name}: {exc}")
+        if close_errors:
+            raise RuntimeError("; ".join(close_errors))
+
+    _write_gif(gif_frames, output_dir / "final_optimized_comparison.gif", config.gif_fps)
+    expected_names = [
+        *individual_names.values(),
+        composite_name,
+        "final_optimized_comparison.gif",
+        "final_optimized_thumbnail.png",
+    ]
+    artifacts = [name for name in expected_names if (output_dir / name).is_file()]
+    return {
+        "fps": config.fps,
+        "gif_fps": config.gif_fps,
+        "duration_s": float(ordered[0].scenario.config.duration_s),
+        "frame_count": len(timestamps),
+        "panel_count": 4,
+        "panel_order": [f"{scenario}/{variant}" for scenario, variant in ordered_keys],
+        "world_bounds_m": {"x": list(config.x_bounds_m), "z": list(config.z_bounds_m)},
+        "individual_size_px": [config.panel_width, config.panel_height],
+        "composite_size_px": list(composite_size),
+        "encoder": asdict(encoder),
+        "mp4_created": bool(write_mp4 and encoder.available),
+        "frame_timestamps": {
+            "first_s": float(timestamps[0]) if timestamps.size else 0.0,
+            "last_s": float(timestamps[-1]) if timestamps.size else 0.0,
+            "count": len(timestamps),
+        },
+        "video_frame_counts": {name: len(timestamps) for name in individual_names.values()}
+        | {composite_name: len(timestamps)},
+        "warnings": warnings_out,
         "artifacts": artifacts,
     }
