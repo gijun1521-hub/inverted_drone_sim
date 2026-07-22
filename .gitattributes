@@ -1,0 +1,2 @@
+# Generated optimization artifacts are SHA-256-addressed byte-for-byte.
+results/analysis/variant_controller_optimization/** -text

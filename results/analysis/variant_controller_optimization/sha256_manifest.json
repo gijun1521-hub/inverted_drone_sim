@@ -1,0 +1,274 @@
+{
+  "algorithm": "SHA-256",
+  "artifacts": {
+    "actual_search_ranges.json": {
+      "sha256": "49882be21809ce791ddef757a2af25cc8612e6938282c90b568be7e01f3bcfe8",
+      "size_bytes": 720
+    },
+    "boundary_diagnostics.csv": {
+      "sha256": "129281956f8a31f167c1e360da2596bbde57d32bc722dbbb19abf577191a5477",
+      "size_bytes": 90
+    },
+    "candidate_cache.json": {
+      "sha256": "c5a29b7489c936fadcab60d9e8e5ba2c09f86b6eb43ac73285d050631576aa1d",
+      "size_bytes": 5431733
+    },
+    "candidate_results.csv": {
+      "sha256": "10631c774bdf209a4c485460963ba32362707ac2610ce5ac9e3a1825a36513a5",
+      "size_bytes": 5248580
+    },
+    "moving_mass_assist_selected.json": {
+      "sha256": "7939a174b59de9eb110d5636d8012b716c6c5f1055fe04a953c643ff9861fc5e",
+      "size_bytes": 21162
+    },
+    "pareto_front.csv": {
+      "sha256": "b10c74476d99b0c9991499c2bd7ef69923d94f220999755c618b37cc2145eaaf",
+      "size_bytes": 1542645
+    },
+    "plots/representative_position_step.png": {
+      "sha256": "de23b371b412cb5297d66e39cefe2f0bd71073ea821d7909a65035a589edad2f",
+      "size_bytes": 209070
+    },
+    "plots/worst_case.png": {
+      "sha256": "ac355e74fe89bc569fc88244213081eab64d9bd98a8f957851c8afe9a91f2c05",
+      "size_bytes": 203864
+    },
+    "profiles/moving_mass_assist.json": {
+      "sha256": "b1f262ca185cfe60a5bff140e1d6de887b0d9d8787d2c8c0793d4bb162ed65e4",
+      "size_bytes": 98832
+    },
+    "profiles/vane_only.json": {
+      "sha256": "6380c453bc9f53c2e7fbb2e13c561447e9c5387da3b335cd96ce08b0ecf7b9b8",
+      "size_bytes": 97846
+    },
+    "rejected_candidates.csv": {
+      "sha256": "74fef5af73f75fbfa6be037092bd41cc03d91f2316a3de3bcc96f09b8eda5a81",
+      "size_bytes": 3333112
+    },
+    "run_metadata.json": {
+      "sha256": "86813be94ea58ec76cd95d2f2c6e2ee9945f758b17673f19d9c72c8e1f8c48ea",
+      "size_bytes": 44570
+    },
+    "scenario_time_series/loiter__commanded_reversal__+1__moving_mass_assist.csv": {
+      "sha256": "ab987ac9b86d823f6f96b1fe32ecba97b32ac0ec30f7b40bfde08aaaf7c192b6",
+      "size_bytes": 3420132
+    },
+    "scenario_time_series/loiter__commanded_reversal__+1__vane_only.csv": {
+      "sha256": "6a9844d5a603378c58074648f7e974be43688333101bf09cf3bcc4116c532346",
+      "size_bytes": 3234064
+    },
+    "scenario_time_series/loiter__commanded_reversal__-1__moving_mass_assist.csv": {
+      "sha256": "603938027edfe9df3803b0d4e97237379a5202cae57513d2bdcc18e90b35e2b5",
+      "size_bytes": 3439980
+    },
+    "scenario_time_series/loiter__commanded_reversal__-1__vane_only.csv": {
+      "sha256": "8a9202c3e8b10d64f18c9ffc770fbb51453d07f4ee59cb5225eef26e6fde9b83",
+      "size_bytes": 3254559
+    },
+    "scenario_time_series/loiter__full_long_hold__+1__moving_mass_assist.csv": {
+      "sha256": "13eac294d3b8cc4ef4871843eea54ff335695ec2df2f8b0674b52e6acec53c9f",
+      "size_bytes": 3399249
+    },
+    "scenario_time_series/loiter__full_long_hold__+1__vane_only.csv": {
+      "sha256": "749af06286948d9ceb10bf7aafc6565a75ca864fda71b66cbec6b12ba3ec8126",
+      "size_bytes": 3211484
+    },
+    "scenario_time_series/loiter__full_long_hold__-1__moving_mass_assist.csv": {
+      "sha256": "ec5e7220678c1425444e7e20c0c7db28d4447b6838852aeb953e9cd7a9333d2d",
+      "size_bytes": 3418745
+    },
+    "scenario_time_series/loiter__full_long_hold__-1__vane_only.csv": {
+      "sha256": "d6a07c32d2524bfe90fd3b3be9fc42bd5ff9855b793612bca46e2d2e91e53891",
+      "size_bytes": 3229653
+    },
+    "scenario_time_series/loiter__gradual_taper__+1__moving_mass_assist.csv": {
+      "sha256": "ee4cc885467b227559cc027c5309eaccb79c0e341b6ed8dec3e576f418c96c80",
+      "size_bytes": 3413528
+    },
+    "scenario_time_series/loiter__gradual_taper__+1__vane_only.csv": {
+      "sha256": "fe4fddbc7927433d7ccf56bb70339d4d3c6c665ece25fc3d2c594e0f6d4b6ca1",
+      "size_bytes": 3225824
+    },
+    "scenario_time_series/loiter__gradual_taper__-1__moving_mass_assist.csv": {
+      "sha256": "0a9ed741c852da59f33e87d0b9adfc0c2c8403ab8dfd3e19595aff2d59a9654b",
+      "size_bytes": 3432803
+    },
+    "scenario_time_series/loiter__gradual_taper__-1__vane_only.csv": {
+      "sha256": "4195cf0b6a315158ae159a076e903051a0bf96a558bbc31cba37693dc7db691b",
+      "size_bytes": 3239675
+    },
+    "scenario_time_series/loiter__light_short_pulse__+1__moving_mass_assist.csv": {
+      "sha256": "abac6eb825ac601d7fd55d0ea89e945c227b3ee68a9bdc68f36e0d261feff34e",
+      "size_bytes": 3439433
+    },
+    "scenario_time_series/loiter__light_short_pulse__+1__vane_only.csv": {
+      "sha256": "1881d1ca271047560fdeddb21052feeb9bf7d9bfd1e961532d6d542aff826038",
+      "size_bytes": 3241469
+    },
+    "scenario_time_series/loiter__light_short_pulse__-1__moving_mass_assist.csv": {
+      "sha256": "e279650102ee264f6c3c3b651ffcd876820bff34816635f37a41fe33196a02f9",
+      "size_bytes": 3445384
+    },
+    "scenario_time_series/loiter__light_short_pulse__-1__vane_only.csv": {
+      "sha256": "41eb687254f84941bd7b73357b6f574b5b41f32f11de82e6fb891ff7392b14fc",
+      "size_bytes": 3246944
+    },
+    "scenario_time_series/loiter__medium_pulse__+1__moving_mass_assist.csv": {
+      "sha256": "72a7b6f7f5e8590dcf4224cca96c718146aba84c21da7c603663ae2e97b70f9f",
+      "size_bytes": 3411041
+    },
+    "scenario_time_series/loiter__medium_pulse__+1__vane_only.csv": {
+      "sha256": "dfa082d08d6d361905419724e6a265c88e038aa0fdb31e6210942d286d909052",
+      "size_bytes": 3226755
+    },
+    "scenario_time_series/loiter__medium_pulse__-1__moving_mass_assist.csv": {
+      "sha256": "87fa6c662b384c67494b6c9fc6d5859ab8ed73c465e6ad6f79533d809ed138aa",
+      "size_bytes": 3433002
+    },
+    "scenario_time_series/loiter__medium_pulse__-1__vane_only.csv": {
+      "sha256": "a4f00ed35edc22610a8cb6f5bddeeeaed22002236cb08649e7384306e79d460d",
+      "size_bytes": 3240028
+    },
+    "scenario_time_series/loiter__move_stop_move__+1__moving_mass_assist.csv": {
+      "sha256": "a4c1c9d7e913532941a6c1d4dc4cec31d4ceccdeb439cf25516f39d7c9fa0447",
+      "size_bytes": 3411461
+    },
+    "scenario_time_series/loiter__move_stop_move__+1__vane_only.csv": {
+      "sha256": "8de473f5fd89a0e0ddf37e1a779fc32742258b13ea2a5fe852440d61ca7d3fa1",
+      "size_bytes": 3228386
+    },
+    "scenario_time_series/loiter__move_stop_move__-1__moving_mass_assist.csv": {
+      "sha256": "d6c65dd911550494329baea6276af1306a735d285757bd4af6b51f0563d3265a",
+      "size_bytes": 3422673
+    },
+    "scenario_time_series/loiter__move_stop_move__-1__vane_only.csv": {
+      "sha256": "7be219c449cc446974236c42b04cbb4438a1bef155b9f9d997c1cf59cc2f3570",
+      "size_bytes": 3238566
+    },
+    "scenario_time_series/loiter__repeated_pulse_release__+1__moving_mass_assist.csv": {
+      "sha256": "593729c9d3adb5300d233c8684ed4b4b6588c02f26eecd8b0168cd0ecd4d774a",
+      "size_bytes": 3435396
+    },
+    "scenario_time_series/loiter__repeated_pulse_release__+1__vane_only.csv": {
+      "sha256": "85bc49e82e7ce8d154383276eb7c3af4799c438d9da27a2000c36963007fb4f6",
+      "size_bytes": 3245108
+    },
+    "scenario_time_series/loiter__repeated_pulse_release__-1__moving_mass_assist.csv": {
+      "sha256": "138647fd0ea419757bb02570f4c805a05ada089ddf5fdd277e42ab6417dd28c5",
+      "size_bytes": 3448652
+    },
+    "scenario_time_series/loiter__repeated_pulse_release__-1__vane_only.csv": {
+      "sha256": "3389bfb485801982b816f7b1fd70ca255be1d4f41df9da149a543354f91be669",
+      "size_bytes": 3258040
+    },
+    "scenario_time_series/loiter__small_sustained__+1__moving_mass_assist.csv": {
+      "sha256": "3e3b99dee5cf318fae39062484b19ebffd58137c3e6d7043974317f29ab95b74",
+      "size_bytes": 3406607
+    },
+    "scenario_time_series/loiter__small_sustained__+1__vane_only.csv": {
+      "sha256": "4b5396c4c2c7441579de77870b8f430ec6adfda0d14138433ddaa0ed4779c727",
+      "size_bytes": 3219951
+    },
+    "scenario_time_series/loiter__small_sustained__-1__moving_mass_assist.csv": {
+      "sha256": "1455e9965229c214d0b2a2e80ab6877aadd6e7879dd4ab655b9cc9d5ae16c149",
+      "size_bytes": 3420123
+    },
+    "scenario_time_series/loiter__small_sustained__-1__vane_only.csv": {
+      "sha256": "35a870b2c2c468d14306cdf3ce2975e31c1d501c17c98a6c73ea538a60f7dd40",
+      "size_bytes": 3234949
+    },
+    "scenario_time_series/seven__backward_1m__moving_mass_assist.csv": {
+      "sha256": "7d96677ee3dae1b79a7d3fc4bd394c63d7edfd4a3ed9fdaf6084665ed25c3f7d",
+      "size_bytes": 4059784
+    },
+    "scenario_time_series/seven__backward_1m__vane_only.csv": {
+      "sha256": "819f93740cbf973d34475867e47069f087c7bd76c80a13f795cd24a002af5514",
+      "size_bytes": 3827013
+    },
+    "scenario_time_series/seven__forward_1m__moving_mass_assist.csv": {
+      "sha256": "90aaca3320ce22a6d33e8bcf5fbabb847d676cfc3360cea1f487c7ec0ad76930",
+      "size_bytes": 4067409
+    },
+    "scenario_time_series/seven__forward_1m__vane_only.csv": {
+      "sha256": "7e55c7367193910b1ed2db30416f9534fdfc03625dff490fb4f324f3115e8595",
+      "size_bytes": 3822076
+    },
+    "scenario_time_series/seven__loiter_negative_disturbance__moving_mass_assist.csv": {
+      "sha256": "0368cee58488bbce77539d63664ced2860ca20a506aea31168b609ba2fdab53c",
+      "size_bytes": 3962158
+    },
+    "scenario_time_series/seven__loiter_negative_disturbance__vane_only.csv": {
+      "sha256": "c941e7459ae164f2c3ce40a4dcec1c4369f8c31222b5e6785631c0894814790b",
+      "size_bytes": 3724202
+    },
+    "scenario_time_series/seven__loiter_positive_disturbance__moving_mass_assist.csv": {
+      "sha256": "35e29f38ff4f450aa6c27bca759909d5d6ca3aa08a3a0fee3abf4168850527e3",
+      "size_bytes": 3941584
+    },
+    "scenario_time_series/seven__loiter_positive_disturbance__vane_only.csv": {
+      "sha256": "e8aaf10de2cac78f92a455c9d60de799679f7705f6d50ac3cd0fac4ff25e3ff9",
+      "size_bytes": 3723539
+    },
+    "scenario_time_series/seven__pitch_negative_recovery__moving_mass_assist.csv": {
+      "sha256": "dd7b1c7cd91cc0ee57338bfe75e91c4918073ed9ef2ac5abec7bfa8769507034",
+      "size_bytes": 2794082
+    },
+    "scenario_time_series/seven__pitch_negative_recovery__vane_only.csv": {
+      "sha256": "a5ad23d7764f9830c1caa63bde81457f951e12e5f7132b50c61c985eea8c1717",
+      "size_bytes": 2645458
+    },
+    "scenario_time_series/seven__pitch_positive_recovery__moving_mass_assist.csv": {
+      "sha256": "296b26f78b62f18a3009be9386ff14cdd37fa4736f56476aa2ed501243c559c2",
+      "size_bytes": 2789907
+    },
+    "scenario_time_series/seven__pitch_positive_recovery__vane_only.csv": {
+      "sha256": "5bf6bbf6b96f61ff0546d2b27f87196291a668246ed1eb75bcf8ca70420ac253",
+      "size_bytes": 2648633
+    },
+    "scenario_time_series/seven__stick_release__moving_mass_assist.csv": {
+      "sha256": "7d229186e89a937ff85b5985d16af1ddbab08b848d3c657bf4aec1dcb54d57fc",
+      "size_bytes": 4127067
+    },
+    "scenario_time_series/seven__stick_release__vane_only.csv": {
+      "sha256": "ad2f51cac983ff9f180e07f4822a85058adf8f390eefb5066e1a92e9d1261cff",
+      "size_bytes": 3892325
+    },
+    "search_space.json": {
+      "sha256": "de18e1ceea9393989b32e7c4adcca14964e5a76354dfba2d380e36e23559145e",
+      "size_bytes": 1576
+    },
+    "shared-objective comparison.csv": {
+      "sha256": "e9ebf4972afa53d2b50964403eb59f81721efb8433a8127fa89a79239121b21f",
+      "size_bytes": 80482
+    },
+    "summary.md": {
+      "sha256": "548279977a861cab188797ac5b169c16f74fce1acb67b4ed32107e7ce9693d36",
+      "size_bytes": 1980
+    },
+    "valid_candidates.csv": {
+      "sha256": "d8273b6e2ff6077be9f351e45aebdfe2d382a8088f0f9e1248267457d561ce00",
+      "size_bytes": 1915937
+    },
+    "validation/deterministic_reruns.json": {
+      "sha256": "1ec8090ee7e33161e818055d776d64ef758045ea934acf11894b196bceabea6a",
+      "size_bytes": 218
+    },
+    "validation/preservation_audit.json": {
+      "sha256": "91b5fd180dc117e8cbaeb0c14070fed756170466d08533f447ee818bbacbd0c7",
+      "size_bytes": 9853
+    },
+    "validation/public_export_hygiene.json": {
+      "sha256": "95a16415d25d3ff55756b66058a16fdef85cc546a46531c2056e3c08673d2fa4",
+      "size_bytes": 62
+    },
+    "validation/selected_scenario_results.csv": {
+      "sha256": "f99c075a7257f60a8397f2b1c3544e4ad02e6cf8cf545fca1bdd12e5b8ee8ef1",
+      "size_bytes": 65121
+    },
+    "vane_only_selected.json": {
+      "sha256": "8a0bd7f4596c90bd05ff92946e04335f250bbd86fed6a4950bfbaf0af0c1bbb7",
+      "size_bytes": 20190
+    }
+  },
+  "schema_version": 1
+}
