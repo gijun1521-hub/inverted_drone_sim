@@ -1,16 +1,17 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "seed": 20260722,
   "source_profile": "params/moving_mass_gain_resweep_provisional.json",
   "targets": {
     "preferred_overshoot_fraction": [0.02, 0.05],
-    "soft_maximum_overshoot_fraction": 0.08,
+    "selection_maximum_overshoot_fraction": 0.08,
     "hard_maximum_overshoot_fraction": 0.12,
     "position_settling_band_m": 0.025,
     "velocity_settling_band_m_s": 0.03,
     "required_continuous_settling_duration_s": 0.75,
     "steady_state_position_error_m": 0.02,
-    "maximum_target_crossings": 2,
+    "selection_maximum_target_crossings": 1,
+    "hard_maximum_target_crossings": 2,
     "target_crossing_deadband_m": 0.01
   },
   "ranges": {
@@ -39,6 +40,11 @@
     "local_step_fraction": 0.08,
     "joint_refinement_samples": 24,
     "joint_refinement_fraction": 0.06,
+    "targeted_parent_count": 12,
+    "targeted_adaptive_samples": 160,
+    "targeted_refinement_fraction": 0.04,
+    "targeted_joint_refinement_samples": 96,
+    "targeted_joint_refinement_fraction": 0.025,
     "boundary_extension_fraction": 0.25,
     "boundary_extension_samples": 16,
     "maximum_boundary_extension_rounds": 4

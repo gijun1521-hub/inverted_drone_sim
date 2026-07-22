@@ -1,3 +1,3 @@
-variant,round,action
-vane_only,1,selected_interior
-moving_mass_assist,1,selected_interior
+variant,round,action,existing_candidates,eligible_candidates
+vane_only,0,corrected_rerank_existing_metrics,124,8
+moving_mass_assist,0,corrected_rerank_existing_metrics,135,13

@@ -36,7 +36,7 @@
       1.0
     ]
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "search": {
     "boundary_extension_fraction": 0.25,
     "boundary_extension_samples": 16,
@@ -46,20 +46,26 @@
     "joint_refinement_samples": 24,
     "local_step_fraction": 0.08,
     "local_top_candidates": 4,
-    "maximum_boundary_extension_rounds": 4
+    "maximum_boundary_extension_rounds": 4,
+    "targeted_adaptive_samples": 160,
+    "targeted_joint_refinement_fraction": 0.025,
+    "targeted_joint_refinement_samples": 96,
+    "targeted_parent_count": 12,
+    "targeted_refinement_fraction": 0.04
   },
   "seed": 20260722,
   "source_profile": "params/moving_mass_gain_resweep_provisional.json",
   "targets": {
     "hard_maximum_overshoot_fraction": 0.12,
-    "maximum_target_crossings": 2,
+    "hard_maximum_target_crossings": 2,
     "position_settling_band_m": 0.025,
     "preferred_overshoot_fraction": [
       0.02,
       0.05
     ],
     "required_continuous_settling_duration_s": 0.75,
-    "soft_maximum_overshoot_fraction": 0.08,
+    "selection_maximum_overshoot_fraction": 0.08,
+    "selection_maximum_target_crossings": 1,
     "steady_state_position_error_m": 0.02,
     "target_crossing_deadband_m": 0.01,
     "velocity_settling_band_m_s": 0.03

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+from copy import deepcopy
 from dataclasses import replace
 from pathlib import Path
 
@@ -13,10 +14,14 @@ from analysis.variant_controller_optimizer import (
     CandidateCache,
     VariantCandidate,
     _boundary_axes,
+    _cache_metrics_compatible,
+    _source_fingerprint,
     _write_manifest,
+    apply_corrected_selection_fields,
     boundary_extension_candidates,
     candidate_rank_key,
     coarse_candidates,
+    corrected_selection_result,
     detect_settling_time,
     evaluate_candidates,
     evaluate_scenario,
@@ -26,6 +31,8 @@ from analysis.variant_controller_optimizer import (
     rank_candidates,
     screening_scenarios,
     target_crossing_count,
+    targeted_refinement_candidates,
+    targeted_joint_refinement_candidates,
     verify_manifest,
 )
 
@@ -50,14 +57,40 @@ class VariantControllerOptimizerTests(unittest.TestCase):
         return VariantCandidate(**values)
 
     @staticmethod
-    def row(key, *, overshoot_distance=0.0, settle=2.0, rise=1.0, effort=1.0, robustness=1.0):
+    def row(
+        key,
+        *,
+        overshoot=0.03,
+        overshoot_distance=None,
+        crossings=1,
+        settle=2.0,
+        rise=1.0,
+        effort=1.0,
+        robustness=1.0,
+    ):
+        if overshoot_distance is None:
+            overshoot_distance = overshoot_band_distance(overshoot, (0.02, 0.05))
+        overshoot_eligible = overshoot <= 0.08 + 1e-12
+        crossing_eligible = crossings <= 1
         return {
             "candidate_key": key,
+            "variant": "vane_only",
             "all_hard_gates_pass": True,
             "all_step_scenarios_settled": True,
+            "positive_step_overshoot_fraction": overshoot,
+            "negative_step_overshoot_fraction": overshoot,
+            "worst_step_overshoot_fraction": overshoot,
+            "positive_step_target_crossing_count": crossings,
+            "negative_step_target_crossing_count": crossings,
+            "worst_step_target_crossing_count": crossings,
+            "selection_overshoot_eligible": overshoot_eligible,
+            "selection_crossing_eligible": crossing_eligible,
+            "selection_eligible": overshoot_eligible and crossing_eligible,
+            "corrected_selection_class": "eligible" if overshoot_eligible and crossing_eligible else "overshoot_ineligible",
             "worst_settling_time_s": settle,
             "worst_rise_time_s": rise,
             "mean_overshoot_band_distance": overshoot_distance,
+            "worst_overshoot_band_distance": overshoot_distance,
             "worst_final_abs_position_error_m": 0.01,
             "actuator_effort_index": effort,
             "robustness_index": robustness,
@@ -70,9 +103,43 @@ class VariantControllerOptimizerTests(unittest.TestCase):
         self.assertAlmostEqual(overshoot_band_distance(0.08, preferred), 0.03)
 
     def test_zero_overshoot_does_not_automatically_win(self):
-        zero = self.row("zero", overshoot_distance=0.02)
-        preferred = self.row("preferred", overshoot_distance=0.0)
+        zero = self.row("zero", overshoot=0.0)
+        preferred = self.row("preferred", overshoot=0.03)
         self.assertEqual(rank_candidates([zero, preferred])[0]["candidate_key"], "preferred")
+
+    def test_eleven_percent_cannot_beat_slower_five_percent(self):
+        fast_ineligible = self.row("fast-11", overshoot=0.11, settle=0.8)
+        slower_eligible = self.row("slow-5", overshoot=0.05, settle=1.2)
+        self.assertEqual(rank_candidates([fast_ineligible, slower_eligible])[0]["candidate_key"], "slow-5")
+
+    def test_eight_point_zero_one_percent_is_ineligible(self):
+        row = apply_corrected_selection_fields(
+            self.row("8.01", overshoot=0.0801), self.spec
+        )
+        self.assertFalse(row["selection_overshoot_eligible"])
+        self.assertEqual(row["corrected_selection_class"], "overshoot_ineligible")
+
+    def test_exactly_eight_percent_is_eligible(self):
+        row = apply_corrected_selection_fields(
+            self.row("8.00", overshoot=0.08), self.spec
+        )
+        self.assertTrue(row["selection_overshoot_eligible"])
+        self.assertEqual(row["corrected_selection_class"], "eligible")
+
+    def test_settling_ranks_only_after_overshoot_eligibility(self):
+        ineligible = self.row("ineligible-fast", overshoot=0.081, settle=0.5)
+        eligible = self.row("eligible-slow", overshoot=0.05, settle=3.0)
+        self.assertLess(candidate_rank_key(eligible), candidate_rank_key(ineligible))
+        faster = self.row("eligible-fast", overshoot=0.05, settle=1.0)
+        self.assertLess(candidate_rank_key(faster), candidate_rank_key(eligible))
+
+    def test_no_eligible_candidate_returns_blocked(self):
+        result = corrected_selection_result(
+            [self.row("overshoot", overshoot=0.081), self.row("crossing", crossings=2)],
+            self.spec,
+        )
+        self.assertEqual(result["status"], "blocked")
+        self.assertIsNone(result["selected"])
 
     def test_settling_time_detection(self):
         t = np.arange(0.0, 2.01, 0.05)
@@ -111,7 +178,7 @@ class VariantControllerOptimizerTests(unittest.TestCase):
         error = [-1.0, -0.1, -0.001, 0.001, 0.08, 0.001, -0.001, -0.03]
         self.assertEqual(target_crossing_count(error, deadband=0.002), 2)
 
-    def test_lexicographic_ranking_prioritizes_settling_then_rise(self):
+    def test_lexicographic_ranking_prioritizes_settling_then_rise_after_eligibility(self):
         slower_rise = self.row("slower-rise", settle=1.0, rise=1.2)
         faster_settle = self.row("faster-settle", settle=0.9, rise=2.0)
         self.assertLess(candidate_rank_key(faster_settle), candidate_rank_key(slower_rise))
@@ -133,6 +200,34 @@ class VariantControllerOptimizerTests(unittest.TestCase):
             invalidated = CandidateCache(path, "fingerprint-b", resume=True)
             self.assertIsNone(invalidated.get("one"))
             json.loads(path.read_text(encoding="utf-8"))
+
+    def test_cached_metrics_reused_when_only_ranking_policy_changes(self):
+        previous_spec = deepcopy(self.spec)
+        previous_spec["schema_version"] = 1
+        targets = previous_spec["targets"]
+        targets["soft_maximum_overshoot_fraction"] = targets.pop(
+            "selection_maximum_overshoot_fraction"
+        )
+        targets["maximum_target_crossings"] = targets.pop("hard_maximum_target_crossings")
+        targets.pop("selection_maximum_target_crossings")
+        payload, _ = _source_fingerprint(previous_spec)
+        previous_metadata = {"fingerprint_payload": payload}
+        policy_changed = deepcopy(self.spec)
+        policy_changed["targets"]["selection_maximum_overshoot_fraction"] = 0.07
+        self.assertTrue(_cache_metrics_compatible(previous_metadata, policy_changed))
+        physics_changed = deepcopy(policy_changed)
+        physics_changed["fixed"]["loit_brk_acc_mss"] = 1.1
+        self.assertFalse(_cache_metrics_compatible(previous_metadata, physics_changed))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "cache.json"
+            original = CandidateCache(path, "old-policy", resume=False)
+            original.record({"candidate_key": "cached", "variant": "vane_only", "metric": 42})
+            reused = CandidateCache(
+                path, "new-policy", resume=True, compatible_reuse=True
+            )
+            self.assertEqual(reused.get("cached")["metric"], 42)
+            self.assertTrue(reused.get("cached")["simulation_metrics_reused"])
+            self.assertEqual(reused.reused_candidate_count, 1)
 
     def test_coarse_search_includes_old_and_current_controllers(self):
         rows = coarse_candidates("vane_only", self.spec, quick=True)
@@ -157,6 +252,22 @@ class VariantControllerOptimizerTests(unittest.TestCase):
         self.assertGreater(ranges["atc_rat_pit_p"][1], 0.14)
         self.assertTrue(candidates)
         self.assertTrue(any(row["axis"] == "atc_rat_pit_p" and row["action"] == "extended" for row in diagnostics))
+
+    def test_targeted_refinement_meets_configured_minimums(self):
+        parents = []
+        for index in range(12):
+            row = self.row(f"parent-{index}", overshoot=0.075, settle=1.0 + index / 10)
+            row.update(self.candidate(atc_rat_pit_p=0.07 + index * 0.001).parameters)
+            parents.append(row)
+        targeted, retained = targeted_refinement_candidates(
+            "vane_only", parents, self.spec
+        )
+        self.assertEqual(len(retained), 12)
+        self.assertGreaterEqual(len(targeted), 160)
+        joint = targeted_joint_refinement_candidates(
+            "vane_only", retained[0], self.spec
+        )
+        self.assertGreaterEqual(len(joint), 96)
 
     def test_manifest_verification_excludes_its_own_record(self):
         with tempfile.TemporaryDirectory() as directory:

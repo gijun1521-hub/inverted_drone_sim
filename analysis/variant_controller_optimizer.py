@@ -90,6 +90,25 @@ SYMMETRY_METRICS = (
 )
 
 
+class NoEligibleCandidateError(RuntimeError):
+    def __init__(
+        self,
+        variant: str,
+        ranked: Sequence[Mapping[str, Any]],
+        diagnostics: Sequence[Mapping[str, Any]],
+        ranges: Mapping[str, Sequence[float]],
+        stats: Mapping[str, Any],
+    ) -> None:
+        super().__init__(
+            f"{variant} is blocked: no candidate met <=8% overshoot and <=1 crossing after targeted refinement"
+        )
+        self.variant = variant
+        self.ranked = [dict(row) for row in ranked]
+        self.diagnostics = [dict(row) for row in diagnostics]
+        self.ranges = {name: list(map(float, bounds)) for name, bounds in ranges.items()}
+        self.stats = dict(stats)
+
+
 @dataclass(frozen=True)
 class VariantCandidate:
     variant: str
@@ -139,6 +158,22 @@ def load_search_spec(path: str | Path = DEFAULT_SPEC) -> dict[str, Any]:
     preferred = spec["targets"]["preferred_overshoot_fraction"]
     if len(preferred) != 2 or not 0.0 <= float(preferred[0]) <= float(preferred[1]):
         raise ValueError("invalid preferred overshoot band")
+    targets = spec["targets"]
+    selection_overshoot = float(targets["selection_maximum_overshoot_fraction"])
+    hard_overshoot = float(targets["hard_maximum_overshoot_fraction"])
+    if not float(preferred[1]) <= selection_overshoot < hard_overshoot:
+        raise ValueError("overshoot thresholds must satisfy preferred <= selection < hard")
+    selection_crossings = int(targets["selection_maximum_target_crossings"])
+    hard_crossings = int(targets["hard_maximum_target_crossings"])
+    if not 0 <= selection_crossings <= hard_crossings:
+        raise ValueError("target-crossing thresholds must satisfy selection <= hard")
+    search = spec["search"]
+    if int(search["targeted_parent_count"]) < 12:
+        raise ValueError("targeted_parent_count must be at least 12")
+    if int(search["targeted_adaptive_samples"]) < 160:
+        raise ValueError("targeted_adaptive_samples must be at least 160")
+    if int(search["targeted_joint_refinement_samples"]) < 96:
+        raise ValueError("targeted_joint_refinement_samples must be at least 96")
     return spec
 
 
@@ -287,7 +322,8 @@ def response_metrics(
         "overshoot_band_distance": overshoot_band_distance(
             overshoot_fraction, targets["preferred_overshoot_fraction"]
         ),
-        "soft_overshoot_exceeded": overshoot_fraction > float(targets["soft_maximum_overshoot_fraction"]),
+        "selection_overshoot_exceeded": overshoot_fraction
+        > float(targets["selection_maximum_overshoot_fraction"]),
         "target_crossing_count": crossings,
         "settling_time_s": settling_time,
         "continuous_settling_duration_s": continuous_duration,
@@ -397,7 +433,7 @@ def hard_gate_reasons(
         targets = spec["targets"]
         if float(metrics.get("overshoot_fraction", math.inf)) > float(targets["hard_maximum_overshoot_fraction"]):
             reasons.append("hard_overshoot_limit")
-        if int(metrics.get("target_crossing_count", 10**9)) > int(targets["maximum_target_crossings"]):
+        if int(metrics.get("target_crossing_count", 10**9)) > int(targets["hard_maximum_target_crossings"]):
             reasons.append("repeated_target_crossing_limit")
         if not bool(metrics.get("settled", False)):
             reasons.append("failure_to_enter_or_remain_settled")
@@ -489,7 +525,8 @@ def evaluate_candidate(candidate: VariantCandidate, spec: Mapping[str, Any], fin
     steps = [row for row in scenario_rows if bool(row.get("is_position_step"))]
     settling = max((_finite_or_penalty(row.get("settling_time_s"), 1000.0) for row in steps), default=1000.0)
     rise = max((_finite_or_penalty(row.get("rise_time_s"), 1000.0) for row in steps), default=1000.0)
-    band_distance = float(np.mean([float(row["overshoot_band_distance"]) for row in steps]))
+    band_distances = [float(row["overshoot_band_distance"]) for row in steps]
+    band_distance = float(np.mean(band_distances))
     final_error = max((float(row["final_abs_position_error_m"]) for row in steps), default=1000.0)
     effort = float(
         np.mean(
@@ -514,7 +551,7 @@ def evaluate_candidate(candidate: VariantCandidate, spec: Mapping[str, Any], fin
             ]
         )
     )
-    return {
+    row = {
         "candidate_key": candidate.key,
         "workflow_fingerprint": fingerprint,
         "variant": candidate.variant,
@@ -527,6 +564,7 @@ def evaluate_candidate(candidate: VariantCandidate, spec: Mapping[str, Any], fin
         "worst_settling_time_s": settling,
         "worst_rise_time_s": rise,
         "mean_overshoot_band_distance": band_distance,
+        "worst_overshoot_band_distance": max(band_distances, default=1000.0),
         "mean_overshoot_fraction": float(np.mean([float(row["overshoot_fraction"]) for row in steps])),
         "worst_final_abs_position_error_m": final_error,
         "actuator_effort_index": effort,
@@ -535,16 +573,150 @@ def evaluate_candidate(candidate: VariantCandidate, spec: Mapping[str, Any], fin
         "scenario_metrics_json": _canonical_json(by_name),
         "symmetry_json": _canonical_json(symmetry),
     }
+    return apply_corrected_selection_fields(row, spec)
+
+
+def _scenario_metrics(row: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+    payload = row.get("scenario_metrics_json", {})
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except json.JSONDecodeError:
+            payload = {}
+    if not isinstance(payload, Mapping):
+        return {}
+    return {str(key): value for key, value in payload.items() if isinstance(value, Mapping)}
+
+
+def apply_corrected_selection_fields(
+    row: Mapping[str, Any], spec: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Derive corrected policy fields from cached, simulation-produced metrics."""
+    result = dict(row)
+    scenarios = _scenario_metrics(result)
+    steps = {name: metrics for name, metrics in scenarios.items() if bool(metrics.get("is_position_step"))}
+    positive = steps.get("forward_1m")
+    negative = steps.get("backward_1m")
+    ordered_steps = list(steps.values())
+    if positive is None and ordered_steps:
+        positive = ordered_steps[0]
+    if negative is None and len(ordered_steps) > 1:
+        negative = ordered_steps[1]
+
+    def directional(metric: str, item: Mapping[str, Any] | None, fallback: Any) -> Any:
+        return item.get(metric, fallback) if item is not None else fallback
+
+    positive_overshoot = _finite_or_penalty(
+        directional("overshoot_fraction", positive, result.get("positive_step_overshoot_fraction")),
+        1000.0,
+    )
+    negative_overshoot = _finite_or_penalty(
+        directional("overshoot_fraction", negative, result.get("negative_step_overshoot_fraction")),
+        1000.0,
+    )
+    positive_crossings = int(
+        directional("target_crossing_count", positive, result.get("positive_step_target_crossing_count", 10**9))
+    )
+    negative_crossings = int(
+        directional("target_crossing_count", negative, result.get("negative_step_target_crossing_count", 10**9))
+    )
+    preferred = spec["targets"]["preferred_overshoot_fraction"]
+    result.update(
+        {
+            "positive_step_overshoot_fraction": positive_overshoot,
+            "negative_step_overshoot_fraction": negative_overshoot,
+            "worst_step_overshoot_fraction": max(positive_overshoot, negative_overshoot),
+            "positive_step_target_crossing_count": positive_crossings,
+            "negative_step_target_crossing_count": negative_crossings,
+            "worst_step_target_crossing_count": max(positive_crossings, negative_crossings),
+            "positive_step_settling_time_s": _finite_or_penalty(
+                directional("settling_time_s", positive, result.get("positive_step_settling_time_s")), 1000.0
+            ),
+            "negative_step_settling_time_s": _finite_or_penalty(
+                directional("settling_time_s", negative, result.get("negative_step_settling_time_s")), 1000.0
+            ),
+            "positive_step_rise_time_s": _finite_or_penalty(
+                directional("rise_time_s", positive, result.get("positive_step_rise_time_s")), 1000.0
+            ),
+            "negative_step_rise_time_s": _finite_or_penalty(
+                directional("rise_time_s", negative, result.get("negative_step_rise_time_s")), 1000.0
+            ),
+            "positive_step_final_abs_position_error_m": _finite_or_penalty(
+                directional(
+                    "final_abs_position_error_m",
+                    positive,
+                    result.get("positive_step_final_abs_position_error_m"),
+                ),
+                1000.0,
+            ),
+            "negative_step_final_abs_position_error_m": _finite_or_penalty(
+                directional(
+                    "final_abs_position_error_m",
+                    negative,
+                    result.get("negative_step_final_abs_position_error_m"),
+                ),
+                1000.0,
+            ),
+            "worst_overshoot_band_distance": max(
+                overshoot_band_distance(positive_overshoot, preferred),
+                overshoot_band_distance(negative_overshoot, preferred),
+            ),
+        }
+    )
+    selection_overshoot = float(spec["targets"]["selection_maximum_overshoot_fraction"])
+    selection_crossings = int(spec["targets"]["selection_maximum_target_crossings"])
+    overshoot_eligible = (
+        positive_overshoot <= selection_overshoot + 1e-12
+        and negative_overshoot <= selection_overshoot + 1e-12
+    )
+    crossing_eligible = positive_crossings <= selection_crossings and negative_crossings <= selection_crossings
+    result["selection_overshoot_eligible"] = overshoot_eligible
+    result["selection_crossing_eligible"] = crossing_eligible
+    if not bool(result.get("all_hard_gates_pass", False)):
+        selection_class = "hard_gate_rejected"
+    elif not bool(result.get("all_step_scenarios_settled", False)):
+        selection_class = "unsettled"
+    elif not overshoot_eligible:
+        selection_class = "overshoot_ineligible"
+    elif not crossing_eligible:
+        selection_class = "crossing_ineligible"
+    else:
+        selection_class = "eligible"
+    result["corrected_selection_class"] = selection_class
+    result["selection_eligible"] = selection_class == "eligible"
+
+    if scenarios:
+        result["worst_vane_saturation_percent"] = max(
+            (_finite_or_penalty(item.get("vane_saturation_percent"), 1000.0) for item in scenarios.values()),
+            default=1000.0,
+        )
+        result["worst_servo_rate_saturation_percent"] = max(
+            (_finite_or_penalty(item.get("servo_rate_saturation_percent"), 1000.0) for item in scenarios.values()),
+            default=1000.0,
+        )
+        result["worst_mixer_saturation_percent"] = max(
+            (_finite_or_penalty(item.get("mixer_saturation_percent"), 1000.0) for item in scenarios.values()),
+            default=1000.0,
+        )
+        limiter_metrics = [
+            _finite_or_penalty(item.get(f"moving_mass_{name}_duty_percent"), 1000.0)
+            for item in scenarios.values()
+            for name in MOVING_MASS_LIMITER_HARD_GATES
+        ]
+        result["worst_moving_mass_limiter_duty_percent"] = max(limiter_metrics, default=0.0)
+    return result
 
 
 def candidate_rank_key(row: Mapping[str, Any]) -> tuple[Any, ...]:
-    """The requested lexicographic selection order, with a stable final key."""
+    """Corrected selection order; speed cannot compensate for policy ineligibility."""
     return (
         not bool(row.get("all_hard_gates_pass", False)),
         not bool(row.get("all_step_scenarios_settled", False)),
+        not bool(row.get("selection_overshoot_eligible", False)),
+        not bool(row.get("selection_crossing_eligible", False)),
         _finite_or_penalty(row.get("worst_settling_time_s"), 1000.0),
+        _finite_or_penalty(row.get("worst_overshoot_band_distance"), 1000.0),
         _finite_or_penalty(row.get("worst_rise_time_s"), 1000.0),
-        _finite_or_penalty(row.get("mean_overshoot_band_distance"), 1000.0),
         _finite_or_penalty(row.get("worst_final_abs_position_error_m"), 1000.0),
         _finite_or_penalty(row.get("actuator_effort_index"), 1000.0),
         _finite_or_penalty(row.get("robustness_index"), 1000.0),
@@ -555,14 +727,29 @@ def candidate_rank_key(row: Mapping[str, Any]) -> tuple[Any, ...]:
 def rank_candidates(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     ranked = sorted((dict(row) for row in rows), key=candidate_rank_key)
     for index, row in enumerate(ranked, 1):
-        row["lexicographic_rank"] = index
+        row["corrected_lexicographic_rank"] = index
     return ranked
+
+
+def corrected_selection_result(
+    rows: Iterable[Mapping[str, Any]], spec: Mapping[str, Any]
+) -> dict[str, Any]:
+    ranked = rank_candidates(apply_corrected_selection_fields(row, spec) for row in rows)
+    selected = next((row for row in ranked if bool(row.get("selection_eligible", False))), None)
+    if selected is None:
+        return {
+            "status": "blocked",
+            "reason": "no candidate satisfies all hard gates, settling, <=8% overshoot, and <=1 target crossing",
+            "selected": None,
+            "ranked": ranked,
+        }
+    return {"status": "selected", "reason": "corrected lexicographic selection", "selected": selected, "ranked": ranked}
 
 
 PARETO_OBJECTIVES = (
     "worst_settling_time_s",
     "worst_rise_time_s",
-    "mean_overshoot_band_distance",
+    "worst_overshoot_band_distance",
     "worst_final_abs_position_error_m",
     "actuator_effort_index",
     "robustness_index",
@@ -590,29 +777,69 @@ def pareto_front(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
 class CandidateCache:
     """Parent-process atomic cache; worker processes never share mutable state."""
 
-    def __init__(self, path: Path, fingerprint: str, *, resume: bool) -> None:
+    def __init__(
+        self,
+        path: Path,
+        fingerprint: str,
+        *,
+        resume: bool,
+        compatible_reuse: bool = False,
+    ) -> None:
         self.path = Path(path)
         self.fingerprint = fingerprint
         self.rows: dict[str, dict[str, Any]] = {}
+        self.compatible_reuse = False
+        self.reused_candidate_count = 0
+        self.newly_recorded_count = 0
         if resume and self.path.exists():
             payload = json.loads(self.path.read_text(encoding="utf-8"))
-            if payload.get("workflow_fingerprint") == fingerprint:
-                self.rows = {str(row["candidate_key"]): row for row in payload.get("candidates", [])}
+            source_fingerprint = str(payload.get("workflow_fingerprint", ""))
+            if source_fingerprint == fingerprint or compatible_reuse:
+                self.compatible_reuse = source_fingerprint != fingerprint
+                for original in payload.get("candidates", []):
+                    row = dict(original)
+                    if self.compatible_reuse:
+                        row["source_workflow_fingerprint"] = source_fingerprint
+                        row["workflow_fingerprint"] = fingerprint
+                        row["simulation_metrics_reused"] = True
+                    self.rows[str(row["candidate_key"])] = row
+                if self.compatible_reuse:
+                    self.reused_candidate_count = len(self.rows)
+                    self.save()
 
     def get(self, key: str) -> dict[str, Any] | None:
         row = self.rows.get(key)
         return dict(row) if row is not None else None
 
     def record(self, row: Mapping[str, Any]) -> None:
-        self.rows[str(row["candidate_key"])] = dict(row)
+        key = str(row["candidate_key"])
+        if key not in self.rows:
+            self.newly_recorded_count += 1
+        stored = dict(row)
+        stored["workflow_fingerprint"] = self.fingerprint
+        stored.setdefault("simulation_metrics_reused", False)
+        self.rows[key] = stored
+        self.save()
+
+    def save(self) -> None:
         atomic_json(
             self.path,
             {
-                "schema_version": 1,
+                "schema_version": 2,
                 "workflow_fingerprint": self.fingerprint,
                 "candidates": [self.rows[key] for key in sorted(self.rows)],
             },
         )
+
+    def replace_rows(self, rows: Iterable[Mapping[str, Any]]) -> None:
+        self.rows = {str(row["candidate_key"]): dict(row) for row in rows}
+        self.save()
+
+    def all_rows(self, variant: str | None = None) -> list[dict[str, Any]]:
+        rows = [dict(row) for row in self.rows.values()]
+        if variant is not None:
+            rows = [row for row in rows if str(row.get("variant")) == variant]
+        return rows
 
 
 def evaluate_candidates(
@@ -752,6 +979,91 @@ def joint_refinement_candidates(
     return list({candidate.key: candidate for candidate in candidates}.values())
 
 
+def _targeted_parent_rows(
+    rows: Sequence[Mapping[str, Any]], spec: Mapping[str, Any]
+) -> list[dict[str, Any]]:
+    parent_count = int(spec["search"]["targeted_parent_count"])
+    maximum = float(spec["targets"]["selection_maximum_overshoot_fraction"])
+    feasible = [
+        dict(row)
+        for row in rows
+        if bool(row.get("all_hard_gates_pass", False))
+        and bool(row.get("all_step_scenarios_settled", False))
+    ]
+    pool = pareto_front(feasible) if feasible else []
+    seen = {str(row["candidate_key"]) for row in pool}
+    pool.extend(row for row in feasible if str(row["candidate_key"]) not in seen)
+    return sorted(
+        pool,
+        key=lambda row: (
+            _finite_or_penalty(row.get("worst_step_overshoot_fraction"), 1000.0) > maximum,
+            abs(_finite_or_penalty(row.get("worst_step_overshoot_fraction"), 1000.0) - maximum),
+            _finite_or_penalty(row.get("worst_settling_time_s"), 1000.0),
+            _finite_or_penalty(row.get("worst_overshoot_band_distance"), 1000.0),
+            _finite_or_penalty(row.get("worst_rise_time_s"), 1000.0),
+            str(row.get("candidate_key", "")),
+        ),
+    )[:parent_count]
+
+
+def targeted_refinement_candidates(
+    variant: str,
+    rows: Sequence[Mapping[str, Any]],
+    spec: Mapping[str, Any],
+    *,
+    quick: bool = False,
+) -> tuple[list[VariantCandidate], list[dict[str, Any]]]:
+    parents = _targeted_parent_rows(rows, spec)
+    if not parents:
+        return [], []
+    ranges = spec["ranges"]
+    active = _active_parameters(variant)
+    fraction = float(spec["search"]["targeted_refinement_fraction"])
+    count = 12 if quick else int(spec["search"]["targeted_adaptive_samples"])
+    variant_seed = 1009 if variant == "vane_only" else 2027
+    points = halton_points(count * 3, len(active), seed=int(spec["seed"]) + variant_seed)
+    candidates: dict[str, VariantCandidate] = {}
+    for index, point in enumerate(points):
+        parent = parents[index % len(parents)]
+        values: dict[str, float] = {}
+        for name, coordinate in zip(active, point):
+            low, high = map(float, ranges[name])
+            half = fraction * (high - low)
+            values[name] = min(high, max(low, float(parent[name]) + (2.0 * coordinate - 1.0) * half))
+        candidate = _candidate_from_parameters(variant, "targeted_adaptive", values)
+        candidates[candidate.key] = candidate
+        if len(candidates) >= count:
+            break
+    return list(candidates.values()), parents
+
+
+def targeted_joint_refinement_candidates(
+    variant: str,
+    best: Mapping[str, Any],
+    spec: Mapping[str, Any],
+    *,
+    quick: bool = False,
+) -> list[VariantCandidate]:
+    ranges = spec["ranges"]
+    active = _active_parameters(variant)
+    fraction = float(spec["search"]["targeted_joint_refinement_fraction"])
+    count = 8 if quick else int(spec["search"]["targeted_joint_refinement_samples"])
+    variant_seed = 4099 if variant == "vane_only" else 5003
+    points = halton_points(count * 3, len(active), seed=int(spec["seed"]) + variant_seed)
+    candidates: dict[str, VariantCandidate] = {}
+    for point in points:
+        values = {}
+        for name, coordinate in zip(active, point):
+            low, high = map(float, ranges[name])
+            half = fraction * (high - low)
+            values[name] = min(high, max(low, float(best[name]) + (2.0 * coordinate - 1.0) * half))
+        candidate = _candidate_from_parameters(variant, "targeted_joint", values)
+        candidates[candidate.key] = candidate
+        if len(candidates) >= count:
+            break
+    return list(candidates.values())
+
+
 def _boundary_axes(
     row: Mapping[str, Any], variant: str, ranges: Mapping[str, Sequence[float]]
 ) -> list[tuple[str, str]]:
@@ -833,6 +1145,56 @@ def boundary_extension_candidates(
     return list({candidate.key: candidate for candidate in candidates}.values()), diagnostics
 
 
+def _simulation_contract(spec: Mapping[str, Any]) -> dict[str, Any]:
+    targets = spec["targets"]
+    return {
+        "seed": int(spec["seed"]),
+        "source_profile": str(spec["source_profile"]),
+        "fixed": dict(spec["fixed"]),
+        "fast_screen_duration_s": float(spec["search"]["fast_screen_duration_s"]),
+        "targets": {
+            "preferred_overshoot_fraction": list(map(float, targets["preferred_overshoot_fraction"])),
+            "hard_maximum_overshoot_fraction": float(targets["hard_maximum_overshoot_fraction"]),
+            "position_settling_band_m": float(targets["position_settling_band_m"]),
+            "velocity_settling_band_m_s": float(targets["velocity_settling_band_m_s"]),
+            "required_continuous_settling_duration_s": float(
+                targets["required_continuous_settling_duration_s"]
+            ),
+            "steady_state_position_error_m": float(targets["steady_state_position_error_m"]),
+            "hard_maximum_target_crossings": int(
+                targets.get("hard_maximum_target_crossings", targets.get("maximum_target_crossings", -1))
+            ),
+            "target_crossing_deadband_m": float(targets["target_crossing_deadband_m"]),
+        },
+    }
+
+
+def _cache_metrics_compatible(
+    previous_metadata: Mapping[str, Any] | None, spec: Mapping[str, Any]
+) -> bool:
+    """Allow policy-only reranking while rejecting changed traces or hard gates."""
+    if not previous_metadata:
+        return False
+    payload = previous_metadata.get("fingerprint_payload")
+    if not isinstance(payload, Mapping) or not isinstance(payload.get("spec"), Mapping):
+        return False
+    if _simulation_contract(payload["spec"]) != _simulation_contract(spec):
+        return False
+    previous_sources = payload.get("sources")
+    if not isinstance(previous_sources, Mapping):
+        return False
+    simulation_sources = (
+        REPO_ROOT / "analysis" / "headless_loiter.py",
+        REPO_ROOT / "analysis" / "pitch_damping_retune.py",
+        REPO_ROOT / "analysis" / "moving_mass_gain_resweep.py",
+        REPO_ROOT / str(spec["source_profile"]),
+    )
+    return all(
+        previous_sources.get(path.relative_to(REPO_ROOT).as_posix()) == sha256_file(path)
+        for path in simulation_sources
+    )
+
+
 def _source_fingerprint(spec: Mapping[str, Any]) -> tuple[dict[str, Any], str]:
     source_paths = (
         Path(__file__),
@@ -879,7 +1241,10 @@ def _profile_payload(candidate: VariantCandidate, spec: Mapping[str, Any], selec
             "profile_notes": "Deterministic 2D simulation-only independently optimized controller; no hardware or real-flight claim.",
             "variant_controller_optimization": {
                 "variant": candidate.variant,
-                "selection_method": "hard gates then lexicographic ranking",
+                "selection_method": (
+                    "hard gates, settling, <=8% step overshoot, <=1 meaningful target crossing, "
+                    "then settling/band-distance/rise/error/effort/robustness lexicographic ranking"
+                ),
                 "selected_candidate": dict(selected_row),
                 "moving_mass_assist_gain_m_per_Nm": candidate.moving_mass_assist_gain_m_per_Nm,
             },
@@ -934,7 +1299,21 @@ def _run_selected_validation(
                 effective = _validation_definition(definition, candidate)
                 metrics, result = evaluate_scenario(candidate, effective, spec, keep_result=True)
                 assert result is not None
-                failures = str(metrics.get("rejection_reasons", ""))
+                failure_list = [
+                    reason
+                    for reason in str(metrics.get("rejection_reasons", "")).split("; ")
+                    if reason
+                ]
+                if bool(metrics.get("is_position_step", False)):
+                    if float(metrics.get("overshoot_fraction", math.inf)) > float(
+                        spec["targets"]["selection_maximum_overshoot_fraction"]
+                    ) + 1e-12:
+                        failure_list.append("selection_overshoot_limit")
+                    if int(metrics.get("target_crossing_count", 10**9)) > int(
+                        spec["targets"]["selection_maximum_target_crossings"]
+                    ):
+                        failure_list.append("selection_target_crossing_limit")
+                failures = "; ".join(dict.fromkeys(failure_list))
                 row = {
                     "suite": "existing_seven",
                     "scenario": definition.key,
@@ -1062,12 +1441,20 @@ def _comparison_rows(
     selected: Mapping[str, Mapping[str, Any]],
     spec: Mapping[str, Any],
     fingerprint: str,
+    cache: CandidateCache,
+    *,
+    workers: int,
 ) -> list[dict[str, Any]]:
     reference_candidates = (
         _candidate_from_parameters("vane_only", "pr24_shared_reference", {**PR24_CONTROLLER, "moving_mass_assist_gain_m_per_Nm": 0.0}),
         _candidate_from_parameters("moving_mass_assist", "pr24_shared_reference", {**PR24_CONTROLLER, "moving_mass_assist_gain_m_per_Nm": PR24_ASSIST_GAIN}),
     )
-    rows = [evaluate_candidate(candidate, spec, fingerprint) for candidate in reference_candidates]
+    rows = [
+        apply_corrected_selection_fields(row, spec)
+        for row in evaluate_candidates(
+            reference_candidates, spec, fingerprint, cache, workers=workers
+        )
+    ]
     rows.extend(dict(selected[variant]) for variant in VARIANTS)
     for row in rows:
         row["comparison_role"] = (
@@ -1080,37 +1467,82 @@ def _comparison_rows(
 
 def _summary_markdown(
     selected: Mapping[str, Mapping[str, Any]],
+    previous_selected: Mapping[str, Mapping[str, Any]],
     comparison: Sequence[Mapping[str, Any]],
     validation: Mapping[str, Any],
     candidate_count: int,
+    search_stats: Mapping[str, Mapping[str, Any]],
 ) -> str:
     lines = [
-        "# Independent variant-controller optimization",
+        "# Corrected independent variant-controller optimization",
         "",
         "This is deterministic 2D simulation research only. It makes no real-flight, Pixhawk, Raspberry Pi, HIL, or hardware-safety claim, and it does not modify rigid-body physics.",
         "",
-        "## Result categories",
+        "## Corrected reranking outcome",
         "",
-        "1. **PR #24 shared-controller actuator isolation:** the merged controller and gain 0 / 0.0415 actuator variants are preserved as read-only references.",
-        "2. **Independently optimized Vane-only:** its PID/position gains were selected by this executable workflow; the physical 0.5 kg mass stayed present and its gain, target, offset, rate, and acceleration were exactly zero.",
-        "3. **Independently optimized Moving-mass-assist:** its PID/position gains and assist gain were searched independently and are not forced to match Vane-only.",
+        "All cached simulation metrics were reranked before any new simulation. A candidate is selectable only when all prior hard gates pass, both steps settle, both overshoots are at most 8%, and both steps have at most one meaningful target crossing.",
         "",
-        f"Candidates evaluated: **{candidate_count}**. Selected validation cases per rerun: **{len(validation['rows'])}**. Two-rerun deterministic validation: **{validation['deterministic']}**. All finalist gates passed: **{validation['passed']}**.",
-        "",
-        "## Selected parameters",
-        "",
-        "| variant | Rate P | Rate D | Angle P | Position P | Velocity P | mass gain (m/Nm) | settle (s) | rise (s) | overshoot |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| variant | cached candidates | existing eligible | newly evaluated | corrected result |",
+        "| --- | ---: | ---: | ---: | --- |",
     ]
     for variant in VARIANTS:
-        row = selected[variant]
+        stats = search_stats[variant]
         lines.append(
-            f"| {variant} | {float(row['atc_rat_pit_p']):.8f} | {float(row['atc_rat_pit_d']):.8f} | {float(row['atc_ang_pit_p']):.6f} | {float(row['psc_ne_pos_p']):.8f} | {float(row['psc_ne_vel_p']):.8f} | {float(row['moving_mass_assist_gain_m_per_Nm']):.8f} | {float(row['worst_settling_time_s']):.4f} | {float(row['worst_rise_time_s']):.4f} | {float(row['mean_overshoot_fraction']):.4f} |"
+            f"| {variant} | {int(stats['existing_candidate_count'])} | {int(stats['existing_eligible_candidate_count'])} | {int(stats['newly_evaluated_candidates'])} | {stats['selection_status']} |"
         )
     lines.extend(
         [
             "",
-            "Selection was lexicographic: all hard gates, settled status, settling time, rise time, preferred-band overshoot distance, steady-state error, actuator effort/limiter use, then mirrored/scenario robustness. Zero overshoot received a distance penalty whenever it fell below the preferred band; it was not treated as automatically optimal.",
+            f"Total candidate rows: **{candidate_count}**. Selected validation cases per rerun: **{len(validation['rows'])}**. Two-rerun deterministic validation: **{validation['deterministic']}**. All finalist gates passed: **{validation['passed']}**.",
+            "",
+            "## Historical previous selections",
+            "",
+            "The prior 11-12% results are retained below as historical output and are not final under the corrected objective.",
+            "",
+            "| variant | previous candidate | worst overshoot | crossings (+/-) | corrected class |",
+            "| --- | --- | ---: | ---: | --- |",
+        ]
+    )
+    for variant in VARIANTS:
+        row = previous_selected.get(variant)
+        if row is None:
+            lines.append(f"| {variant} | not available | - | - | - |")
+        else:
+            lines.append(
+                f"| {variant} | `{row['candidate_key']}` | {float(row['worst_step_overshoot_fraction']):.6f} | {int(row['positive_step_target_crossing_count'])}/{int(row['negative_step_target_crossing_count'])} | {row['corrected_selection_class']} |"
+            )
+    lines.extend(
+        [
+            "",
+            "## Final selected controllers",
+            "",
+            "| variant | Rate P | Rate D | Angle P | Position P | Velocity P | mass gain (m/Nm) |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for variant in VARIANTS:
+        row = selected[variant]
+        lines.append(
+            f"| {variant} | {float(row['atc_rat_pit_p']):.8f} | {float(row['atc_rat_pit_d']):.8f} | {float(row['atc_ang_pit_p']):.6f} | {float(row['psc_ne_pos_p']):.8f} | {float(row['psc_ne_vel_p']):.8f} | {float(row['moving_mass_assist_gain_m_per_Nm']):.8f} |"
+        )
+    lines.extend(
+        [
+            "",
+            "| variant | settle + / - (s) | rise + / - (s) | worst overshoot | crossings + / - | worst final error (m) | effort index | vane / servo / mixer sat. (%) | mass limiter max (%) |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for variant in VARIANTS:
+        row = selected[variant]
+        lines.append(
+            f"| {variant} | {float(row['positive_step_settling_time_s']):.4f} / {float(row['negative_step_settling_time_s']):.4f} | {float(row['positive_step_rise_time_s']):.4f} / {float(row['negative_step_rise_time_s']):.4f} | {float(row['worst_step_overshoot_fraction']):.6f} | {int(row['positive_step_target_crossing_count'])} / {int(row['negative_step_target_crossing_count'])} | {float(row['worst_final_abs_position_error_m']):.8f} | {float(row['actuator_effort_index']):.6f} | {float(row['worst_vane_saturation_percent']):.3f} / {float(row['worst_servo_rate_saturation_percent']):.3f} / {float(row['worst_mixer_saturation_percent']):.3f} | {float(row['worst_moving_mass_limiter_duty_percent']):.3f} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Exact selection rationale",
+            "",
+            "The executable optimizer uses this strict lexicographic order: (1) every pre-existing hard gate, (2) both steps settle, (3) both step overshoots <= 0.08, (4) both target-crossing counts <= 1, (5) shortest worst settling time, (6) smallest worst distance from the 0.02-0.05 preferred overshoot band, (7) shortest worst rise time, (8) smallest worst final error, (9) lower actuator effort and limiter use, and (10) better symmetry and robustness. Zero overshoot remains eligible but has a 0.02 band-distance penalty. The 0.12 overshoot hard failure and pre-existing two-crossing hard failure remain unchanged.",
             "",
             "The Pareto CSV retains valid tradeoffs rather than collapsing them into one weighted score. The shared-objective comparison CSV evaluates the PR #24 shared references and both independently optimized controllers with the same screening objectives.",
             "",
@@ -1162,35 +1594,118 @@ def run_variant_search(
     *,
     workers: int,
     quick: bool,
-) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], dict[str, list[float]]]:
-    all_rows: dict[str, dict[str, Any]] = {}
-    coarse = coarse_candidates(variant, spec, quick=quick)
-    for row in evaluate_candidates(coarse, spec, fingerprint, cache, workers=workers):
-        all_rows[str(row["candidate_key"])] = row
-    ranked = rank_candidates(all_rows.values())
-    valid = [row for row in ranked if bool(row["all_hard_gates_pass"])]
-    if not valid:
-        raise RuntimeError(f"no valid {variant} candidate after coarse search")
-    local = local_refinement_candidates(variant, valid, spec, quick=quick)
-    for row in evaluate_candidates(local, spec, fingerprint, cache, workers=workers):
-        all_rows[str(row["candidate_key"])] = row
-    ranked = rank_candidates(all_rows.values())
-    best = next(row for row in ranked if bool(row["all_hard_gates_pass"]))
-    joint = joint_refinement_candidates(variant, best, spec, quick=quick)
-    for row in evaluate_candidates(joint, spec, fingerprint, cache, workers=workers):
-        all_rows[str(row["candidate_key"])] = row
+) -> tuple[
+    dict[str, Any],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    dict[str, list[float]],
+    dict[str, Any],
+]:
+    existing_rows = [apply_corrected_selection_fields(row, spec) for row in cache.all_rows(variant)]
+    all_rows = {str(row["candidate_key"]): row for row in existing_rows}
+    existing_result = corrected_selection_result(existing_rows, spec)
+    existing_eligible_count = sum(bool(row.get("selection_eligible")) for row in existing_result["ranked"])
+    start_new_count = cache.newly_recorded_count
     ranges = {name: list(map(float, bounds)) for name, bounds in spec["ranges"].items()}
     diagnostics: list[dict[str, Any]] = []
+    stats: dict[str, Any] = {
+        "variant": variant,
+        "existing_candidate_count": len(existing_rows),
+        "existing_eligible_candidate_count": existing_eligible_count,
+        "newly_evaluated_candidates": 0,
+        "targeted_parent_count": 0,
+        "targeted_adaptive_candidates": 0,
+        "targeted_joint_candidates": 0,
+        "selection_status": existing_result["status"],
+    }
+    if existing_result["selected"] is not None:
+        diagnostics.append(
+            {
+                "variant": variant,
+                "round": 0,
+                "action": "corrected_rerank_existing_metrics",
+                "existing_candidates": len(existing_rows),
+                "eligible_candidates": existing_eligible_count,
+            }
+        )
+        return existing_result["selected"], existing_result["ranked"], diagnostics, ranges, stats
+
+    # A fresh output directory still needs the ordinary broad search before
+    # near-boundary refinement can choose meaningful parents.
+    if not existing_rows:
+        for row in evaluate_candidates(
+            coarse_candidates(variant, spec, quick=quick), spec, fingerprint, cache, workers=workers
+        ):
+            all_rows[str(row["candidate_key"])] = apply_corrected_selection_fields(row, spec)
+        ranked = rank_candidates(all_rows.values())
+        hard_pass = [row for row in ranked if bool(row.get("all_hard_gates_pass"))]
+        if hard_pass:
+            for row in evaluate_candidates(
+                local_refinement_candidates(variant, hard_pass, spec, quick=quick),
+                spec,
+                fingerprint,
+                cache,
+                workers=workers,
+            ):
+                all_rows[str(row["candidate_key"])] = apply_corrected_selection_fields(row, spec)
+            ranked = rank_candidates(all_rows.values())
+            hard_pass = [row for row in ranked if bool(row.get("all_hard_gates_pass"))]
+        if hard_pass:
+            for row in evaluate_candidates(
+                joint_refinement_candidates(variant, hard_pass[0], spec, quick=quick),
+                spec,
+                fingerprint,
+                cache,
+                workers=workers,
+            ):
+                all_rows[str(row["candidate_key"])] = apply_corrected_selection_fields(row, spec)
+
+    ranked = rank_candidates(all_rows.values())
+    targeted, parents = targeted_refinement_candidates(variant, ranked, spec, quick=quick)
+    stats["targeted_parent_count"] = len(parents)
+    stats["targeted_adaptive_candidates"] = len(targeted)
+    diagnostics.append(
+        {
+            "variant": variant,
+            "round": 0,
+            "action": "targeted_adaptive_refinement",
+            "parent_count": len(parents),
+            "candidate_count": len(targeted),
+        }
+    )
+    for row in evaluate_candidates(targeted, spec, fingerprint, cache, workers=workers):
+        all_rows[str(row["candidate_key"])] = apply_corrected_selection_fields(row, spec)
+
+    ranked = rank_candidates(all_rows.values())
+    refined_parents = _targeted_parent_rows(ranked, spec)
+    if refined_parents:
+        joint = targeted_joint_refinement_candidates(variant, refined_parents[0], spec, quick=quick)
+    else:
+        joint = []
+    stats["targeted_joint_candidates"] = len(joint)
+    diagnostics.append(
+        {
+            "variant": variant,
+            "round": 0,
+            "action": "targeted_joint_refinement",
+            "candidate_count": len(joint),
+        }
+    )
+    for row in evaluate_candidates(joint, spec, fingerprint, cache, workers=workers):
+        all_rows[str(row["candidate_key"])] = apply_corrected_selection_fields(row, spec)
+
     maximum_rounds = 1 if quick else int(spec["search"]["maximum_boundary_extension_rounds"])
     for round_index in range(1, maximum_rounds + 1):
-        ranked = rank_candidates(all_rows.values())
-        best = next(row for row in ranked if bool(row["all_hard_gates_pass"]))
-        axes = _boundary_axes(best, variant, ranges)
+        result = corrected_selection_result(all_rows.values(), spec)
+        selected = result["selected"]
+        if selected is None:
+            break
+        axes = _boundary_axes(selected, variant, ranges)
         if not axes:
             diagnostics.append({"variant": variant, "round": round_index, "action": "selected_interior"})
             break
         extension, round_diagnostics = boundary_extension_candidates(
-            variant, best, ranges, axes, spec, round_index, quick=quick
+            variant, selected, ranges, axes, spec, round_index, quick=quick
         )
         diagnostics.extend(round_diagnostics)
         if not extension:
@@ -1198,10 +1713,16 @@ def run_variant_search(
         extended_spec = json.loads(json.dumps(spec))
         extended_spec["ranges"].update(ranges)
         for row in evaluate_candidates(extension, extended_spec, fingerprint, cache, workers=workers):
-            all_rows[str(row["candidate_key"])] = row
-    ranked = rank_candidates(all_rows.values())
-    selected = next(row for row in ranked if bool(row["all_hard_gates_pass"]))
-    return selected, ranked, diagnostics, ranges
+            all_rows[str(row["candidate_key"])] = apply_corrected_selection_fields(row, spec)
+
+    final_result = corrected_selection_result(all_rows.values(), spec)
+    stats["newly_evaluated_candidates"] = cache.newly_recorded_count - start_new_count
+    stats["selection_status"] = final_result["status"]
+    if final_result["selected"] is None:
+        raise NoEligibleCandidateError(
+            variant, final_result["ranked"], diagnostics, ranges, stats
+        )
+    return final_result["selected"], final_result["ranked"], diagnostics, ranges, stats
 
 
 def run_workflow(
@@ -1220,31 +1741,103 @@ def run_workflow(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     spec = load_search_spec(spec_path)
+    previous_metadata_path = output_dir / "run_metadata.json"
+    previous_metadata = (
+        json.loads(previous_metadata_path.read_text(encoding="utf-8"))
+        if previous_metadata_path.exists()
+        else None
+    )
+    previous_selected_raw = {
+        name: json.loads((output_dir / f"{name}_selected.json").read_text(encoding="utf-8"))
+        for name in VARIANTS
+        if (output_dir / f"{name}_selected.json").exists()
+    }
+    historical_path = output_dir / "historical_previous_selections.json"
+    existing_history = (
+        json.loads(historical_path.read_text(encoding="utf-8"))
+        if historical_path.exists()
+        else None
+    )
+    if isinstance(existing_history, Mapping) and isinstance(existing_history.get("selections"), Mapping):
+        previous_selected_raw = dict(existing_history["selections"])
+    historical_source_fingerprint = (
+        existing_history.get("source_workflow_fingerprint")
+        if isinstance(existing_history, Mapping)
+        else (previous_metadata.get("workflow_fingerprint") if previous_metadata else None)
+    )
+    previous_selected = {
+        name: apply_corrected_selection_fields(row, spec)
+        for name, row in previous_selected_raw.items()
+    }
     fingerprint_payload, fingerprint = _source_fingerprint(spec)
     preserved_before = {**_tree_hashes(PR24_RESULTS), PR24_PROFILE.relative_to(REPO_ROOT).as_posix(): sha256_file(PR24_PROFILE)}
     atomic_json(output_dir / "search_space.json", spec)
-    cache = CandidateCache(output_dir / "candidate_cache.json", fingerprint, resume=resume)
+    compatible_reuse = resume and _cache_metrics_compatible(previous_metadata, spec)
+    cache = CandidateCache(
+        output_dir / "candidate_cache.json",
+        fingerprint,
+        resume=resume,
+        compatible_reuse=compatible_reuse,
+    )
+    if cache.rows:
+        cache.replace_rows(apply_corrected_selection_fields(row, spec) for row in cache.all_rows())
+    atomic_json(
+        historical_path,
+        {
+            "schema_version": 1,
+            "source_workflow_fingerprint": historical_source_fingerprint,
+            "status": "historical_not_final_under_corrected_objective",
+            "selections": previous_selected,
+        },
+    )
     requested = VARIANTS if variant == "both" else (variant,)
     selected: dict[str, dict[str, Any]] = {}
     all_rows: list[dict[str, Any]] = []
     boundary_rows: list[dict[str, Any]] = []
     actual_ranges: dict[str, Any] = {}
+    search_stats: dict[str, dict[str, Any]] = {}
     for name in requested:
-        chosen, ranked, diagnostics, ranges = run_variant_search(
-            name,
-            spec,
-            fingerprint,
-            cache,
-            workers=workers,
-            quick=quick,
-        )
+        try:
+            chosen, ranked, diagnostics, ranges, stats = run_variant_search(
+                name,
+                spec,
+                fingerprint,
+                cache,
+                workers=workers,
+                quick=quick,
+            )
+        except NoEligibleCandidateError as error:
+            atomic_json(
+                output_dir / "blocked_selection.json",
+                {
+                    "schema_version": 1,
+                    "status": "blocked",
+                    "variant": error.variant,
+                    "reason": str(error),
+                    "search_stats": error.stats,
+                    "actual_search_ranges": error.ranges,
+                },
+            )
+            atomic_csv(output_dir / f"{name}_candidate_results.csv", error.ranked)
+            atomic_csv(output_dir / "boundary_diagnostics.csv", error.diagnostics)
+            cache.replace_rows(
+                apply_corrected_selection_fields(row, spec) for row in cache.all_rows()
+            )
+            raise
         selected[name] = chosen
         all_rows.extend(ranked)
         boundary_rows.extend(diagnostics)
         actual_ranges[name] = ranges
+        search_stats[name] = stats
         atomic_json(output_dir / f"{name}_selected.json", chosen)
         atomic_json(output_dir / "profiles" / f"{name}.json", _profile_payload(_selected_candidate(chosen), spec, chosen))
-    all_rows = rank_candidates(all_rows)
+    all_rows = sorted(
+        all_rows,
+        key=lambda row: (str(row["variant"]), int(row["corrected_lexicographic_rank"])),
+    )
+    cache.replace_rows(
+        apply_corrected_selection_fields(row, spec) for row in cache.all_rows()
+    )
     atomic_csv(output_dir / "candidate_results.csv", all_rows)
     atomic_csv(output_dir / "valid_candidates.csv", [row for row in all_rows if bool(row["all_hard_gates_pass"])])
     atomic_csv(output_dir / "rejected_candidates.csv", [row for row in all_rows if not bool(row["all_hard_gates_pass"])])
@@ -1257,7 +1850,15 @@ def run_workflow(
         if selected["vane_only"]["candidate_key"] == selected["moving_mass_assist"]["candidate_key"]:
             raise RuntimeError("variant selections unexpectedly share an identical candidate key")
         validation = _run_selected_validation(selected, spec, output_dir)
-        comparison = _comparison_rows(selected, spec, fingerprint)
+        comparison_new_start = cache.newly_recorded_count
+        comparison = _comparison_rows(
+            selected, spec, fingerprint, cache, workers=workers
+        )
+        comparison_new = cache.newly_recorded_count - comparison_new_start
+        if comparison_new:
+            search_stats["comparison_reference"] = {
+                "newly_evaluated_candidates": comparison_new
+            }
         atomic_csv(output_dir / "shared-objective comparison.csv", comparison)
         _plot_selected(output_dir, validation)
     preserved_after = {**_tree_hashes(PR24_RESULTS), PR24_PROFILE.relative_to(REPO_ROOT).as_posix(): sha256_file(PR24_PROFILE)}
@@ -1268,12 +1869,19 @@ def run_workflow(
         "changed": sorted(key for key in set(preserved_before) | set(preserved_after) if preserved_before.get(key) != preserved_after.get(key)),
     }
     atomic_json(output_dir / "validation" / "preservation_audit.json", preservation)
-    summary = _summary_markdown(selected, comparison, validation, len(all_rows))
+    summary = _summary_markdown(
+        selected,
+        previous_selected,
+        comparison,
+        validation,
+        len(all_rows),
+        search_stats,
+    )
     atomic_text(output_dir / "summary.md", summary)
     atomic_json(
         output_dir / "run_metadata.json",
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "workflow_fingerprint": fingerprint,
             "fingerprint_payload": fingerprint_payload,
             "variant": variant,
@@ -1281,6 +1889,28 @@ def run_workflow(
             "resume": resume,
             "quick": quick,
             "candidate_count": len(all_rows),
+            "cache_policy_only_compatible_reuse": compatible_reuse,
+            "reused_candidate_count": cache.reused_candidate_count,
+            "newly_evaluated_candidate_count": cache.newly_recorded_count,
+            "search_stats": search_stats,
+            "selection_policy": {
+                "maximum_overshoot_fraction": spec["targets"]["selection_maximum_overshoot_fraction"],
+                "maximum_target_crossings": spec["targets"]["selection_maximum_target_crossings"],
+                "hard_maximum_overshoot_fraction": spec["targets"]["hard_maximum_overshoot_fraction"],
+                "hard_maximum_target_crossings": spec["targets"]["hard_maximum_target_crossings"],
+                "lexicographic_order": [
+                    "all_hard_gates_pass",
+                    "all_step_scenarios_settled",
+                    "selection_overshoot_eligible",
+                    "selection_crossing_eligible",
+                    "worst_settling_time_s",
+                    "worst_overshoot_band_distance",
+                    "worst_rise_time_s",
+                    "worst_final_abs_position_error_m",
+                    "actuator_effort_index",
+                    "robustness_index",
+                ],
+            },
             "selected": selected,
             "validation_passed": validation["passed"],
             "runtime_s": time.perf_counter() - started,
