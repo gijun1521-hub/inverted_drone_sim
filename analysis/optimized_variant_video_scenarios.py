@@ -14,10 +14,12 @@ try:
     from ..config import ControllerConfig, InteractiveSimConfig, RigidBodyConfig
     from ..params import load_interactive_config
     from .headless_loiter import LoiterRunResult, LoiterScenarioConfig, run_headless_loiter
+    from .variant_controller_optimizer import detect_settling_time, load_search_spec
 except ImportError:  # pragma: no cover - direct execution from repository root
     from config import ControllerConfig, InteractiveSimConfig, RigidBodyConfig
     from params import load_interactive_config
     from analysis.headless_loiter import LoiterRunResult, LoiterScenarioConfig, run_headless_loiter
+    from analysis.variant_controller_optimizer import detect_settling_time, load_search_spec
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -35,6 +37,7 @@ PR25_RESULTS = (
 PR24_OUTPUT_DIR = REPO_ROOT / "results" / "analysis" / "final_seminar_videos"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "results" / "analysis" / "final_optimized_controller_videos"
 TAIL_WINDOW_S = 2.0
+PR25_SETTLING_LABEL = "PR #25 strict settling"
 
 CONTROLLER_KEYS = (
     "atc_rat_pit_p",
@@ -53,6 +56,21 @@ PR25_METRIC_TOLERANCES = {
     "moving_mass_max_offset_m": 0.002,
 }
 
+
+def pr25_settling_definition() -> dict[str, Any]:
+    targets = load_search_spec()["targets"]
+    return {
+        "label": PR25_SETTLING_LABEL,
+        "detector": "analysis.variant_controller_optimizer.detect_settling_time",
+        "position_error_band_m": float(targets["position_settling_band_m"]),
+        "horizontal_speed_band_m_s": float(targets["velocity_settling_band_m_s"]),
+        "required_continuous_duration_s": float(
+            targets["required_continuous_settling_duration_s"]
+        ),
+        "event_reference": "command step or disturbance onset",
+        "requires_final_in_band_suffix": True,
+    }
+
 METRIC_COLUMNS = [
     "scenario",
     "variant",
@@ -63,8 +81,10 @@ METRIC_COLUMNS = [
     "tail_rms_vx_m_s",
     "final_abs_x_error_m",
     "position_overshoot_m",
-    "settling_time_s",
-    "settled",
+    "pr25_strict_event_time_s",
+    "pr25_strict_settling_time_s",
+    "pr25_strict_continuous_duration_s",
+    "pr25_strict_settled",
     "peak_abs_theta_deg",
     "vane_command_rms_deg",
     "vane_command_max_deg",
@@ -287,25 +307,6 @@ def _rms(values: np.ndarray) -> float:
     return float(np.sqrt(np.mean(np.square(values)))) if values.size else 0.0
 
 
-def _settling_metric(
-    times: np.ndarray,
-    x_error: np.ndarray,
-    vx: np.ndarray,
-    reference_time_s: float,
-    duration_s: float,
-) -> tuple[float, bool]:
-    mask = times >= reference_time_s - 1e-12
-    event_times = times[mask]
-    if event_times.size == 0:
-        return max(0.0, duration_s - reference_time_s), False
-    suffix_error = np.maximum.accumulate(np.abs(x_error[mask])[::-1])[::-1]
-    suffix_vx = np.maximum.accumulate(np.abs(vx[mask])[::-1])[::-1]
-    candidates = np.flatnonzero((suffix_error <= 0.05) & (suffix_vx <= 0.05))
-    if candidates.size:
-        return float(max(0.0, event_times[candidates[0]] - reference_time_s)), True
-    return max(0.0, duration_s - reference_time_s), False
-
-
 def compute_metrics(
     scenario: OptimizedScenarioDefinition,
     variant: OptimizedVariantDefinition,
@@ -327,8 +328,20 @@ def compute_metrics(
     tail = times >= max(0.0, scenario.config.duration_s - TAIL_WINDOW_S) - 1e-12
     dt = float(rows[0]["physics_dt"])
     mass_accel = np.diff(mass_rate, prepend=0.0) / dt
-    settling_time, settled = _settling_metric(
-        times, x_error, vx, scenario.settling_reference_time_s, scenario.config.duration_s
+    settling_definition = pr25_settling_definition()
+    strict_event_time = (
+        float(scenario.config.target_step_time_s)
+        if scenario.config.target_step_time_s is not None
+        else float(scenario.config.disturbance_start_s)
+    )
+    settling_time, continuous_duration, settled = detect_settling_time(
+        times,
+        x_error,
+        vx,
+        event_time_s=strict_event_time,
+        position_band_m=settling_definition["position_error_band_m"],
+        velocity_band_m_s=settling_definition["horizontal_speed_band_m_s"],
+        required_duration_s=settling_definition["required_continuous_duration_s"],
     )
     post_event = times >= scenario.settling_reference_time_s - 1e-12
     if scenario.key == "forward_1m":
@@ -350,8 +363,10 @@ def compute_metrics(
         "tail_rms_vx_m_s": _rms(vx[tail]),
         "final_abs_x_error_m": float(abs(x_error[-1])),
         "position_overshoot_m": overshoot,
-        "settling_time_s": settling_time,
-        "settled": settled,
+        "pr25_strict_event_time_s": strict_event_time,
+        "pr25_strict_settling_time_s": settling_time,
+        "pr25_strict_continuous_duration_s": continuous_duration,
+        "pr25_strict_settled": settled,
         "peak_abs_theta_deg": float(np.max(np.abs(theta_deg))),
         "vane_command_rms_deg": _rms(vane_command_deg),
         "vane_command_max_deg": float(np.max(np.abs(vane_command_deg))),
@@ -366,7 +381,7 @@ def compute_metrics(
         "simulation_sample_count": len(rows),
     }
     for key, value in metric.items():
-        if isinstance(value, (float, np.floating)) and not math.isfinite(float(value)):
+        if value is not None and isinstance(value, (float, np.floating)) and not math.isfinite(float(value)):
             raise ValueError(f"{scenario.key}/{variant.key}: non-finite metric {key}={value!r}")
     return metric
 
@@ -525,6 +540,23 @@ def compare_to_pr25(results: Iterable[OptimizedRunResult]) -> dict[str, Any]:
                     "passed": delta <= 1e-15,
                 }
             )
+        if full_horizon and result.scenario.key == "forward_1m":
+            actual = float(result.metrics["pr25_strict_settling_time_s"])
+            expected = float(reference["settling_time_s"])
+            tolerance = float(result.metrics["physics_dt_s"])
+            delta = abs(actual - expected)
+            comparisons.append(
+                {
+                    "scenario": result.scenario.key,
+                    "variant": result.variant.key,
+                    "metric": "pr25_strict_settling_time_s",
+                    "actual": actual,
+                    "pr25_committed": expected,
+                    "absolute_tolerance": tolerance,
+                    "absolute_delta": delta,
+                    "passed": delta <= tolerance + 1e-12,
+                }
+            )
     failed = [row for row in comparisons if not row["passed"]]
     if failed:
         raise ValueError(f"PR #25 selected-result comparison failed: {failed!r}")
@@ -564,15 +596,19 @@ def write_summary_markdown(
         "",
         "Both variants use identical scenario definitions, vehicle/moving-mass physics, actuator limits, integration timesteps, camera bounds, frame timing, and resolution. Only the profile-selected controller and assist behavior differ.",
         "",
-        "| Scenario | Variant | Profile | Gain (m/Nm) | Final |x error| (m) | Overshoot/excursion (m) | Settling (s) | Peak pitch (deg) | Mass max (mm) |",
+        f"Primary response metric: **{PR25_SETTLING_LABEL}** means position error <= 0.025 m and horizontal speed <= 0.03 m/s continuously for at least 0.75 s, with the condition remaining true through the end of the record. An early quiet interval followed by a later departure is rejected.",
+        "",
+        f"| Scenario | Variant | Profile | Gain (m/Nm) | Final |x error| (m) | Overshoot/excursion (m) | {PR25_SETTLING_LABEL} (s) | Peak pitch (deg) | Mass max (mm) |",
         "|---|---|---|---:|---:|---:|---:|---:|---:|",
     ]
     for result in results:
         row = result.metrics
+        strict_settling = row["pr25_strict_settling_time_s"]
+        strict_text = f"{strict_settling:.3f}" if strict_settling is not None else "not within video"
         lines.append(
             f"| {result.scenario.display_name} | {result.variant.display_name} | `{result.variant.profile_source}` | "
             f"{row['assist_gain_m_per_Nm']:.17g} | {row['final_abs_x_error_m']:.6f} | "
-            f"{row['position_overshoot_m']:.6f} | {row['settling_time_s']:.3f} | "
+            f"{row['position_overshoot_m']:.6f} | {strict_text} | "
             f"{row['peak_abs_theta_deg']:.3f} | {1000.0 * row['moving_mass_max_offset_m']:.3f} |"
         )
     lines.extend(
@@ -581,6 +617,7 @@ def write_summary_markdown(
             "## Validation",
             "",
             f"- PR #25 selected-scenario comparisons: **PASS** ({pr25_comparison['comparison_count']} explicit checks).",
+            f"- Both +1 m variants match committed PR #25 strict settling within one physics timestep.",
             "- Vane-only assist gain, target, offset, velocity, and acceleration: **exactly zero**.",
             "- Moving-mass assist gain: **loaded from and matched to the PR #25 selected candidate**.",
             "- Physical moving mass remains installed in both variants; the Vane-only rail state is locked at center.",
@@ -620,6 +657,7 @@ def write_manifest(
         "deterministic": True,
         "simulation_only": True,
         "real_flight_claim": False,
+        "primary_settling_definition": pr25_settling_definition(),
         "profiles": validate_profile_sources()["profiles"],
         "scenarios": [asdict(item) for item in optimized_scenarios(results[0].scenario.config.duration_s)],
         "variants": [

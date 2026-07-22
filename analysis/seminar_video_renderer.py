@@ -147,9 +147,15 @@ def prepare_run(result: Any, timestamps: np.ndarray) -> PreparedRun:
     sampled["target_x"] = target_x
     sampled["target_z"] = target_z
     sampled["x_error"] = target_x - sampled["x_cg"]
-    sampled["settling_band_satisfied"] = (
-        (np.abs(sampled["x_error"]) <= 0.05) & (np.abs(sampled["vx"]) <= 0.05)
-    ).astype(float)
+    strict_time = result.metrics.get("pr25_strict_settling_time_s")
+    strict_settled = bool(result.metrics.get("pr25_strict_settled", False))
+    if strict_settled and strict_time is not None:
+        strict_entry_time = float(result.metrics["pr25_strict_event_time_s"]) + float(strict_time)
+        sampled["pr25_strict_settling_satisfied"] = (
+            timestamps >= strict_entry_time - 1e-12
+        ).astype(float)
+    else:
+        sampled["pr25_strict_settling_satisfied"] = np.zeros(timestamps.shape, dtype=float)
     return PreparedRun(result=result, timestamps=timestamps, values=sampled)
 
 
@@ -356,7 +362,7 @@ def render_panel(
             f"t={time_s:4.2f}s | target x={target[0]:+.3f}m | current x={x:+.3f}m | vx={values['vx'][frame_index]:+.3f}m/s",
             f"pitch={math.degrees(theta):+.2f}deg | rate={math.degrees(values['omega'][frame_index]):+.2f}deg/s | vane cmd={math.degrees(values['vane_angle_cmd'][frame_index]):+.2f}deg",
             f"mass target={mass_target_mm:+.2f}mm | offset={mass_offset_mm:+.2f}mm | gain={result.variant.assist_gain_m_per_Nm:.17g}m/Nm",
-            f"position error={values['x_error'][frame_index]:+.3f}m | settling band satisfied={'YES' if values['settling_band_satisfied'][frame_index] else 'NO'} | {result.variant.hud_mass_label}",
+            f"position error={values['x_error'][frame_index]:+.3f}m | PR #25 strict settling={'YES' if values['pr25_strict_settling_satisfied'][frame_index] else 'NO'} | {result.variant.hud_mass_label}",
         )
         hud_font = _font(int(12 * scale))
         for line_index, line in enumerate(lines):

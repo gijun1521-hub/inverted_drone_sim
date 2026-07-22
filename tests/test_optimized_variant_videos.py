@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import csv
 import math
 import tempfile
 import unittest
 from pathlib import Path
 
 from analysis.optimized_variant_video_scenarios import (
+    PR25_RESULTS,
+    PR25_SETTLING_LABEL,
     compare_to_pr25,
     expected_profile_values,
     optimized_scenarios,
@@ -47,6 +50,7 @@ class OptimizedVariantScenarioTests(unittest.TestCase):
             (0.0, 1.0, 0.0, 1.5, 0.2, 8.0),
         )
         self.assertEqual((forward.config.target_step_time_s, forward.config.target_step_x), (1.0, 1.0))
+        self.assertEqual(loiter.settling_reference_time_s, 1.7)
 
     def test_paired_runs_share_scenario_vehicle_and_timing(self):
         for scenario in ("loiter", "forward_1m"):
@@ -98,6 +102,16 @@ class OptimizedVariantScenarioTests(unittest.TestCase):
         self.assertTrue(report["dynamic_metrics_skipped_for_short_horizon"])
         self.assertEqual(report["comparison_count"], 28)
 
+    def test_primary_metric_is_named_pr25_strict_settling(self):
+        self.assertEqual(PR25_SETTLING_LABEL, "PR #25 strict settling")
+        for result in self.results:
+            self.assertIn("pr25_strict_settling_time_s", result.metrics)
+            self.assertIn("pr25_strict_continuous_duration_s", result.metrics)
+            self.assertIn("pr25_strict_settled", result.metrics)
+            self.assertNotIn("settling_time_s", result.metrics)
+            self.assertNotIn("settled", result.metrics)
+        self.assertEqual(self.by_key[("loiter", "vane_only")].metrics["pr25_strict_event_time_s"], 1.5)
+
     def test_reduced_resolution_renderer_produces_composite_assets(self):
         config = RenderConfig(
             fps=20,
@@ -116,6 +130,39 @@ class OptimizedVariantScenarioTests(unittest.TestCase):
             self.assertEqual(report["composite_size_px"], [480, 272])
             self.assertGreater((output / "final_optimized_comparison.gif").stat().st_size, 0)
             self.assertGreater((output / "final_optimized_thumbnail.png").stat().st_size, 0)
+
+
+class OptimizedVariantStrictSettlingTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.results = {
+            result.key: result for result in run_all_scenarios(duration_s=10.0)
+        }
+        with PR25_RESULTS.open(newline="", encoding="utf-8") as stream:
+            cls.pr25_rows = {
+                row["variant"]: row
+                for row in csv.DictReader(stream)
+                if row["scenario_name"] == "forward_1m"
+            }
+
+    def test_both_forward_variants_match_committed_pr25_strict_settling_within_one_timestep(self):
+        for variant in ("vane_only", "moving_mass_assist"):
+            result = self.results[("forward_1m", variant)]
+            actual = float(result.metrics["pr25_strict_settling_time_s"])
+            expected = float(self.pr25_rows[variant]["settling_time_s"])
+            timestep = float(result.metrics["physics_dt_s"])
+            self.assertTrue(result.metrics["pr25_strict_settled"])
+            self.assertLessEqual(abs(actual - expected), timestep + 1e-12)
+
+    def test_full_horizon_pr25_comparison_includes_strict_settling_checks(self):
+        report = compare_to_pr25(self.results.values())
+        strict = [
+            row
+            for row in report["comparisons"]
+            if row["metric"] == "pr25_strict_settling_time_s"
+        ]
+        self.assertEqual({row["variant"] for row in strict}, {"vane_only", "moving_mass_assist"})
+        self.assertTrue(all(row["passed"] for row in strict))
 
 
 if __name__ == "__main__":
