@@ -1,0 +1,59 @@
+{
+  "schema_version": 3,
+  "seed": 20260722,
+  "source_profile": "params/moving_mass_gain_resweep_provisional.json",
+  "targets": {
+    "preferred_overshoot_fraction": [0.02, 0.05],
+    "selection_maximum_overshoot_fraction": 0.08,
+    "hard_maximum_overshoot_fraction": 0.12,
+    "position_settling_band_m": 0.025,
+    "velocity_settling_band_m_s": 0.03,
+    "required_continuous_settling_duration_s": 0.75,
+    "steady_state_position_error_m": 0.02,
+    "selection_maximum_target_crossings": 1,
+    "hard_maximum_target_crossings": 2,
+    "target_crossing_deadband_m": 0.01
+  },
+  "ranges": {
+    "atc_rat_pit_p": [0.055, 0.14],
+    "atc_rat_pit_d": [0.006, 0.035],
+    "atc_ang_pit_p": [8.0, 35.0],
+    "psc_ne_pos_p": [0.45, 0.8],
+    "psc_ne_vel_p": [0.5, 1.0],
+    "moving_mass_assist_gain_m_per_Nm": [0.0, 0.16]
+  },
+  "fixed": {
+    "atc_rat_pit_i": 0.0,
+    "loit_brk_delay_s": 0.5,
+    "loit_brk_acc_mss": 1.0,
+    "loit_brk_jerk_msss": 3.0,
+    "loit_capture_vx_threshold_ms": 0.08,
+    "loit_capture_desired_vx_threshold_ms": 0.02,
+    "loit_capture_persistent": true,
+    "loit_shaper_clamp_target": true,
+    "loit_capture_without_jump": true
+  },
+  "search": {
+    "mandatory_corrected_refinement": true,
+    "fast_screen_duration_s": 12.0,
+    "coarse_samples": 48,
+    "local_top_candidates": 4,
+    "local_step_fraction": 0.08,
+    "joint_refinement_samples": 24,
+    "joint_refinement_fraction": 0.06,
+    "targeted_parent_count": 12,
+    "targeted_adaptive_samples": 160,
+    "targeted_refinement_fraction": 0.04,
+    "targeted_joint_refinement_samples": 96,
+    "targeted_joint_refinement_fraction": 0.025,
+    "corrected_parent_fill_samples": 64,
+    "corrected_parent_fill_fraction": 0.006,
+    "corrected_parent_fill_max_rounds": 4,
+    "corrected_additional_refinement_samples": 96,
+    "corrected_additional_refinement_fraction": 0.0125,
+    "minimum_refinement_settling_improvement_s": 0.10,
+    "boundary_extension_fraction": 0.25,
+    "boundary_extension_samples": 16,
+    "maximum_boundary_extension_rounds": 4
+  }
+}

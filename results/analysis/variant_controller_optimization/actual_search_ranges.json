@@ -1,0 +1,54 @@
+{
+  "moving_mass_assist": {
+    "atc_ang_pit_p": [
+      8.0,
+      35.0
+    ],
+    "atc_rat_pit_d": [
+      0.006,
+      0.035
+    ],
+    "atc_rat_pit_p": [
+      0.055,
+      0.14
+    ],
+    "moving_mass_assist_gain_m_per_Nm": [
+      0.0,
+      0.16
+    ],
+    "psc_ne_pos_p": [
+      0.45,
+      0.8
+    ],
+    "psc_ne_vel_p": [
+      0.5,
+      1.0
+    ]
+  },
+  "vane_only": {
+    "atc_ang_pit_p": [
+      8.0,
+      35.0
+    ],
+    "atc_rat_pit_d": [
+      0.006,
+      0.035
+    ],
+    "atc_rat_pit_p": [
+      0.055,
+      0.14
+    ],
+    "moving_mass_assist_gain_m_per_Nm": [
+      0.0,
+      0.16
+    ],
+    "psc_ne_pos_p": [
+      0.45,
+      0.8
+    ],
+    "psc_ne_vel_p": [
+      0.5,
+      1.0
+    ]
+  }
+}

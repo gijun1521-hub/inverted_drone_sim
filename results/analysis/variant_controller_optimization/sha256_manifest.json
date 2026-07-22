@@ -1,0 +1,294 @@
+{
+  "algorithm": "SHA-256",
+  "artifacts": {
+    "actual_search_ranges.json": {
+      "sha256": "49882be21809ce791ddef757a2af25cc8612e6938282c90b568be7e01f3bcfe8",
+      "size_bytes": 720
+    },
+    "boundary_diagnostics.csv": {
+      "sha256": "7b6d52c2594bf555f5b1d387c514ae375b0100e2caa0d4817dac745c49f4039a",
+      "size_bytes": 10553
+    },
+    "candidate_cache.json": {
+      "sha256": "fe8dca49e8b37ab13f808856ddcbebeb9ffcd9085386ba8e6023d7f207934e46",
+      "size_bytes": 29427505
+    },
+    "candidate_results.csv": {
+      "sha256": "34c47bb549280ccbc6dd64179006ded0f0c5c55114e442a9899504a1bb1217f0",
+      "size_bytes": 27104560
+    },
+    "corrected_cached_only_selections.json": {
+      "sha256": "afd9357fb4b5f4cf139497e45618605e40deefb3e2798760b9b37bf962960705",
+      "size_bytes": 44219
+    },
+    "historical_previous_selections.json": {
+      "sha256": "9378f22a430506fc8dd03887b788657eb75a8ea9f921beac50a7740a07db2f49",
+      "size_bytes": 44089
+    },
+    "moving_mass_assist_selected.json": {
+      "sha256": "fab64485c44368721521e04ea48da60f707daab3d2cc48b81dea2e07f7f5318a",
+      "size_bytes": 23365
+    },
+    "pareto_front.csv": {
+      "sha256": "cdf7562740b5930a8e2dc49e8f260e1a4bc4e7d811b6ce04407b50a7d512688f",
+      "size_bytes": 11949688
+    },
+    "plots/representative_position_step.png": {
+      "sha256": "8d795ae1c07c8d84959093661edc9dff70bd547bd2a492d6cd9df66b08101c83",
+      "size_bytes": 248250
+    },
+    "plots/worst_case.png": {
+      "sha256": "84923b30e3f00d63addebd0cff755371bca7772883bc876c8d358c3767da3700",
+      "size_bytes": 184594
+    },
+    "profiles/moving_mass_assist.json": {
+      "sha256": "91cc400bf3dd9e07e56a714b403f4364fb1d1f246cdae8c5cbae0d741bfb93c0",
+      "size_bytes": 101354
+    },
+    "profiles/vane_only.json": {
+      "sha256": "ddbfe044be85cacd137465893ac9f6f058a4340526d58f45365411817b617ef3",
+      "size_bytes": 100303
+    },
+    "refinement_neighborhoods/moving_mass_assist.csv": {
+      "sha256": "020be032a3f2d73623b36684af2aabb13b16e076d465864b8c878363913cca42",
+      "size_bytes": 463098
+    },
+    "refinement_neighborhoods/vane_only.csv": {
+      "sha256": "5e130bddb5e58906dd218aeac202c30e2eac4a4778a49838837d0e7e4d3d6ee0",
+      "size_bytes": 271657
+    },
+    "refinement_parent_sets.json": {
+      "sha256": "fcb22de511eb694cd3705e7b2f34a70d218a81c781d0b29c2df1c47e1e2b6a23",
+      "size_bytes": 9007
+    },
+    "rejected_candidates.csv": {
+      "sha256": "6068b1660b73c4f7707a006d9fe553f6a5997fcfe31cf753880ec9a9b20fd3a9",
+      "size_bytes": 4991614
+    },
+    "run_metadata.json": {
+      "sha256": "e1bf906e0a23a50b5f0a6ddbfc4b2ee7bfcafd7c236769c096db98f215fe43f7",
+      "size_bytes": 105980
+    },
+    "scenario_time_series/loiter__commanded_reversal__+1__moving_mass_assist.csv": {
+      "sha256": "ce18f2665a6842aeae3da5c040c70e863befb1a795dda8704024d638a33e2ce1",
+      "size_bytes": 3417632
+    },
+    "scenario_time_series/loiter__commanded_reversal__+1__vane_only.csv": {
+      "sha256": "11001ad8173a1a847cf694b895ac2832ad8fdfe4d25db880408453b98def0e5a",
+      "size_bytes": 3224540
+    },
+    "scenario_time_series/loiter__commanded_reversal__-1__moving_mass_assist.csv": {
+      "sha256": "10b58e2b8191bcb1eee5474a853b3bc67b20e2fef266650258ca941ef75fc0b3",
+      "size_bytes": 3436015
+    },
+    "scenario_time_series/loiter__commanded_reversal__-1__vane_only.csv": {
+      "sha256": "5d94da43c9fc0f1c4b7dc88ef37bb3445642a48a9d15c8f6240371fe335a3ae3",
+      "size_bytes": 3243645
+    },
+    "scenario_time_series/loiter__full_long_hold__+1__moving_mass_assist.csv": {
+      "sha256": "c97faa11d22da35bc6b8b333c1d732b53ac646f6ad43d9523f55c4106ffaf1cd",
+      "size_bytes": 3395796
+    },
+    "scenario_time_series/loiter__full_long_hold__+1__vane_only.csv": {
+      "sha256": "5a1721b87dba6483ab079cca9b792ca8c10eb86921a1102d4e9848180f6df52b",
+      "size_bytes": 3201862
+    },
+    "scenario_time_series/loiter__full_long_hold__-1__moving_mass_assist.csv": {
+      "sha256": "a076070b42e1bfa740cc0cafe08bbf5a1bb0bc54845099ea69c8b4dce97963e7",
+      "size_bytes": 3412134
+    },
+    "scenario_time_series/loiter__full_long_hold__-1__vane_only.csv": {
+      "sha256": "422e295e0bd74effd1679614cb93192627b996df0bf38b03f0215c52a1e3dd04",
+      "size_bytes": 3217453
+    },
+    "scenario_time_series/loiter__gradual_taper__+1__moving_mass_assist.csv": {
+      "sha256": "63b23f8353d0add5b6eb608bed89ed0f08de183049c77cd8aba6bfb8e622d4ea",
+      "size_bytes": 3409498
+    },
+    "scenario_time_series/loiter__gradual_taper__+1__vane_only.csv": {
+      "sha256": "543905fc89934b1ab1ea993a469385be1da2bf74e282caba722decc18d3c7716",
+      "size_bytes": 3212063
+    },
+    "scenario_time_series/loiter__gradual_taper__-1__moving_mass_assist.csv": {
+      "sha256": "0c245f5bc430f78b8b48c1315eb51803c32d7e5260796aa3d0c85e70ae279469",
+      "size_bytes": 3421716
+    },
+    "scenario_time_series/loiter__gradual_taper__-1__vane_only.csv": {
+      "sha256": "6908185d9da8840bd01a98647cfacf5511833b742c6b174327b8ff1ecea1dc59",
+      "size_bytes": 3223222
+    },
+    "scenario_time_series/loiter__light_short_pulse__+1__moving_mass_assist.csv": {
+      "sha256": "e5c3a180f6e20332cd9c32acbe7bd0340716d30ae1bd0705e8355274e75fe218",
+      "size_bytes": 3420867
+    },
+    "scenario_time_series/loiter__light_short_pulse__+1__vane_only.csv": {
+      "sha256": "950fb1fb58dbb5307f6fa888ae9d943c7a4e5d5d9dd4d5a9d1a8165c2f956e56",
+      "size_bytes": 3225864
+    },
+    "scenario_time_series/loiter__light_short_pulse__-1__moving_mass_assist.csv": {
+      "sha256": "3ed5aa5f85254a1ffa02ff7d4089a0ca4a56022c51737026ec300ee4e324be1c",
+      "size_bytes": 3429032
+    },
+    "scenario_time_series/loiter__light_short_pulse__-1__vane_only.csv": {
+      "sha256": "90ed2b82c0cf6317738d32a19a8153e8513937b5ef79a4941dd6c053ad330641",
+      "size_bytes": 3233370
+    },
+    "scenario_time_series/loiter__medium_pulse__+1__moving_mass_assist.csv": {
+      "sha256": "c2c838ec1ee104fd130a68a2c0a65968af7f4971d8b63d200841c212aa891208",
+      "size_bytes": 3411272
+    },
+    "scenario_time_series/loiter__medium_pulse__+1__vane_only.csv": {
+      "sha256": "359f477969616de202ce2a9ec3b46185122defb35ee899995779407c8ad8f975",
+      "size_bytes": 3217297
+    },
+    "scenario_time_series/loiter__medium_pulse__-1__moving_mass_assist.csv": {
+      "sha256": "d780b5c4b13802eaf68f515764b71d7428446a58f8c78c6eb763007948eca3e6",
+      "size_bytes": 3420082
+    },
+    "scenario_time_series/loiter__medium_pulse__-1__vane_only.csv": {
+      "sha256": "cf5e4a8c25b25fb9ba863e527488e4fddf3faf8e3b71da8969df6769f4979bc6",
+      "size_bytes": 3226613
+    },
+    "scenario_time_series/loiter__move_stop_move__+1__moving_mass_assist.csv": {
+      "sha256": "dfc4826c5a37987df476e80984f3933e3b8cb0066cb4203e4a1581a135c450ed",
+      "size_bytes": 3406520
+    },
+    "scenario_time_series/loiter__move_stop_move__+1__vane_only.csv": {
+      "sha256": "8a24219628f8530820a5d1aa0f597c6d65790bd4d8ca3922d58405954a44f577",
+      "size_bytes": 3215257
+    },
+    "scenario_time_series/loiter__move_stop_move__-1__moving_mass_assist.csv": {
+      "sha256": "172df1f835d21622956a35202eef9d687a0e5d1f5bb8d73cf82470ac58e3abea",
+      "size_bytes": 3418668
+    },
+    "scenario_time_series/loiter__move_stop_move__-1__vane_only.csv": {
+      "sha256": "7367b0d73ac749021a170b80d50389fd208647be35f5a6cd9bc93e6c53192e66",
+      "size_bytes": 3226072
+    },
+    "scenario_time_series/loiter__repeated_pulse_release__+1__moving_mass_assist.csv": {
+      "sha256": "d2bf60766504aba3240f9f00506ff358c616f6ae61cf885411840e933b25bad0",
+      "size_bytes": 3431280
+    },
+    "scenario_time_series/loiter__repeated_pulse_release__+1__vane_only.csv": {
+      "sha256": "2e811b7af22ff98ce855e160a3c048c686d84f0d396c65ddff92f2d54c9197df",
+      "size_bytes": 3237038
+    },
+    "scenario_time_series/loiter__repeated_pulse_release__-1__moving_mass_assist.csv": {
+      "sha256": "ecc87dbe4633ec3ff28c5480ca7eae67ddac301bc912fce967f46825c1ac1681",
+      "size_bytes": 3443742
+    },
+    "scenario_time_series/loiter__repeated_pulse_release__-1__vane_only.csv": {
+      "sha256": "725dc48af00ec7376506f247ffcdd0ee781416cdc2f1c293a442bdf0d7f6afdb",
+      "size_bytes": 3249189
+    },
+    "scenario_time_series/loiter__small_sustained__+1__moving_mass_assist.csv": {
+      "sha256": "28054cb30b4f354df31777aa884b1549c82786f9feadf2ec637beaa30bfe6431",
+      "size_bytes": 3401985
+    },
+    "scenario_time_series/loiter__small_sustained__+1__vane_only.csv": {
+      "sha256": "61ac58aa4346c753f1cecda2f9b958b7af7f013d89c6dace8bdb4b12ae89b0c9",
+      "size_bytes": 3206033
+    },
+    "scenario_time_series/loiter__small_sustained__-1__moving_mass_assist.csv": {
+      "sha256": "1bba25ab771b0a2110177de8b20ea722d947d584dc79cdfd41c38ede0d1d8814",
+      "size_bytes": 3415899
+    },
+    "scenario_time_series/loiter__small_sustained__-1__vane_only.csv": {
+      "sha256": "22d358bd93ec8262bce26c045509edba5382f776c492bf4815ca6ca44a95fbdd",
+      "size_bytes": 3218231
+    },
+    "scenario_time_series/seven__backward_1m__moving_mass_assist.csv": {
+      "sha256": "2272a66c5d24ce3a777e6472f666d08db0dfdc5e57909bd3343600105d613feb",
+      "size_bytes": 4035382
+    },
+    "scenario_time_series/seven__backward_1m__vane_only.csv": {
+      "sha256": "60766233b1de5a9984e90bc1b8b06294bba0396c3afae03e11c02005173c0299",
+      "size_bytes": 3811383
+    },
+    "scenario_time_series/seven__forward_1m__moving_mass_assist.csv": {
+      "sha256": "3eb6a55fc63d23808cebc1e82211d4fca4c500a54856481bdf0d158da827b967",
+      "size_bytes": 4027585
+    },
+    "scenario_time_series/seven__forward_1m__vane_only.csv": {
+      "sha256": "fe7a3cc802388bb76f4e6ab229e540ed736ecbbdebb5ccb309b5de69fa06524b",
+      "size_bytes": 3803526
+    },
+    "scenario_time_series/seven__loiter_negative_disturbance__moving_mass_assist.csv": {
+      "sha256": "b02e8cd4f7883356f34effdb571d3ec23d5fbae44687941d9664a13dd37b3a9c",
+      "size_bytes": 3913319
+    },
+    "scenario_time_series/seven__loiter_negative_disturbance__vane_only.csv": {
+      "sha256": "eaa7426d97f9f96443ee442b9d8f3324dced2e56e80c3cc191502b75ed4e6a52",
+      "size_bytes": 3699375
+    },
+    "scenario_time_series/seven__loiter_positive_disturbance__moving_mass_assist.csv": {
+      "sha256": "8ed12026a0aec49645fc6caeb0627bf4094b772a6800b80c39226f8b465bad84",
+      "size_bytes": 3913907
+    },
+    "scenario_time_series/seven__loiter_positive_disturbance__vane_only.csv": {
+      "sha256": "c5ea274749d318ec779d6e49e821b449be547eacdfccc818df305363e0fb4a82",
+      "size_bytes": 3701203
+    },
+    "scenario_time_series/seven__pitch_negative_recovery__moving_mass_assist.csv": {
+      "sha256": "fee2ab6ad412facdd67ee1463f16fec41c04c2df4ecd6926cec01edefd0a3807",
+      "size_bytes": 2789484
+    },
+    "scenario_time_series/seven__pitch_negative_recovery__vane_only.csv": {
+      "sha256": "0855523a50a49dbabb4c4ec79c1df609f4fa11e07789b8e23113d0f8fdc1cec9",
+      "size_bytes": 2633993
+    },
+    "scenario_time_series/seven__pitch_positive_recovery__moving_mass_assist.csv": {
+      "sha256": "c3a928d2677342d4d6a8259bd98da46cf279b63ca86130ab44e7b55ee23da5fd",
+      "size_bytes": 2790319
+    },
+    "scenario_time_series/seven__pitch_positive_recovery__vane_only.csv": {
+      "sha256": "85bd7de327cb269c23d414720f94d4230ae166f623c375c2bb1e42d86ed7209d",
+      "size_bytes": 2635100
+    },
+    "scenario_time_series/seven__stick_release__moving_mass_assist.csv": {
+      "sha256": "ad372c304f497f1130b557c6cbbfa4bd1ad6da8a502be978d2726cfb6b638204",
+      "size_bytes": 4106525
+    },
+    "scenario_time_series/seven__stick_release__vane_only.csv": {
+      "sha256": "c1431ab7faf2e87238fe158fd85994b3756b8f1df22d0801c172a93d9dda354c",
+      "size_bytes": 3875163
+    },
+    "search_space.json": {
+      "sha256": "f646f1ff7c94ebd00c0ca98b399633bae280c8a88d20468c6e943eadc9f22866",
+      "size_bytes": 2172
+    },
+    "shared-objective comparison.csv": {
+      "sha256": "40486c3980fcc64497d3655a1f20ff0e179161e39c01bb08d67fe7099ef0b0f9",
+      "size_bytes": 84049
+    },
+    "summary.md": {
+      "sha256": "6dea3ac5fd4fc5ca736290e43abbbab0d0c4b36f917bc25626c8ce4f18bec725",
+      "size_bytes": 4922
+    },
+    "valid_candidates.csv": {
+      "sha256": "e96548d861b64aa64b70835d44267ef0f175e8f27b46b4a7ffbc35bd3f38ccbb",
+      "size_bytes": 22114265
+    },
+    "validation/deterministic_reruns.json": {
+      "sha256": "bacb506d0c6b664438e35286e143dbbf7146b347fb7a698f224fd47ac55e7035",
+      "size_bytes": 218
+    },
+    "validation/preservation_audit.json": {
+      "sha256": "91b5fd180dc117e8cbaeb0c14070fed756170466d08533f447ee818bbacbd0c7",
+      "size_bytes": 9853
+    },
+    "validation/public_export_hygiene.json": {
+      "sha256": "3ec06a7100d08777d74d78c24f62ca6f733fce7c5d16f9fe2890a3540adeccc8",
+      "size_bytes": 62
+    },
+    "validation/selected_scenario_results.csv": {
+      "sha256": "ac7467401b0a7822227dabbe4bc39d693a116fd5b4815f6a0c7fbff91eacdce8",
+      "size_bytes": 65509
+    },
+    "vane_only_selected.json": {
+      "sha256": "85a68da6d8bf69ebc729656e01c38d053677f18bfc085dc0a5ab1006f1569e72",
+      "size_bytes": 22341
+    }
+  },
+  "schema_version": 1
+}
