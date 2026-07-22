@@ -15,6 +15,9 @@ from analysis.variant_controller_optimizer import (
     VariantCandidate,
     _boundary_axes,
     _cache_metrics_compatible,
+    _deterministic_refinement_candidates,
+    _mandatory_parent_rows,
+    _refinement_acceptance,
     _source_fingerprint,
     _write_manifest,
     apply_corrected_selection_fields,
@@ -268,6 +271,70 @@ class VariantControllerOptimizerTests(unittest.TestCase):
             "vane_only", retained[0], self.spec
         )
         self.assertGreaterEqual(len(joint), 96)
+
+    def test_mandatory_parent_set_uses_at_least_twelve_eligible_candidates(self):
+        rows = []
+        for index in range(16):
+            row = self.row(
+                f"eligible-{index}",
+                overshoot=0.02 + index * 0.003,
+                settle=1.0 + index * 0.05,
+                effort=2.0 - index * 0.03,
+            )
+            row.update(
+                self.candidate(
+                    atc_rat_pit_p=0.06 + index * 0.003,
+                    psc_ne_pos_p=0.50 + index * 0.01,
+                ).parameters
+            )
+            rows.append(row)
+        parents = _mandatory_parent_rows(rows, self.spec)
+        self.assertGreaterEqual(len(parents), 12)
+        self.assertTrue(all(row["selection_eligible"] for row in parents))
+        self.assertIn("eligible-0", {row["candidate_key"] for row in parents})
+
+    def test_variants_use_separate_deterministic_refinement_sequences(self):
+        vane_parent = self.row("vane-parent")
+        vane_parent.update(self.candidate().parameters)
+        assist_parent = self.row("assist-parent")
+        assist_parent.update(self.candidate("moving_mass_assist").parameters)
+        vane, _ = _deterministic_refinement_candidates(
+            "vane_only",
+            [vane_parent],
+            self.spec,
+            count=20,
+            fraction=0.01,
+            stage="test",
+            sequence=1,
+        )
+        assist, _ = _deterministic_refinement_candidates(
+            "moving_mass_assist",
+            [assist_parent],
+            self.spec,
+            count=20,
+            fraction=0.01,
+            stage="test",
+            sequence=1,
+        )
+        vane_pid = {tuple(row.parameters[name] for name in tuple(row.parameters)[:-1]) for row in vane}
+        assist_pid = {tuple(row.parameters[name] for name in tuple(row.parameters)[:-1]) for row in assist}
+        self.assertTrue(vane_pid.isdisjoint(assist_pid))
+
+    def test_refinement_requires_point_one_second_improvement(self):
+        baseline = self.row("baseline", settle=8.0)
+        small = self.row("small", settle=7.91)
+        selected, status, converged, improvement = _refinement_acceptance(
+            baseline, small, 0.10
+        )
+        self.assertEqual(selected["candidate_key"], "baseline")
+        self.assertTrue(converged)
+        self.assertAlmostEqual(improvement, 0.09)
+        enough = self.row("enough", settle=7.90)
+        selected, status, converged, _ = _refinement_acceptance(
+            baseline, enough, 0.10
+        )
+        self.assertEqual(selected["candidate_key"], "enough")
+        self.assertFalse(converged)
 
     def test_manifest_verification_excludes_its_own_record(self):
         with tempfile.TemporaryDirectory() as directory:

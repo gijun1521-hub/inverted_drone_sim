@@ -174,6 +174,13 @@ def load_search_spec(path: str | Path = DEFAULT_SPEC) -> dict[str, Any]:
         raise ValueError("targeted_adaptive_samples must be at least 160")
     if int(search["targeted_joint_refinement_samples"]) < 96:
         raise ValueError("targeted_joint_refinement_samples must be at least 96")
+    if bool(search.get("mandatory_corrected_refinement", False)):
+        if int(search["corrected_parent_fill_samples"]) < 1:
+            raise ValueError("corrected_parent_fill_samples must be positive")
+        if int(search["corrected_additional_refinement_samples"]) < 1:
+            raise ValueError("corrected_additional_refinement_samples must be positive")
+        if float(search["minimum_refinement_settling_improvement_s"]) < 0.10:
+            raise ValueError("minimum_refinement_settling_improvement_s must be at least 0.10")
     return spec
 
 
@@ -1064,6 +1071,252 @@ def targeted_joint_refinement_candidates(
     return list(candidates.values())
 
 
+def _mandatory_parent_rows(
+    rows: Sequence[Mapping[str, Any]], spec: Mapping[str, Any]
+) -> list[dict[str, Any]]:
+    """Select eligible parents from corrected rank, Pareto tradeoffs, and objective leaders."""
+    eligible = [
+        dict(row)
+        for row in sorted(rows, key=candidate_rank_key)
+        if bool(row.get("selection_eligible", False))
+    ]
+    if not eligible:
+        return []
+    minimum = int(spec["search"]["targeted_parent_count"])
+    chosen: dict[str, dict[str, Any]] = {
+        str(row["candidate_key"]): row for row in eligible[:minimum]
+    }
+    for row in pareto_front(eligible):
+        chosen[str(row["candidate_key"])] = row
+    for objective in (
+        "worst_settling_time_s",
+        "worst_overshoot_band_distance",
+        "worst_final_abs_position_error_m",
+        "actuator_effort_index",
+    ):
+        leaders = sorted(
+            eligible,
+            key=lambda row: (
+                _finite_or_penalty(row.get(objective), 1000.0),
+                candidate_rank_key(row),
+            ),
+        )[:3]
+        for row in leaders:
+            chosen[str(row["candidate_key"])] = row
+    return sorted(chosen.values(), key=candidate_rank_key)
+
+
+def _deterministic_refinement_candidates(
+    variant: str,
+    parents: Sequence[Mapping[str, Any]],
+    spec: Mapping[str, Any],
+    *,
+    count: int,
+    fraction: float,
+    stage: str,
+    sequence: int,
+) -> tuple[list[VariantCandidate], dict[str, str]]:
+    if not parents:
+        return [], {}
+    active = _active_parameters(variant)
+    ranges = spec["ranges"]
+    variant_seed = 11003 if variant == "vane_only" else 17011
+    points = halton_points(count * 8, len(active), seed=int(spec["seed"]) + variant_seed + sequence * 257)
+    candidates: dict[str, VariantCandidate] = {}
+    parent_keys: dict[str, str] = {}
+    for index, point in enumerate(points):
+        parent = parents[index % len(parents)]
+        values: dict[str, float] = {}
+        for name, coordinate in zip(active, point):
+            low, high = map(float, ranges[name])
+            half = float(fraction) * (high - low)
+            values[name] = min(high, max(low, float(parent[name]) + (2.0 * coordinate - 1.0) * half))
+        candidate = _candidate_from_parameters(variant, stage, values)
+        candidates[candidate.key] = candidate
+        parent_keys[candidate.key] = str(parent["candidate_key"])
+        if len(candidates) >= count:
+            break
+    if len(candidates) < count:
+        raise RuntimeError(f"{variant} {stage} generated only {len(candidates)} / {count} unique candidates")
+    return list(candidates.values()), parent_keys
+
+
+def _normalized_parameter_distance(
+    row: Mapping[str, Any], parent: Mapping[str, Any], variant: str, spec: Mapping[str, Any]
+) -> float:
+    return float(
+        math.sqrt(
+            sum(
+                ((float(row[name]) - float(parent[name])) / (float(spec["ranges"][name][1]) - float(spec["ranges"][name][0])))
+                ** 2
+                for name in _active_parameters(variant)
+            )
+        )
+    )
+
+
+def _on_local_boundary(
+    row: Mapping[str, Any], parent: Mapping[str, Any], variant: str, spec: Mapping[str, Any], fraction: float
+) -> bool:
+    for name in _active_parameters(variant):
+        low, high = map(float, spec["ranges"][name])
+        span = high - low
+        value = float(row[name])
+        if math.isclose(value, low, rel_tol=0.0, abs_tol=1e-12) or math.isclose(
+            value, high, rel_tol=0.0, abs_tol=1e-12
+        ):
+            return True
+        if abs(value - float(parent[name])) >= 0.995 * float(fraction) * span:
+            return True
+    return False
+
+
+def _best_eligible(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any] | None:
+    return next(
+        (dict(row) for row in sorted(rows, key=candidate_rank_key) if bool(row.get("selection_eligible", False))),
+        None,
+    )
+
+
+def _best_preferred_band(
+    rows: Iterable[Mapping[str, Any]], spec: Mapping[str, Any]
+) -> dict[str, Any] | None:
+    lower, upper = map(float, spec["targets"]["preferred_overshoot_fraction"])
+    preferred = [
+        dict(row)
+        for row in rows
+        if bool(row.get("selection_eligible", False))
+        and lower <= float(row.get("positive_step_overshoot_fraction", math.inf)) <= upper
+        and lower <= float(row.get("negative_step_overshoot_fraction", math.inf)) <= upper
+    ]
+    return min(preferred, key=candidate_rank_key) if preferred else None
+
+
+def _refinement_acceptance(
+    baseline: Mapping[str, Any], best_found: Mapping[str, Any], minimum_improvement_s: float
+) -> tuple[dict[str, Any], str, bool, float]:
+    improvement = float(baseline["worst_settling_time_s"]) - float(best_found["worst_settling_time_s"])
+    if improvement + 1e-12 >= float(minimum_improvement_s):
+        return dict(best_found), "improved_refined_selection", False, improvement
+    return dict(baseline), "converged_preserved_cached_only_selection", True, improvement
+
+
+def _evaluate_refinement_round(
+    variant: str,
+    round_number: int,
+    action: str,
+    candidates: Sequence[VariantCandidate],
+    parent_keys: Mapping[str, str],
+    fraction: float,
+    spec: Mapping[str, Any],
+    fingerprint: str,
+    cache: CandidateCache,
+    all_rows: dict[str, dict[str, Any]],
+    *,
+    workers: int,
+) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any] | None]:
+    before = _best_eligible(all_rows.values())
+    prior_keys = set(cache.rows)
+    evaluated = evaluate_candidates(candidates, spec, fingerprint, cache, workers=workers)
+    candidate_by_key = {candidate.key: candidate for candidate in candidates}
+    round_rows: list[dict[str, Any]] = []
+    for original in evaluated:
+        row = apply_corrected_selection_fields(original, spec)
+        key = str(row["candidate_key"])
+        parent_key = parent_keys.get(key)
+        parent = all_rows.get(str(parent_key)) if parent_key is not None else None
+        row["refinement_round"] = round_number
+        row["refinement_action"] = action
+        row["refinement_parent_key"] = parent_key or ""
+        if key in candidate_by_key and key not in prior_keys:
+            row["stage"] = candidate_by_key[key].stage
+        row["parameter_space_distance_from_parent"] = (
+            _normalized_parameter_distance(row, parent, variant, spec) if parent is not None else 0.0
+        )
+        row["on_local_refinement_boundary"] = (
+            _on_local_boundary(row, parent, variant, spec, fraction) if parent is not None else False
+        )
+        cache.record(row)
+        all_rows[key] = row
+        round_rows.append(row)
+    after = _best_eligible(all_rows.values())
+    best_new = _best_eligible(round_rows)
+    if best_new is None and round_rows:
+        best_new = min(round_rows, key=candidate_rank_key)
+    preferred = _best_preferred_band(all_rows.values(), spec)
+    before_settling = _finite_or_penalty(before.get("worst_settling_time_s") if before else None, 1000.0)
+    after_settling = _finite_or_penalty(after.get("worst_settling_time_s") if after else None, 1000.0)
+    diagnostic = {
+        "variant": variant,
+        "round": round_number,
+        "action": action,
+        "generated_candidate_count": len(candidates),
+        "new_candidate_count": sum(candidate.key not in prior_keys for candidate in candidates),
+        "cached_candidate_count": sum(candidate.key in prior_keys for candidate in candidates),
+        "best_eligible_before_key": before.get("candidate_key", "") if before else "",
+        "best_eligible_before_settling_time_s": before_settling,
+        "best_eligible_after_key": after.get("candidate_key", "") if after else "",
+        "best_eligible_after_settling_time_s": after_settling,
+        "settling_improvement_s": before_settling - after_settling,
+        "best_preferred_band_candidate_key": preferred.get("candidate_key", "") if preferred else "",
+        "best_preferred_band_overshoot_fraction": preferred.get("worst_step_overshoot_fraction", "") if preferred else "",
+        "best_preferred_band_settling_time_s": preferred.get("worst_settling_time_s", "") if preferred else "",
+        "best_new_candidate_key": best_new.get("candidate_key", "") if best_new else "",
+        "best_new_candidate_parent_key": best_new.get("refinement_parent_key", "") if best_new else "",
+        "best_new_candidate_parameter_distance": best_new.get("parameter_space_distance_from_parent", "") if best_new else "",
+        "optimum_on_local_boundary": bool(best_new.get("on_local_refinement_boundary", False)) if best_new else False,
+        "another_refinement_round_required": False,
+    }
+    return diagnostic, round_rows, best_new
+
+
+def _frozen_refinement_parents(
+    variant: str,
+    baseline_key: str,
+    proposed: Sequence[Mapping[str, Any]],
+    all_rows: Mapping[str, Mapping[str, Any]],
+    cache: CandidateCache,
+) -> list[dict[str, Any]]:
+    path = cache.path.parent / "refinement_parent_sets.json"
+    payload = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"schema_version": 1, "variants": {}}
+    entry = payload.get("variants", {}).get(variant, {})
+    stored_keys = entry.get("parent_candidate_keys", []) if entry.get("baseline_candidate_key") == baseline_key else []
+    stored = [dict(all_rows[key]) for key in stored_keys if key in all_rows and bool(all_rows[key].get("selection_eligible"))]
+    if len(stored) >= 12 and len(stored) == len(stored_keys):
+        return stored
+    parents = [dict(row) for row in proposed]
+    payload.setdefault("variants", {})[variant] = {
+        "baseline_candidate_key": baseline_key,
+        "parent_candidate_keys": [str(row["candidate_key"]) for row in parents],
+    }
+    atomic_json(path, payload)
+    return parents
+
+
+def _neighborhood_export_row(row: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "variant": row.get("variant"),
+        "refinement_round": row.get("refinement_round"),
+        "refinement_action": row.get("refinement_action"),
+        "candidate_key": row.get("candidate_key"),
+        "refinement_parent_key": row.get("refinement_parent_key"),
+        "parameter_space_distance_from_parent": row.get("parameter_space_distance_from_parent"),
+        "on_local_refinement_boundary": row.get("on_local_refinement_boundary"),
+        **{name: row.get(name) for name in SEARCH_PARAMETER_ORDER},
+        "selection_eligible": row.get("selection_eligible"),
+        "corrected_selection_class": row.get("corrected_selection_class"),
+        "worst_settling_time_s": row.get("worst_settling_time_s"),
+        "worst_step_overshoot_fraction": row.get("worst_step_overshoot_fraction"),
+        "worst_overshoot_band_distance": row.get("worst_overshoot_band_distance"),
+        "worst_step_target_crossing_count": row.get("worst_step_target_crossing_count"),
+        "worst_rise_time_s": row.get("worst_rise_time_s"),
+        "worst_final_abs_position_error_m": row.get("worst_final_abs_position_error_m"),
+        "actuator_effort_index": row.get("actuator_effort_index"),
+        "worst_moving_mass_limiter_duty_percent": row.get("worst_moving_mass_limiter_duty_percent"),
+        "robustness_index": row.get("robustness_index"),
+    }
+
+
 def _boundary_axes(
     row: Mapping[str, Any], variant: str, ranges: Mapping[str, Sequence[float]]
 ) -> list[tuple[str, str]]:
@@ -1468,27 +1721,28 @@ def _comparison_rows(
 def _summary_markdown(
     selected: Mapping[str, Mapping[str, Any]],
     previous_selected: Mapping[str, Mapping[str, Any]],
+    cached_only_selected: Mapping[str, Mapping[str, Any]],
     comparison: Sequence[Mapping[str, Any]],
     validation: Mapping[str, Any],
     candidate_count: int,
     search_stats: Mapping[str, Mapping[str, Any]],
 ) -> str:
     lines = [
-        "# Corrected independent variant-controller optimization",
+        "# Mandatory corrected-objective independent refinement",
         "",
         "This is deterministic 2D simulation research only. It makes no real-flight, Pixhawk, Raspberry Pi, HIL, or hardware-safety claim, and it does not modify rigid-body physics.",
         "",
-        "## Corrected reranking outcome",
+        "## Mandatory refinement outcome",
         "",
-        "All cached simulation metrics were reranked before any new simulation. A candidate is selectable only when all prior hard gates pass, both steps settle, both overshoots are at most 8%, and both steps have at most one meaningful target crossing.",
+        "The corrected cached-only selections were retained as executable baselines, then each variant received a separate deterministic sampling sequence with at least 12 corrected-eligible parents, 160 adaptive-local candidates, 96 joint candidates, and an additional refinement round. A candidate remains selectable only when all prior hard gates pass, both steps settle, both overshoots are at most 8%, and both steps have at most one meaningful target crossing.",
         "",
-        "| variant | cached candidates | existing eligible | newly evaluated | corrected result |",
-        "| --- | ---: | ---: | ---: | --- |",
+        "| variant | cached candidates | existing eligible | refinement parents | newly evaluated | refined result | improvement (s) |",
+        "| --- | ---: | ---: | ---: | ---: | --- | ---: |",
     ]
     for variant in VARIANTS:
         stats = search_stats[variant]
         lines.append(
-            f"| {variant} | {int(stats['existing_candidate_count'])} | {int(stats['existing_eligible_candidate_count'])} | {int(stats['newly_evaluated_candidates'])} | {stats['selection_status']} |"
+            f"| {variant} | {int(stats['existing_candidate_count'])} | {int(stats['existing_eligible_candidate_count'])} | {int(stats['refinement_parent_count'])} | {int(stats['newly_evaluated_candidates'])} | {stats['selection_status']} | {float(stats['settling_improvement_s']):.4f} |"
         )
     lines.extend(
         [
@@ -1514,7 +1768,21 @@ def _summary_markdown(
     lines.extend(
         [
             "",
-            "## Final selected controllers",
+            "## Corrected cached-only selections before refinement",
+            "",
+            "| variant | Rate P | Rate D | Angle P | Position P | Velocity P | mass gain (m/Nm) | settle (s) | overshoot |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for variant in VARIANTS:
+        row = cached_only_selected[variant]
+        lines.append(
+            f"| {variant} | {float(row['atc_rat_pit_p']):.8f} | {float(row['atc_rat_pit_d']):.8f} | {float(row['atc_ang_pit_p']):.6f} | {float(row['psc_ne_pos_p']):.8f} | {float(row['psc_ne_vel_p']):.8f} | {float(row['moving_mass_assist_gain_m_per_Nm']):.8f} | {float(row['worst_settling_time_s']):.4f} | {float(row['worst_step_overshoot_fraction']):.6f} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Corrected independently refined selections",
             "",
             "| variant | Rate P | Rate D | Angle P | Position P | Velocity P | mass gain (m/Nm) |",
             "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
@@ -1525,6 +1793,28 @@ def _summary_markdown(
         lines.append(
             f"| {variant} | {float(row['atc_rat_pit_p']):.8f} | {float(row['atc_rat_pit_d']):.8f} | {float(row['atc_ang_pit_p']):.6f} | {float(row['psc_ne_pos_p']):.8f} | {float(row['psc_ne_vel_p']):.8f} | {float(row['moving_mass_assist_gain_m_per_Nm']):.8f} |"
         )
+    controller_fields = SEARCH_PARAMETER_ORDER[:-1]
+    same_controller_values = all(
+        math.isclose(
+            float(selected["vane_only"][name]),
+            float(selected["moving_mass_assist"][name]),
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        )
+        for name in controller_fields
+    )
+    lines.extend(
+        [
+            "",
+            "## Independent-optimum comparison",
+            "",
+            "The five independently refined controller values converged to "
+            + ("the same values." if same_controller_values else "different values.")
+            + " No equality or difference constraint was imposed; each variant used its own deterministic sequence and ranking.",
+            "",
+            "Round-by-round candidate counts, before/after settling times, preferred-band candidates, parent distances, local-boundary flags, and continuation decisions are recorded in `boundary_diagnostics.csv`. Separate response-neighborhood tables are exported under `refinement_neighborhoods/`.",
+        ]
+    )
     lines.extend(
         [
             "",
@@ -1542,7 +1832,7 @@ def _summary_markdown(
             "",
             "## Exact selection rationale",
             "",
-            "The executable optimizer uses this strict lexicographic order: (1) every pre-existing hard gate, (2) both steps settle, (3) both step overshoots <= 0.08, (4) both target-crossing counts <= 1, (5) shortest worst settling time, (6) smallest worst distance from the 0.02-0.05 preferred overshoot band, (7) shortest worst rise time, (8) smallest worst final error, (9) lower actuator effort and limiter use, and (10) better symmetry and robustness. Zero overshoot remains eligible but has a 0.02 band-distance penalty. The 0.12 overshoot hard failure and pre-existing two-crossing hard failure remain unchanged.",
+            "The executable optimizer uses this strict lexicographic order: (1) every pre-existing hard gate, (2) both steps settle, (3) both step overshoots <= 0.08, (4) both target-crossing counts <= 1, (5) shortest worst settling time, (6) smallest worst distance from the 0.02-0.05 preferred overshoot band, (7) shortest worst rise time, (8) smallest worst final error, (9) lower actuator effort and limiter use, and (10) better symmetry and robustness. Zero overshoot remains eligible but has a 0.02 band-distance penalty. The 0.12 overshoot hard failure and pre-existing two-crossing hard failure remain unchanged. The refined candidate replaces the cached-only baseline only when its worst settling time improves by at least 0.10 s; otherwise the baseline is preserved and the neighborhood is reported converged.",
             "",
             "The Pareto CSV retains valid tradeoffs rather than collapsing them into one weighted score. The shared-objective comparison CSV evaluates the PR #24 shared references and both independently optimized controllers with the same screening objectives.",
             "",
@@ -1586,11 +1876,241 @@ def _write_manifest(output_dir: Path) -> None:
     atomic_json(output_dir / "sha256_manifest.json", {"schema_version": 1, "algorithm": "SHA-256", "artifacts": artifacts})
 
 
+def _run_mandatory_corrected_refinement(
+    variant: str,
+    spec: dict[str, Any],
+    fingerprint: str,
+    cache: CandidateCache,
+    existing_rows: Sequence[Mapping[str, Any]],
+    baseline_selected: Mapping[str, Any],
+    ranges: dict[str, list[float]],
+    *,
+    workers: int,
+    quick: bool,
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
+    all_rows = {
+        str(row["candidate_key"]): apply_corrected_selection_fields(row, spec)
+        for row in existing_rows
+    }
+    baseline_key = str(baseline_selected["candidate_key"])
+    baseline = all_rows.get(baseline_key, apply_corrected_selection_fields(baseline_selected, spec))
+    all_rows[baseline_key] = baseline
+    baseline_settling = float(baseline["worst_settling_time_s"])
+    initial_eligible_count = sum(bool(row.get("selection_eligible")) for row in all_rows.values())
+    start_new_count = cache.newly_recorded_count
+    diagnostics: list[dict[str, Any]] = []
+    newly_refined_rows: dict[str, dict[str, Any]] = {}
+
+    parents = _mandatory_parent_rows(list(all_rows.values()), spec)
+    minimum_parents = int(spec["search"]["targeted_parent_count"])
+    fill_round = 0
+    while len([row for row in all_rows.values() if bool(row.get("selection_eligible"))]) < minimum_parents:
+        fill_round += 1
+        if fill_round > int(spec["search"]["corrected_parent_fill_max_rounds"]):
+            raise RuntimeError(
+                f"{variant} could not establish {minimum_parents} corrected-eligible cached parents"
+            )
+        fill_count = 12 if quick else int(spec["search"]["corrected_parent_fill_samples"])
+        fill_fraction = float(spec["search"]["corrected_parent_fill_fraction"]) / fill_round
+        fill_candidates, fill_parent_keys = _deterministic_refinement_candidates(
+            variant,
+            parents,
+            spec,
+            count=fill_count,
+            fraction=fill_fraction,
+            stage=f"corrected_parent_fill_{fill_round}",
+            sequence=10 + fill_round,
+        )
+        diagnostic, round_rows, _ = _evaluate_refinement_round(
+            variant,
+            0,
+            f"eligible_parent_fill_{fill_round}",
+            fill_candidates,
+            fill_parent_keys,
+            fill_fraction,
+            spec,
+            fingerprint,
+            cache,
+            all_rows,
+            workers=workers,
+        )
+        diagnostic["another_refinement_round_required"] = True
+        diagnostics.append(diagnostic)
+        newly_refined_rows.update({str(row["candidate_key"]): row for row in round_rows})
+        parents = _mandatory_parent_rows(list(all_rows.values()), spec)
+
+    parents = _mandatory_parent_rows(list(all_rows.values()), spec)
+    parents = _frozen_refinement_parents(variant, baseline_key, parents, all_rows, cache)
+    if len(parents) < minimum_parents:
+        raise RuntimeError(f"{variant} refinement parent set has only {len(parents)} eligible candidates")
+
+    baseline_improved_round: int | None = None
+
+    def process_round(
+        round_number: int,
+        action: str,
+        round_parents: Sequence[Mapping[str, Any]],
+        count: int,
+        fraction: float,
+        sequence: int,
+    ) -> dict[str, Any]:
+        nonlocal baseline_improved_round
+        candidates, parent_keys = _deterministic_refinement_candidates(
+            variant,
+            round_parents,
+            spec,
+            count=count,
+            fraction=fraction,
+            stage=f"corrected_{action}_round_{round_number}",
+            sequence=sequence,
+        )
+        diagnostic, round_rows, best_new = _evaluate_refinement_round(
+            variant,
+            round_number,
+            action,
+            candidates,
+            parent_keys,
+            fraction,
+            spec,
+            fingerprint,
+            cache,
+            all_rows,
+            workers=workers,
+        )
+        newly_refined_rows.update({str(row["candidate_key"]): row for row in round_rows})
+        best_now = _best_eligible(all_rows.values())
+        if (
+            baseline_improved_round is None
+            and best_now is not None
+            and float(best_now["worst_settling_time_s"]) < baseline_settling - 1e-12
+        ):
+            baseline_improved_round = round_number
+        diagnostic["best_new_candidate_key"] = best_new.get("candidate_key", "") if best_new else ""
+        diagnostics.append(diagnostic)
+        return diagnostic
+
+    adaptive_count = 12 if quick else int(spec["search"]["targeted_adaptive_samples"])
+    adaptive_fraction = float(spec["search"]["targeted_refinement_fraction"])
+    process_round(1, "adaptive_local", parents, adaptive_count, adaptive_fraction, 101)
+    diagnostics[-1]["another_refinement_round_required"] = True
+
+    best_new = _best_eligible(newly_refined_rows.values())
+    if best_new is None:
+        best_new = min(newly_refined_rows.values(), key=candidate_rank_key)
+    joint_count = 8 if quick else int(spec["search"]["targeted_joint_refinement_samples"])
+    joint_fraction = float(spec["search"]["targeted_joint_refinement_fraction"])
+    process_round(2, "joint_refinement", [best_new], joint_count, joint_fraction, 202)
+    diagnostics[-1]["another_refinement_round_required"] = True
+
+    additional_count = 8 if quick else int(spec["search"]["corrected_additional_refinement_samples"])
+    additional_fraction = float(spec["search"]["corrected_additional_refinement_fraction"])
+    additional_round = 3
+    while True:
+        best_new = _best_eligible(newly_refined_rows.values())
+        if best_new is None:
+            best_new = min(newly_refined_rows.values(), key=candidate_rank_key)
+        diagnostic = process_round(
+            additional_round,
+            "additional_refinement",
+            [best_new],
+            additional_count,
+            additional_fraction / (2 ** (additional_round - 3)),
+            300 + additional_round,
+        )
+        needs_post_improvement_round = baseline_improved_round == additional_round
+        needs_boundary_round = bool(diagnostic["optimum_on_local_boundary"]) and additional_round < 6
+        another_required = needs_post_improvement_round or needs_boundary_round
+        diagnostic["another_refinement_round_required"] = another_required
+        if not another_required:
+            break
+        additional_round += 1
+
+    maximum_boundary_rounds = 1 if quick else int(spec["search"]["maximum_boundary_extension_rounds"])
+    for boundary_round in range(1, maximum_boundary_rounds + 1):
+        best = _best_eligible(all_rows.values())
+        if best is None:
+            break
+        axes = _boundary_axes(best, variant, ranges)
+        if not axes:
+            break
+        extension, extension_diagnostics = boundary_extension_candidates(
+            variant, best, ranges, axes, spec, boundary_round, quick=quick
+        )
+        if not extension:
+            diagnostics.extend(extension_diagnostics)
+            break
+        parent_keys = {candidate.key: str(best["candidate_key"]) for candidate in extension}
+        diagnostic, round_rows, _ = _evaluate_refinement_round(
+            variant,
+            additional_round + boundary_round,
+            f"global_boundary_extension_{boundary_round}",
+            extension,
+            parent_keys,
+            float(spec["search"]["boundary_extension_fraction"]),
+            spec,
+            fingerprint,
+            cache,
+            all_rows,
+            workers=workers,
+        )
+        diagnostic["another_refinement_round_required"] = boundary_round < maximum_boundary_rounds
+        diagnostics.extend(extension_diagnostics)
+        diagnostics.append(diagnostic)
+        newly_refined_rows.update({str(row["candidate_key"]): row for row in round_rows})
+
+    final_result = corrected_selection_result(all_rows.values(), spec)
+    if final_result["selected"] is None:
+        stats = {"variant": variant, "selection_status": "blocked"}
+        raise NoEligibleCandidateError(variant, final_result["ranked"], diagnostics, ranges, stats)
+    best_found = final_result["selected"]
+    minimum_improvement = float(spec["search"]["minimum_refinement_settling_improvement_s"])
+    ranked_baseline = next(
+        dict(row) for row in final_result["ranked"] if str(row["candidate_key"]) == baseline_key
+    )
+    selected, selection_status, converged, improvement = _refinement_acceptance(
+        ranked_baseline, best_found, minimum_improvement
+    )
+    selected.update(
+        {
+            "refinement_selection_status": selection_status,
+            "refinement_baseline_candidate_key": baseline_key,
+            "refinement_best_found_candidate_key": str(best_found["candidate_key"]),
+            "refinement_settling_improvement_s": improvement,
+            "refinement_minimum_acceptance_improvement_s": minimum_improvement,
+        }
+    )
+    stats = {
+        "variant": variant,
+        "mandatory_corrected_refinement": True,
+        "existing_candidate_count": len(existing_rows),
+        "existing_eligible_candidate_count": initial_eligible_count,
+        "refinement_parent_count": len(parents),
+        "refinement_parent_candidate_keys": [str(row["candidate_key"]) for row in parents],
+        "refinement_round_count": len(diagnostics),
+        "newly_evaluated_candidates": cache.newly_recorded_count - start_new_count,
+        "eligible_candidate_count_after_refinement": sum(
+            bool(row.get("selection_eligible")) for row in final_result["ranked"]
+        ),
+        "baseline_candidate_key": baseline_key,
+        "baseline_worst_settling_time_s": baseline_settling,
+        "best_found_candidate_key": str(best_found["candidate_key"]),
+        "best_found_worst_settling_time_s": float(best_found["worst_settling_time_s"]),
+        "settling_improvement_s": improvement,
+        "minimum_acceptance_improvement_s": minimum_improvement,
+        "selection_status": selection_status,
+        "converged_within_evaluated_neighborhood": converged,
+        "selected_candidate_key": str(selected["candidate_key"]),
+        "new_refinement_candidate_count": len(newly_refined_rows),
+    }
+    return selected, final_result["ranked"], diagnostics, stats
+
+
 def run_variant_search(
     variant: str,
     spec: dict[str, Any],
     fingerprint: str,
     cache: CandidateCache,
+    baseline_selected: Mapping[str, Any] | None = None,
     *,
     workers: int,
     quick: bool,
@@ -1619,6 +2139,19 @@ def run_variant_search(
         "selection_status": existing_result["status"],
     }
     if existing_result["selected"] is not None:
+        if bool(spec["search"].get("mandatory_corrected_refinement", False)):
+            chosen, ranked, mandatory_diagnostics, mandatory_stats = _run_mandatory_corrected_refinement(
+                variant,
+                spec,
+                fingerprint,
+                cache,
+                existing_rows,
+                baseline_selected or existing_result["selected"],
+                ranges,
+                workers=workers,
+                quick=quick,
+            )
+            return chosen, ranked, mandatory_diagnostics, ranges, mandatory_stats
         diagnostics.append(
             {
                 "variant": variant,
@@ -1747,11 +2280,12 @@ def run_workflow(
         if previous_metadata_path.exists()
         else None
     )
-    previous_selected_raw = {
+    current_selected_raw = {
         name: json.loads((output_dir / f"{name}_selected.json").read_text(encoding="utf-8"))
         for name in VARIANTS
         if (output_dir / f"{name}_selected.json").exists()
     }
+    previous_selected_raw = dict(current_selected_raw)
     historical_path = output_dir / "historical_previous_selections.json"
     existing_history = (
         json.loads(historical_path.read_text(encoding="utf-8"))
@@ -1768,6 +2302,22 @@ def run_workflow(
     previous_selected = {
         name: apply_corrected_selection_fields(row, spec)
         for name, row in previous_selected_raw.items()
+    }
+    cached_only_path = output_dir / "corrected_cached_only_selections.json"
+    existing_cached_only = (
+        json.loads(cached_only_path.read_text(encoding="utf-8"))
+        if cached_only_path.exists()
+        else None
+    )
+    cached_only_raw = (
+        dict(existing_cached_only["selections"])
+        if isinstance(existing_cached_only, Mapping)
+        and isinstance(existing_cached_only.get("selections"), Mapping)
+        else current_selected_raw
+    )
+    corrected_cached_only = {
+        name: apply_corrected_selection_fields(row, spec)
+        for name, row in cached_only_raw.items()
     }
     fingerprint_payload, fingerprint = _source_fingerprint(spec)
     preserved_before = {**_tree_hashes(PR24_RESULTS), PR24_PROFILE.relative_to(REPO_ROOT).as_posix(): sha256_file(PR24_PROFILE)}
@@ -1790,6 +2340,14 @@ def run_workflow(
             "selections": previous_selected,
         },
     )
+    atomic_json(
+        cached_only_path,
+        {
+            "schema_version": 1,
+            "status": "corrected_cached_only_pre_refinement_baseline",
+            "selections": corrected_cached_only,
+        },
+    )
     requested = VARIANTS if variant == "both" else (variant,)
     selected: dict[str, dict[str, Any]] = {}
     all_rows: list[dict[str, Any]] = []
@@ -1803,6 +2361,7 @@ def run_workflow(
                 spec,
                 fingerprint,
                 cache,
+                corrected_cached_only.get(name),
                 workers=workers,
                 quick=quick,
             )
@@ -1843,6 +2402,13 @@ def run_workflow(
     atomic_csv(output_dir / "rejected_candidates.csv", [row for row in all_rows if not bool(row["all_hard_gates_pass"])])
     atomic_csv(output_dir / "pareto_front.csv", pareto_front(all_rows))
     atomic_csv(output_dir / "boundary_diagnostics.csv", boundary_rows)
+    for name in requested:
+        neighborhood = [
+            _neighborhood_export_row(row)
+            for row in all_rows
+            if str(row.get("variant")) == name and row.get("refinement_action")
+        ]
+        atomic_csv(output_dir / "refinement_neighborhoods" / f"{name}.csv", neighborhood)
     atomic_json(output_dir / "actual_search_ranges.json", actual_ranges)
     validation: dict[str, Any] = {"passed": False, "deterministic": False, "rows": [], "representative": {}}
     comparison: list[dict[str, Any]] = []
@@ -1872,6 +2438,7 @@ def run_workflow(
     summary = _summary_markdown(
         selected,
         previous_selected,
+        corrected_cached_only,
         comparison,
         validation,
         len(all_rows),
@@ -1881,7 +2448,7 @@ def run_workflow(
     atomic_json(
         output_dir / "run_metadata.json",
         {
-            "schema_version": 2,
+            "schema_version": 3,
             "workflow_fingerprint": fingerprint,
             "fingerprint_payload": fingerprint_payload,
             "variant": variant,
@@ -1893,6 +2460,7 @@ def run_workflow(
             "reused_candidate_count": cache.reused_candidate_count,
             "newly_evaluated_candidate_count": cache.newly_recorded_count,
             "search_stats": search_stats,
+            "corrected_cached_only_selections": corrected_cached_only,
             "selection_policy": {
                 "maximum_overshoot_fraction": spec["targets"]["selection_maximum_overshoot_fraction"],
                 "maximum_target_crossings": spec["targets"]["selection_maximum_target_crossings"],

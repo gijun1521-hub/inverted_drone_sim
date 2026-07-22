@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "seed": 20260722,
   "source_profile": "params/moving_mass_gain_resweep_provisional.json",
   "targets": {
@@ -34,6 +34,7 @@
     "loit_capture_without_jump": true
   },
   "search": {
+    "mandatory_corrected_refinement": true,
     "fast_screen_duration_s": 12.0,
     "coarse_samples": 48,
     "local_top_candidates": 4,
@@ -45,6 +46,12 @@
     "targeted_refinement_fraction": 0.04,
     "targeted_joint_refinement_samples": 96,
     "targeted_joint_refinement_fraction": 0.025,
+    "corrected_parent_fill_samples": 64,
+    "corrected_parent_fill_fraction": 0.006,
+    "corrected_parent_fill_max_rounds": 4,
+    "corrected_additional_refinement_samples": 96,
+    "corrected_additional_refinement_fraction": 0.0125,
+    "minimum_refinement_settling_improvement_s": 0.10,
     "boundary_extension_fraction": 0.25,
     "boundary_extension_samples": 16,
     "maximum_boundary_extension_rounds": 4
